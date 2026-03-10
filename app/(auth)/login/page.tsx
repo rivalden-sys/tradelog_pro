@@ -1,8 +1,36 @@
 'use client'
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
+
+  const router = useRouter()
+
+  const [email,setEmail] = useState("")
+  const [password,setPassword] = useState("")
+  const [loading,setLoading] = useState(false)
+
+  const handleLogin = async () => {
+
+    setLoading(true)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    setLoading(false)
+
+    if(error){
+      alert(error.message)
+      return
+    }
+
+    router.push("/dashboard")
+  }
 
   return (
 
@@ -22,8 +50,6 @@ export default function LoginPage() {
         border:"1px solid rgba(0,0,0,0.08)",
         boxShadow:"0 20px 40px rgba(0,0,0,0.25)"
       }}>
-
-        {/* header */}
 
         <div style={{textAlign:"center",marginBottom:28}}>
 
@@ -45,9 +71,6 @@ export default function LoginPage() {
 
         </div>
 
-
-        {/* email */}
-
         <label style={{
           fontSize:13,
           fontWeight:500,
@@ -57,6 +80,8 @@ export default function LoginPage() {
         </label>
 
         <input
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
           placeholder="you@email.com"
           style={{
             width:"100%",
@@ -71,9 +96,6 @@ export default function LoginPage() {
           }}
         />
 
-
-        {/* password */}
-
         <label style={{
           fontSize:13,
           fontWeight:500,
@@ -84,6 +106,8 @@ export default function LoginPage() {
 
         <input
           type="password"
+          value={password}
+          onChange={(e)=>setPassword(e.target.value)}
           placeholder="••••••••"
           style={{
             width:"100%",
@@ -98,24 +122,22 @@ export default function LoginPage() {
           }}
         />
 
-
-        {/* login */}
-
-        <button style={{
-          width:"100%",
-          padding:"12px",
-          borderRadius:10,
-          background:"#0a0a0b",
-          color:"#fff",
-          fontWeight:500,
-          border:"none",
-          cursor:"pointer"
-        }}>
-          Sign in
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          style={{
+            width:"100%",
+            padding:"12px",
+            borderRadius:10,
+            background:"#0a0a0b",
+            color:"#fff",
+            fontWeight:500,
+            border:"none",
+            cursor:"pointer"
+          }}
+        >
+          {loading ? "Signing in..." : "Sign in"}
         </button>
-
-
-        {/* google */}
 
         <button style={{
           width:"100%",
@@ -130,9 +152,6 @@ export default function LoginPage() {
         }}>
           Continue with Google
         </button>
-
-
-        {/* register */}
 
         <p style={{
           textAlign:"center",
