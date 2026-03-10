@@ -1,155 +1,111 @@
 'use client'
 
-import Link from "next/link"
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleLogin = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) { setError(error.message); setLoading(false); return }
+    router.push('/dashboard')
+  }
+
+  const handleGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` }
+    })
+  }
 
   return (
-
-    <main style={{
-      minHeight:"100vh",
-      display:"flex",
-      alignItems:"center",
-      justifyContent:"center",
-      background:"#f5f5f7"
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#0a0a0b',
+      fontFamily: "-apple-system, 'SF Pro Display', sans-serif",
     }}>
-
-      <form
-        method="post"
-        action="/auth/login"
-        style={{
-          width:420,
-          background:"#ffffff",
-          padding:36,
-          borderRadius:18,
-          border:"1px solid rgba(0,0,0,0.08)",
-          boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
-        }}
-      >
-
-        <div style={{textAlign:"center",marginBottom:28}}>
-
-          <h1 style={{
-            fontSize:26,
-            fontWeight:700,
-            color:"#111"
-          }}>
-            TradeLog <span style={{color:"#22c55e"}}>Pro</span>
+      <div style={{
+        background: '#1c1c1e', borderRadius: 18, padding: '40px 36px',
+        width: '100%', maxWidth: 400, border: '1px solid rgba(255,255,255,0.08)',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+            TradeLog <span style={{ color: '#30d158' }}>Pro</span>
           </h1>
-
-          <p style={{
-            color:"#6b7280",
-            fontSize:14,
-            marginTop:6
-          }}>
-            Sign in to your account
-          </p>
-
+          <p style={{ fontSize: 14, color: '#8e8e93' }}>Войдите в аккаунт</p>
         </div>
 
+        {error && (
+          <div style={{
+            background: '#ff453a18', border: '1px solid #ff453a44',
+            borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+            fontSize: 13, color: '#ff453a',
+          }}>{error}</div>
+        )}
 
-        <label style={{
-          fontSize:13,
-          fontWeight:500,
-          color:"#374151"
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 13, color: '#8e8e93', display: 'block', marginBottom: 6 }}>Email</label>
+          <input
+            type="email" value={email} onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: '#2c2c2e', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 12, padding: '11px 14px', fontSize: 14,
+              color: '#fff', outline: 'none',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 13, color: '#8e8e93', display: 'block', marginBottom: 6 }}>Пароль</label>
+          <input
+            type="password" value={password} onChange={e => setPassword(e.target.value)}
+            placeholder="••••••••"
+            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: '#2c2c2e', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 12, padding: '11px 14px', fontSize: 14,
+              color: '#fff', outline: 'none',
+            }}
+          />
+        </div>
+
+        <button onClick={handleLogin} disabled={loading} style={{
+          width: '100%', background: '#fff', color: '#000',
+          border: 'none', borderRadius: 12, padding: '12px',
+          fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.6 : 1, marginBottom: 12,
+          fontFamily: 'inherit',
         }}>
-          Email
-        </label>
-
-        <input
-          name="email"
-          placeholder="you@email.com"
-          required
-          style={{
-            width:"100%",
-            marginTop:6,
-            marginBottom:18,
-            padding:"12px 14px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#f9fafb",
-            fontSize:14
-          }}
-        />
-
-
-        <label style={{
-          fontSize:13,
-          fontWeight:500,
-          color:"#374151"
-        }}>
-          Password
-        </label>
-
-        <input
-          type="password"
-          name="password"
-          required
-          placeholder="••••••••"
-          style={{
-            width:"100%",
-            marginTop:6,
-            marginBottom:22,
-            padding:"12px 14px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#f9fafb",
-            fontSize:14
-          }}
-        />
-
-
-        <button
-          type="submit"
-          style={{
-            width:"100%",
-            padding:"12px",
-            borderRadius:10,
-            background:"#0a0a0b",
-            color:"#fff",
-            fontWeight:500,
-            border:"none",
-            cursor:"pointer"
-          }}
-        >
-          Sign in
+          {loading ? 'Входим...' : 'Войти'}
         </button>
 
-
-        <button
-          type="button"
-          style={{
-            width:"100%",
-            padding:"12px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#fff",
-            marginTop:12,
-            fontWeight:500,
-            cursor:"pointer"
-          }}
-        >
-          Continue with Google
+        <button onClick={handleGoogle} style={{
+          width: '100%', background: 'transparent',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 12, padding: '12px',
+          fontSize: 15, fontWeight: 600, cursor: 'pointer',
+          color: '#fff', marginBottom: 24, fontFamily: 'inherit',
+        }}>
+          Google
         </button>
 
-
-        <p style={{
-          textAlign:"center",
-          fontSize:14,
-          marginTop:18,
-          color:"#6b7280"
-        }}>
-          No account?{" "}
-          <Link href="/register" style={{
-            color:"#22c55e",
-            fontWeight:500
-          }}>
-            Create account
-          </Link>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#8e8e93' }}>
+          Нет аккаунта?{' '}
+          <a href="/register" style={{ color: '#30d158', fontWeight: 600 }}>Зарегистрироваться</a>
         </p>
-
-      </form>
-
-    </main>
+      </div>
+    </div>
   )
 }
