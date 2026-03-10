@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTheme } from '@/components/layout/ThemeProvider'
+import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -27,13 +28,7 @@ const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 
 function card(t: ReturnType<typeof th>): React.CSSProperties {
-  return {
-    background: t.surface,
-    borderRadius: 18,
-    padding: '24px 26px',
-    boxShadow: t.shadow,
-    border: `1px solid ${t.border}`,
-  }
+  return { background: t.surface, borderRadius: 18, padding: '24px 26px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
 }
 
 function Dot({ color }: { color: string }) {
@@ -51,21 +46,10 @@ function Section({ title, color, children, t }: any) {
   )
 }
 
-function SeverityBadge({ severity }: { severity: string }) {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    high:   { label: 'Высокий',  color: RED,    bg: `${RED}18`    },
-    medium: { label: 'Средний',  color: ORANGE, bg: `${ORANGE}18` },
-    low:    { label: 'Низкий',   color: GREEN,  bg: `${GREEN}18`  },
-  }
-  const s = map[severity] || map.medium
-  return (
-    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color }}>{s.label}</span>
-  )
-}
-
 export default function AIPage() {
   const { dark } = useTheme()
   const t = th(dark)
+  const { t: tr } = useLocale()
 
   const [coachData,    setCoachData]    = useState<any>(null)
   const [psychData,    setPsychData]    = useState<any>(null)
@@ -75,31 +59,31 @@ export default function AIPage() {
   const [psychError,   setPsychError]   = useState('')
 
   async function runCoach() {
-    setCoachLoading(true)
-    setCoachError('')
+    setCoachLoading(true); setCoachError('')
     try {
       const res  = await fetch('/api/ai/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
       const json = await res.json()
       if (json.success) setCoachData(json.data)
-      else setCoachError(json.error || 'Ошибка AI')
-    } catch {
-      setCoachError('Ошибка сети')
-    }
+      else setCoachError(json.error || 'Error')
+    } catch { setCoachError(tr('ai_net_error')) }
     setCoachLoading(false)
   }
 
   async function runPsych() {
-    setPsychLoading(true)
-    setPsychError('')
+    setPsychLoading(true); setPsychError('')
     try {
       const res  = await fetch('/api/ai/psychology', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
       const json = await res.json()
       if (json.success) setPsychData(json.data)
-      else setPsychError(json.error || 'Ошибка AI')
-    } catch {
-      setPsychError('Ошибка сети')
-    }
+      else setPsychError(json.error || 'Error')
+    } catch { setPsychError(tr('ai_net_error')) }
     setPsychLoading(false)
+  }
+
+  const severityMap: Record<string, { label: string; color: string; bg: string }> = {
+    high:   { label: tr('ai_high'),   color: RED,    bg: `${RED}18`    },
+    medium: { label: tr('ai_medium'), color: ORANGE, bg: `${ORANGE}18` },
+    low:    { label: tr('ai_low'),    color: GREEN,  bg: `${GREEN}18`  },
   }
 
   return (
@@ -108,8 +92,8 @@ export default function AIPage() {
       <div style={{ padding: '32px 40px' }}>
 
         <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>AI Коуч</div>
-          <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>Анализ журнала и психологических паттернов</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
+          <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('ai_subtitle')}</div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -119,60 +103,38 @@ export default function AIPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
-                  <Dot color={BLUE} />AI Анализ журнала
+                  <Dot color={BLUE} />{tr('ai_journal')}
                 </div>
-                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Разбор последних 50 сделок</div>
+                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{tr('ai_journal_sub')}</div>
               </div>
-              <button
-                onClick={runCoach}
-                disabled={coachLoading}
-                style={{
-                  padding: '9px 20px', borderRadius: 12, border: 'none', cursor: coachLoading ? 'default' : 'pointer',
-                  background: coachLoading ? t.surface2 : t.text,
-                  color: coachLoading ? t.sub : t.bg,
-                  fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                  opacity: coachLoading ? 0.7 : 1,
-                }}
-              >
-                {coachLoading ? 'Анализирую...' : 'Запустить анализ'}
+              <button onClick={runCoach} disabled={coachLoading} style={{
+                padding: '9px 20px', borderRadius: 12, border: 'none', cursor: coachLoading ? 'default' : 'pointer',
+                background: coachLoading ? t.surface2 : t.text, color: coachLoading ? t.sub : t.bg,
+                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', opacity: coachLoading ? 0.7 : 1,
+              }}>
+                {coachLoading ? tr('ai_running') : tr('ai_run')}
               </button>
             </div>
 
-            {coachError && (
-              <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
-                {coachError}
-              </div>
-            )}
-
-            {!coachData && !coachLoading && !coachError && (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-                Нажми "Запустить анализ" чтобы получить разбор своего журнала
-              </div>
-            )}
-
-            {coachLoading && (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-                AI анализирует твои сделки...
-              </div>
-            )}
+            {coachError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{coachError}</div>}
+            {!coachData && !coachLoading && !coachError && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_coach')}</div>}
+            {coachLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_loading_coach')}</div>}
 
             {coachData && (
               <div>
-                <Section title="Главная ошибка" color={RED} t={t}>{coachData.main_error}</Section>
+                <Section title={tr('ai_main_error')}  color={RED}    t={t}>{coachData.main_error}</Section>
                 <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                <Section title="Лучший сетап" color={GREEN} t={t}>{coachData.best_setup}</Section>
+                <Section title={tr('ai_best_setup')}  color={GREEN}  t={t}>{coachData.best_setup}</Section>
                 <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                <Section title="Худший сетап" color={ORANGE} t={t}>{coachData.worst_setup}</Section>
+                <Section title={tr('ai_worst_setup')} color={ORANGE} t={t}>{coachData.worst_setup}</Section>
                 <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                <Section title="Дисциплина" color={PURPLE} t={t}>{coachData.discipline}</Section>
+                <Section title={tr('ai_discipline')}  color={PURPLE} t={t}>{coachData.discipline}</Section>
                 <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                <Section title="Риск-менеджмент" color={BLUE} t={t}>{coachData.risk_management}</Section>
+                <Section title={tr('ai_risk')}        color={BLUE}   t={t}>{coachData.risk_management}</Section>
                 {coachData.action_steps?.length > 0 && (
                   <>
                     <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-                      Конкретные шаги
-                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>{tr('ai_steps')}</div>
                     {coachData.action_steps.map((step: string, i: number) => (
                       <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
                         <div style={{ width: 22, height: 22, borderRadius: 7, background: `${BLUE}18`, color: BLUE, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
@@ -190,74 +152,52 @@ export default function AIPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
-                  <Dot color={PURPLE} />AI Психология
+                  <Dot color={PURPLE} />{tr('ai_psych')}
                 </div>
-                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Анализ комментариев и паттернов</div>
+                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{tr('ai_psych_sub')}</div>
               </div>
-              <button
-                onClick={runPsych}
-                disabled={psychLoading}
-                style={{
-                  padding: '9px 20px', borderRadius: 12, border: 'none', cursor: psychLoading ? 'default' : 'pointer',
-                  background: psychLoading ? t.surface2 : t.text,
-                  color: psychLoading ? t.sub : t.bg,
-                  fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                  opacity: psychLoading ? 0.7 : 1,
-                }}
-              >
-                {psychLoading ? 'Анализирую...' : 'Запустить анализ'}
+              <button onClick={runPsych} disabled={psychLoading} style={{
+                padding: '9px 20px', borderRadius: 12, border: 'none', cursor: psychLoading ? 'default' : 'pointer',
+                background: psychLoading ? t.surface2 : t.text, color: psychLoading ? t.sub : t.bg,
+                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', opacity: psychLoading ? 0.7 : 1,
+              }}>
+                {psychLoading ? tr('ai_running') : tr('ai_run')}
               </button>
             </div>
 
-            {psychError && (
-              <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
-                {psychError}
-              </div>
-            )}
-
-            {!psychData && !psychLoading && !psychError && (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-                Нажми "Запустить анализ" чтобы выявить психологические паттерны
-              </div>
-            )}
-
-            {psychLoading && (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-                AI читает твои комментарии...
-              </div>
-            )}
+            {psychError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{psychError}</div>}
+            {!psychData && !psychLoading && !psychError && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_psych')}</div>}
+            {psychLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_loading_psych')}</div>}
 
             {psychData && (
               <div>
-                <Section title="Психологический портрет" color={PURPLE} t={t}>{psychData.summary}</Section>
+                <Section title={tr('ai_portrait')} color={PURPLE} t={t}>{psychData.summary}</Section>
                 <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
                 <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}10`, marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: RED, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
-                    Главный риск
-                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: RED, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>{tr('ai_top_risk')}</div>
                   <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6 }}>{psychData.top_risk}</div>
                 </div>
                 {psychData.patterns?.length > 0 && (
                   <>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>
-                      Выявленные паттерны
-                    </div>
-                    {psychData.patterns.map((p: any, i: number) => (
-                      <div key={i} style={{ border: `1px solid ${t.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.pattern}</div>
-                          <SeverityBadge severity={p.severity} />
+                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>{tr('ai_patterns')}</div>
+                    {psychData.patterns.map((p: any, i: number) => {
+                      const s = severityMap[p.severity] || severityMap.medium
+                      return (
+                        <div key={i} style={{ border: `1px solid ${t.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.pattern}</div>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color }}>{s.label}</span>
+                          </div>
+                          <div style={{ fontSize: 13, color: t.sub, lineHeight: 1.6, marginBottom: 8 }}>{p.evidence}</div>
+                          <div style={{ fontSize: 13, color: GREEN, lineHeight: 1.6 }}>→ {p.action}</div>
                         </div>
-                        <div style={{ fontSize: 13, color: t.sub, lineHeight: 1.6, marginBottom: 8 }}>{p.evidence}</div>
-                        <div style={{ fontSize: 13, color: GREEN, lineHeight: 1.6 }}>→ {p.action}</div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </>
                 )}
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>
