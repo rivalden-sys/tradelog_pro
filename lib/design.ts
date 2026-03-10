@@ -13,7 +13,7 @@ export const colors = {
   gradeB: '#0a84ff',
   gradeC: '#ff9f0a',
   gradeD: '#ff453a',
-} as const
+}
 
 export const lightTheme = {
   bg:       '#f2f2f7',
@@ -26,7 +26,7 @@ export const lightTheme = {
   text3:    '#8e8e93',
   shadow:   '0 2px 16px rgba(0,0,0,0.07)',
   shadow2:  '0 4px 24px rgba(0,0,0,0.10)',
-} as const
+}
 
 export const darkTheme = {
   bg:       '#0a0a0b',
@@ -39,14 +39,14 @@ export const darkTheme = {
   text3:    '#8e8e93',
   shadow:   '0 2px 16px rgba(0,0,0,0.40)',
   shadow2:  '0 4px 24px rgba(0,0,0,0.50)',
-} as const
+}
 
 export type Theme = typeof lightTheme
 
 export const typography = {
   fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif",
   fontMono:   "'SF Mono', 'Fira Code', Consolas, monospace",
-} as const
+}
 
 export const radius = {
   sm:   '8px',
@@ -54,7 +54,7 @@ export const radius = {
   lg:   '18px',
   xl:   '24px',
   full: '9999px',
-} as const
+}
 
 export const spacing = {
   xs:  '4px',
@@ -63,7 +63,7 @@ export const spacing = {
   lg:  '24px',
   xl:  '32px',
   xxl: '48px',
-} as const
+}
 
 // Helper: result → color
 export function resultColor(result: string): string {
