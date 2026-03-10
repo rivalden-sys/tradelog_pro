@@ -11,7 +11,7 @@ export default function LoginPage() {
       display:"flex",
       alignItems:"center",
       justifyContent:"center",
-      background:"#f5f5f7"
+      background:"#1c1c1e"
     }}>
 
       <div style={{
@@ -20,7 +20,7 @@ export default function LoginPage() {
         padding:36,
         borderRadius:18,
         border:"1px solid rgba(0,0,0,0.08)",
-        boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
+        boxShadow:"0 20px 40px rgba(0,0,0,0.25)"
       }}>
 
         {/* header */}
@@ -66,6 +66,7 @@ export default function LoginPage() {
             borderRadius:10,
             border:"1px solid #e5e7eb",
             background:"#f9fafb",
+            color:"#212124",
             fontSize:14
           }}
         />
@@ -92,6 +93,7 @@ export default function LoginPage() {
             borderRadius:10,
             border:"1px solid #e5e7eb",
             background:"#f9fafb",
+            color:"#212124",
             fontSize:14
           }}
         />
@@ -120,7 +122,8 @@ export default function LoginPage() {
           padding:"12px",
           borderRadius:10,
           border:"1px solid #e5e7eb",
-          background:"#fff",
+          background:"#212124",
+          color:"#ffffff",
           marginTop:12,
           fontWeight:500,
           cursor:"pointer"
