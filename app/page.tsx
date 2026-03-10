@@ -4,32 +4,13 @@ import Link from "next/link"
 
 export default function Landing() {
 
-  const container = {
-    maxWidth: 1300,
-    margin: "0 auto",
-    padding: "120px 24px",
-  }
-
-  const grid = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-    gap: 24,
-  }
-
-  const card = {
-    background: "#2a2a2e",
-    borderRadius: 16,
-    padding: 28,
-    border: "1px solid rgba(255,255,255,0.05)",
-  }
-
   return (
 
     <main
       style={{
-        background: "#1c1c1e",
-        minHeight: "100vh",
-        color: "#ffffff"
+        background:"#1c1c1e",
+        minHeight:"100vh",
+        color:"#ffffff"
       }}
     >
 
@@ -37,16 +18,18 @@ export default function Landing() {
 
       <section
         style={{
-          ...container,
-          textAlign: "center"
+          maxWidth:1300,
+          margin:"0 auto",
+          padding:"120px 24px",
+          textAlign:"center"
         }}
       >
 
         <h1
           style={{
-            fontSize: 44,
-            fontWeight: 700,
-            marginBottom: 16
+            fontSize:44,
+            fontWeight:700,
+            marginBottom:16
           }}
         >
           AI Trading Journal
@@ -54,9 +37,9 @@ export default function Landing() {
 
         <p
           style={{
-            color: "#9CA3AF",
-            marginBottom: 32,
-            whiteSpace: "nowrap"
+            color:"#9CA3AF",
+            marginBottom:32,
+            whiteSpace:"nowrap"
           }}
         >
           Track every trade, analyze performance and improve your trading decisions with AI insights.
@@ -64,21 +47,21 @@ export default function Landing() {
 
         <div
           style={{
-            display: "flex",
-            gap: 12,
-            justifyContent: "center"
+            display:"flex",
+            gap:12,
+            justifyContent:"center"
           }}
         >
 
           <Link
             href="/register"
             style={{
-              background: "#000",
-              padding: "12px 22px",
-              borderRadius: 12,
-              textDecoration: "none",
-              color: "#fff",
-              fontWeight: 500
+              background:"#000",
+              padding:"12px 22px",
+              borderRadius:12,
+              textDecoration:"none",
+              color:"#fff",
+              fontWeight:500
             }}
           >
             Start free
@@ -87,11 +70,11 @@ export default function Landing() {
           <Link
             href="/login"
             style={{
-              border: "1px solid rgba(255,255,255,0.15)",
-              padding: "12px 22px",
-              borderRadius: 12,
-              textDecoration: "none",
-              color: "#fff"
+              border:"1px solid rgba(255,255,255,0.15)",
+              padding:"12px 22px",
+              borderRadius:12,
+              textDecoration:"none",
+              color:"#fff"
             }}
           >
             Login
@@ -106,16 +89,17 @@ export default function Landing() {
 
       <section
         style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "0 24px 80px"
+          maxWidth:1300,
+          margin:"0 auto",
+          padding:"0 24px 80px"
         }}
       >
 
         <div
           style={{
-            ...grid,
-            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))"
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+            gap:20
           }}
         >
 
@@ -133,23 +117,29 @@ export default function Landing() {
 
       <section
         style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "0 24px 100px"
+          maxWidth:1300,
+          margin:"0 auto",
+          padding:"0 24px 100px"
         }}
       >
 
         <h2
           style={{
-            fontSize: 28,
-            fontWeight: 700,
-            marginBottom: 32
+            fontSize:28,
+            fontWeight:700,
+            marginBottom:32
           }}
         >
           Everything you need to improve your trading
         </h2>
 
-        <div style={grid}>
+        <div
+          style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",
+            gap:24
+          }}
+        >
 
           <Card
             title="Trade journal"
@@ -171,27 +161,81 @@ export default function Landing() {
       </section>
 
 
-      {/* PRICING */}
+      {/* HOW IT WORKS */}
 
       <section
         style={{
-          maxWidth: 1300,
-          margin: "0 auto",
-          padding: "0 24px 120px"
+          maxWidth:1300,
+          margin:"0 auto",
+          padding:"0 24px 100px"
         }}
       >
 
         <h2
           style={{
-            fontSize: 28,
-            fontWeight: 700,
-            marginBottom: 32
+            fontSize:28,
+            fontWeight:700,
+            marginBottom:32
+          }}
+        >
+          How it works
+        </h2>
+
+        <div
+          style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",
+            gap:24
+          }}
+        >
+
+          <Card
+            title="1. Log trades"
+            text="Record entries, exits and strategy."
+          />
+
+          <Card
+            title="2. Analyze performance"
+            text="View statistics and patterns in your trading."
+          />
+
+          <Card
+            title="3. Improve with AI"
+            text="AI highlights mistakes and improvements."
+          />
+
+        </div>
+
+      </section>
+
+
+      {/* PRICING */}
+
+      <section
+        style={{
+          maxWidth:1300,
+          margin:"0 auto",
+          padding:"0 24px 120px"
+        }}
+      >
+
+        <h2
+          style={{
+            fontSize:28,
+            fontWeight:700,
+            marginBottom:32
           }}
         >
           Pricing
         </h2>
 
-        <div style={grid}>
+        <div
+          style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",
+            gap:24
+          }}
+        >
 
           <Price
             title="Free"
@@ -215,6 +259,7 @@ export default function Landing() {
     </main>
   )
 }
+
 
 
 function Stat({label,value}:{label:string,value:string}) {
@@ -250,6 +295,7 @@ function Stat({label,value}:{label:string,value:string}) {
 }
 
 
+
 function Card({title,text}:{title:string,text:string}) {
 
   return (
@@ -280,6 +326,7 @@ function Card({title,text}:{title:string,text:string}) {
 
   )
 }
+
 
 
 function Price({title,desc,price,button,highlight}:{title:string,desc:string,price:string,button:string,highlight?:boolean}) {
