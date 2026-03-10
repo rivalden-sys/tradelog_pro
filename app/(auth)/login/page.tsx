@@ -11,21 +11,19 @@ export default function LoginPage() {
       display:"flex",
       alignItems:"center",
       justifyContent:"center",
-      background:"#1c1c1e"
+      background:"#f5f5f7"
     }}>
 
-      <form
-        method="post"
-        action="/auth/login"
-        style={{
-          width:420,
-          background:"#ffffff",
-          padding:36,
-          borderRadius:18,
-          border:"1px solid rgba(0,0,0,0.08)",
-          boxShadow:"0 20px 40px rgba(0,0,0,0.25)"
-        }}
-      >
+      <div style={{
+        width:420,
+        background:"#ffffff",
+        padding:36,
+        borderRadius:18,
+        border:"1px solid rgba(0,0,0,0.08)",
+        boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
+      }}>
+
+        {/* header */}
 
         <div style={{textAlign:"center",marginBottom:28}}>
 
@@ -48,6 +46,8 @@ export default function LoginPage() {
         </div>
 
 
+        {/* email */}
+
         <label style={{
           fontSize:13,
           fontWeight:500,
@@ -57,9 +57,7 @@ export default function LoginPage() {
         </label>
 
         <input
-          name="email"
           placeholder="you@email.com"
-          required
           style={{
             width:"100%",
             marginTop:6,
@@ -68,11 +66,12 @@ export default function LoginPage() {
             borderRadius:10,
             border:"1px solid #e5e7eb",
             background:"#f9fafb",
-            color:"#212124",
             fontSize:14
           }}
         />
 
+
+        {/* password */}
 
         <label style={{
           fontSize:13,
@@ -84,8 +83,7 @@ export default function LoginPage() {
 
         <input
           type="password"
-          name="password"
-          required
+          placeholder="••••••••"
           style={{
             width:"100%",
             marginTop:6,
@@ -94,45 +92,44 @@ export default function LoginPage() {
             borderRadius:10,
             border:"1px solid #e5e7eb",
             background:"#f9fafb",
-            color:"#212124",
             fontSize:14
           }}
         />
 
 
-        <button
-          type="submit"
-          style={{
-            width:"100%",
-            padding:"12px",
-            borderRadius:10,
-            background:"#0a0a0b",
-            color:"#fff",
-            fontWeight:500,
-            border:"none",
-            cursor:"pointer"
-          }}
-        >
+        {/* login */}
+
+        <button style={{
+          width:"100%",
+          padding:"12px",
+          borderRadius:10,
+          background:"#0a0a0b",
+          color:"#fff",
+          fontWeight:500,
+          border:"none",
+          cursor:"pointer"
+        }}>
           Sign in
         </button>
 
 
-        <button
-          type="button"
-          style={{
-            width:"100%",
-            padding:"12px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#212124",
-            color:"#ffffff",
-            marginTop:12,
-            fontWeight:500
-          }}
-        >
+        {/* google */}
+
+        <button style={{
+          width:"100%",
+          padding:"12px",
+          borderRadius:10,
+          border:"1px solid #e5e7eb",
+          background:"#fff",
+          marginTop:12,
+          fontWeight:500,
+          cursor:"pointer"
+        }}>
           Continue with Google
         </button>
 
+
+        {/* register */}
 
         <p style={{
           textAlign:"center",
@@ -149,7 +146,7 @@ export default function LoginPage() {
           </Link>
         </p>
 
-      </form>
+      </div>
 
     </main>
   )
