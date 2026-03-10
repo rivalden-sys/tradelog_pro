@@ -34,14 +34,12 @@ export async function POST() {
       .single();
 
     let customerId = userData?.stripe_customer_id;
-
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: { supabase_user_id: user.id },
       });
       customerId = customer.id;
-
       await supabase
         .from('users')
         .update({ stripe_customer_id: customerId })
@@ -58,8 +56,8 @@ export async function POST() {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?canceled=true`,
+      success_url: `${process.env.APP_URL}/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
+      cancel_url: `${process.env.APP_URL}/billing?canceled=true`,
     });
 
     return NextResponse.json({ url: session.url });
