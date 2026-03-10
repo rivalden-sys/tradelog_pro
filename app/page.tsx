@@ -7,6 +7,8 @@ export default function Landing() {
 
   const { theme } = useTheme()
 
+  const background = "#0f0f10"
+
   const container = {
     maxWidth: 1100,
     margin: "0 auto",
@@ -52,24 +54,24 @@ export default function Landing() {
   const buttonPrimary = {
     background: theme.text,
     color: theme.bg,
-    padding: "10px 20px",
+    padding: "10px 22px",
     borderRadius: 12,
     textDecoration: "none",
     fontWeight: 500,
-    display: "inline-block",
-    marginTop: 10
-  }
-
-  const buttonSecondary = {
-    padding: "10px 20px",
-    borderRadius: 12,
-    border: `1px solid ${theme.border}`,
-    textDecoration: "none",
     display: "inline-block"
   }
 
+  const buttonOutline = {
+    border: `1px solid ${theme.border}`,
+    padding: "10px 22px",
+    borderRadius: 12,
+    textDecoration: "none",
+    display: "inline-block",
+    color: theme.text
+  }
+
   return (
-    <main>
+    <main style={{ background: background, minHeight: "100vh" }}>
 
       {/* HERO */}
 
@@ -88,7 +90,7 @@ export default function Landing() {
             Start free
           </Link>
 
-          <Link href="/login" style={buttonSecondary}>
+          <Link href="/login" style={buttonOutline}>
             Login
           </Link>
         </div>
@@ -181,11 +183,10 @@ export default function Landing() {
               style={{
                 background: theme.bg,
                 color: theme.text,
-                padding: "10px 20px",
+                padding: "10px 22px",
                 borderRadius: 12,
                 textDecoration: "none",
-                display: "inline-block",
-                marginTop: 10
+                display: "inline-block"
               }}
             >
               Start Pro
