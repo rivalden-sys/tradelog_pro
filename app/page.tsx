@@ -5,15 +5,16 @@ import Link from "next/link"
 export default function Landing() {
 
   const container = {
-    maxWidth: 1200,
+    maxWidth: 1100,
     margin: "0 auto",
     padding: "80px 24px"
   }
 
   const grid = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-    gap: 24
+    gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+    gap: 24,
+    marginTop: 32
   }
 
   const card = {
@@ -21,21 +22,44 @@ export default function Landing() {
     border: "1px solid rgba(0,0,0,0.06)",
     borderRadius: 16,
     padding: 28,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
+    boxShadow: "0 4px 16px rgba(0,0,0,0.04)"
   }
 
-  const button = {
+  const title = {
+    fontSize: 44,
+    fontWeight: 700,
+    color: "#111",
+    marginBottom: 12
+  }
+
+  const subtitle = {
+    color: "#555",
+    maxWidth: 640,
+    margin: "0 auto 28px"
+  }
+
+  const cardTitle = {
+    fontWeight: 600,
+    color: "#111",
+    marginBottom: 6
+  }
+
+  const cardText = {
+    color: "#555"
+  }
+
+  const buttonPrimary = {
     background: "#111",
     color: "#fff",
-    padding: "12px 24px",
+    padding: "12px 22px",
     borderRadius: 12,
     textDecoration: "none",
     fontWeight: 500
   }
 
   const buttonOutline = {
-    border: "1px solid rgba(0,0,0,0.1)",
-    padding: "12px 24px",
+    border: "1px solid rgba(0,0,0,0.15)",
+    padding: "12px 22px",
     borderRadius: 12,
     textDecoration: "none",
     color: "#111"
@@ -48,26 +72,18 @@ export default function Landing() {
 
       <section style={{...container, textAlign:"center"}}>
 
-        <h1 style={{
-          fontSize:52,
-          marginBottom:12,
-          fontWeight:700
-        }}>
+        <h1 style={title}>
           AI Trading Journal
         </h1>
 
-        <p style={{
-          maxWidth:640,
-          margin:"0 auto 28px",
-          color:"#666"
-        }}>
+        <p style={subtitle}>
           Track every trade, analyze performance and improve your
           trading decisions with AI insights.
         </p>
 
         <div style={{display:"flex",gap:12,justifyContent:"center"}}>
 
-          <Link href="/register" style={button}>
+          <Link href="/register" style={buttonPrimary}>
             Start free
           </Link>
 
@@ -80,7 +96,7 @@ export default function Landing() {
       </section>
 
 
-      {/* STATS PREVIEW */}
+      {/* STATS */}
 
       <section style={container}>
 
@@ -90,23 +106,23 @@ export default function Landing() {
         }}>
 
           <div style={card}>
-            <h3>Trades logged</h3>
-            <h2 style={{marginTop:8}}>12,430+</h2>
+            <div style={cardTitle}>Trades logged</div>
+            <div style={{fontSize:24,fontWeight:600}}>12,430+</div>
           </div>
 
           <div style={card}>
-            <h3>Average win rate</h3>
-            <h2 style={{marginTop:8}}>57%</h2>
+            <div style={cardTitle}>Average win rate</div>
+            <div style={{fontSize:24,fontWeight:600}}>57%</div>
           </div>
 
           <div style={card}>
-            <h3>AI insights generated</h3>
-            <h2 style={{marginTop:8}}>84k</h2>
+            <div style={cardTitle}>AI insights</div>
+            <div style={{fontSize:24,fontWeight:600}}>84k</div>
           </div>
 
           <div style={card}>
-            <h3>Active traders</h3>
-            <h2 style={{marginTop:8}}>2,300+</h2>
+            <div style={cardTitle}>Active traders</div>
+            <div style={{fontSize:24,fontWeight:600}}>2,300+</div>
           </div>
 
         </div>
@@ -118,31 +134,31 @@ export default function Landing() {
 
       <section style={container}>
 
-        <h2 style={{marginBottom:28}}>
+        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
           Everything you need to improve your trading
         </h2>
 
         <div style={grid}>
 
           <div style={card}>
-            <h3>Trade journal</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>Trade journal</div>
+            <div style={cardText}>
               Log entries, exits, strategy and notes for every trade.
-            </p>
+            </div>
           </div>
 
           <div style={card}>
-            <h3>Performance analytics</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>Performance analytics</div>
+            <div style={cardText}>
               Track win rate, risk-reward and performance statistics.
-            </p>
+            </div>
           </div>
 
           <div style={card}>
-            <h3>AI trade analysis</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>AI trade analysis</div>
+            <div style={cardText}>
               Identify emotional trades and strategy mistakes.
-            </p>
+            </div>
           </div>
 
         </div>
@@ -154,31 +170,31 @@ export default function Landing() {
 
       <section style={container}>
 
-        <h2 style={{marginBottom:28}}>
+        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
           How it works
         </h2>
 
         <div style={grid}>
 
           <div style={card}>
-            <h3>1. Log your trades</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>1. Log trades</div>
+            <div style={cardText}>
               Record entries, exits and strategy.
-            </p>
+            </div>
           </div>
 
           <div style={card}>
-            <h3>2. Analyze performance</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>2. Analyze performance</div>
+            <div style={cardText}>
               View statistics and patterns in your trading.
-            </p>
+            </div>
           </div>
 
           <div style={card}>
-            <h3>3. Improve with AI</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>3. Improve with AI</div>
+            <div style={cardText}>
               AI highlights mistakes and improvements.
-            </p>
+            </div>
           </div>
 
         </div>
@@ -190,7 +206,7 @@ export default function Landing() {
 
       <section style={container}>
 
-        <h2 style={{marginBottom:28}}>
+        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
           Pricing
         </h2>
 
@@ -198,12 +214,12 @@ export default function Landing() {
 
           <div style={{...card,textAlign:"center"}}>
 
-            <h3>Free</h3>
-            <p style={{color:"#666"}}>Basic trade journal</p>
+            <div style={cardTitle}>Free</div>
+            <div style={cardText}>Basic trade journal</div>
 
-            <h1 style={{margin:"16px 0"}}>$0</h1>
+            <div style={{fontSize:32,fontWeight:700,margin:"12px 0"}}>$0</div>
 
-            <Link href="/register" style={button}>
+            <Link href="/register" style={buttonPrimary}>
               Start
             </Link>
 
@@ -215,14 +231,15 @@ export default function Landing() {
             border:"2px solid #22c55e"
           }}>
 
-            <h3>Pro</h3>
-            <p style={{color:"#666"}}>
+            <div style={cardTitle}>Pro</div>
+
+            <div style={cardText}>
               AI analysis and advanced statistics
-            </p>
+            </div>
 
-            <h1 style={{margin:"16px 0"}}>$19</h1>
+            <div style={{fontSize:32,fontWeight:700,margin:"12px 0"}}>$19</div>
 
-            <Link href="/register" style={button}>
+            <Link href="/register" style={buttonPrimary}>
               Start Pro
             </Link>
 
