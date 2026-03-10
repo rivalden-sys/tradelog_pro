@@ -6,7 +6,7 @@ import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 
-const PAIRS  = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT']
+const PAIRS  = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT', 'DOGE/USDT', 'AVAX/USDT', 'DOT/USDT']
 const SETUPS = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const GRADES = ['A', 'B', 'C', 'D']
 
@@ -17,8 +17,8 @@ export default function NewTradePage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     date:            new Date().toISOString().split('T')[0],
-    pair:            'BTC/USDT',
-    setup:           SETUPS[0],
+    pair:            '',
+    setup:           '',
     direction:       'Long',
     result:          'Тейк',
     rr:              '',
@@ -96,18 +96,36 @@ export default function NewTradePage() {
             </div>
             <div>
               <label style={labelStyle}>{t('new_trade_pair')}</label>
-              <select value={form.pair} onChange={e => set('pair', e.target.value)} style={inputStyle}>
-                {PAIRS.map(p => <option key={p}>{p}</option>)}
-              </select>
+              <input
+                type="text"
+                list="pairs-list"
+                placeholder="BTC/USDT"
+                value={form.pair}
+                onChange={e => set('pair', e.target.value.toUpperCase())}
+                style={inputStyle}
+                autoComplete="off"
+              />
+              <datalist id="pairs-list">
+                {PAIRS.map(p => <option key={p} value={p} />)}
+              </datalist>
             </div>
           </div>
 
           {/* Setup */}
           <div>
             <label style={labelStyle}>{t('new_trade_setup')}</label>
-            <select value={form.setup} onChange={e => set('setup', e.target.value)} style={inputStyle}>
-              {SETUPS.map(s => <option key={s}>{s}</option>)}
-            </select>
+            <input
+              type="text"
+              list="setups-list"
+              placeholder="CHoCH + BOS + FVG"
+              value={form.setup}
+              onChange={e => set('setup', e.target.value)}
+              style={inputStyle}
+              autoComplete="off"
+            />
+            <datalist id="setups-list">
+              {SETUPS.map(s => <option key={s} value={s} />)}
+            </datalist>
           </div>
 
           {/* Direction */}
