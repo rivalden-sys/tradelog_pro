@@ -12,49 +12,50 @@ export default function Landing() {
   const container = {
     maxWidth: 1100,
     margin: "0 auto",
-    padding: "40px 24px"
+    padding: "60px 24px"
   }
 
   const hero = {
     textAlign: "center" as const,
-    paddingTop: 80,
-    paddingBottom: 40
+    paddingTop: 80
   }
 
-  const grid = {
+  const grid3 = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-    gap: 20,
-    marginTop: 30
+    gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+    gap: 24,
+    marginTop: 40
+  }
+
+  const grid2 = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
+    gap: 24,
+    marginTop: 40
   }
 
   const card = {
     background: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: 16,
-    padding: 24,
+    padding: 28,
     boxShadow: theme.shadow
   }
 
   const cardTitle = {
     color: theme.text,
-    fontWeight: 600
+    fontWeight: 600,
+    marginBottom: 8
   }
 
   const cardText = {
-    color: theme.text2,
-    marginTop: 6
-  }
-
-  const priceCard = {
-    ...card,
-    textAlign: "center" as const
+    color: theme.text2
   }
 
   const buttonPrimary = {
     background: theme.text,
     color: theme.bg,
-    padding: "10px 22px",
+    padding: "12px 24px",
     borderRadius: 12,
     textDecoration: "none",
     fontWeight: 500,
@@ -63,7 +64,7 @@ export default function Landing() {
 
   const buttonOutline = {
     border: `1px solid ${theme.border}`,
-    padding: "10px 22px",
+    padding: "12px 24px",
     borderRadius: 12,
     textDecoration: "none",
     display: "inline-block",
@@ -77,15 +78,16 @@ export default function Landing() {
 
       <section style={{ ...container, ...hero }}>
 
-        <h1 style={{ fontSize: 44, marginBottom: 12 }}>
+        <h1 style={{ fontSize: 48, marginBottom: 16 }}>
           AI Trading Journal
         </h1>
 
-        <p style={{ color: theme.text2, marginBottom: 24 }}>
-          Track every trade, analyze performance and get AI insights to improve your trading decisions.
+        <p style={{ color: theme.text2, maxWidth: 640, margin: "0 auto 28px" }}>
+          Track every trade, analyze your performance and understand your mistakes
+          with AI-powered trading insights.
         </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 14 }}>
           <Link href="/register" style={buttonPrimary}>
             Start free
           </Link>
@@ -98,30 +100,38 @@ export default function Landing() {
       </section>
 
 
+
       {/* FEATURES */}
 
       <section style={container}>
 
-        <div style={grid}>
+        <h2 style={{ textAlign:"center", marginBottom: 20 }}>
+          Everything you need to improve your trading
+        </h2>
+
+        <div style={grid3}>
 
           <div style={card}>
             <h3 style={cardTitle}>Track trades</h3>
             <p style={cardText}>
-              Log entries, exits, strategy and notes for every trade.
+              Log entries, exits, position size, strategy and notes
+              for every trade you take.
             </p>
           </div>
 
           <div style={card}>
             <h3 style={cardTitle}>AI analysis</h3>
             <p style={cardText}>
-              Get automatic insights on mistakes and improvements.
+              AI analyzes your trades and identifies patterns
+              in your decision making.
             </p>
           </div>
 
           <div style={card}>
             <h3 style={cardTitle}>Performance stats</h3>
             <p style={cardText}>
-              Understand win rate, expectancy and trading behavior.
+              Understand win rate, expectancy, risk-reward
+              and long term performance.
             </p>
           </div>
 
@@ -130,19 +140,67 @@ export default function Landing() {
       </section>
 
 
-      {/* AI SECTION */}
 
-      <section style={{ ...container, textAlign:"center" }}>
+      {/* HOW IT WORKS */}
 
-        <h2 style={{ fontSize: 28, marginBottom: 10 }}>
-          Built for serious traders
+      <section style={container}>
+
+        <h2 style={{ textAlign:"center", marginBottom: 20 }}>
+          How it works
         </h2>
 
-        <p style={{ color: theme.text2 }}>
-          TradeLog analyzes your trades and helps you understand patterns in your decision making.
-        </p>
+        <div style={grid3}>
+
+          <div style={card}>
+            <h3 style={cardTitle}>1. Log trades</h3>
+            <p style={cardText}>
+              Record your trades including entry, exit,
+              strategy and notes.
+            </p>
+          </div>
+
+          <div style={card}>
+            <h3 style={cardTitle}>2. Analyze performance</h3>
+            <p style={cardText}>
+              View statistics about your trading behavior
+              and performance over time.
+            </p>
+          </div>
+
+          <div style={card}>
+            <h3 style={cardTitle}>3. Improve with AI</h3>
+            <p style={cardText}>
+              AI highlights mistakes and helps you improve
+              your decision making.
+            </p>
+          </div>
+
+        </div>
 
       </section>
+
+
+
+      {/* AI SECTION */}
+
+      <section style={container}>
+
+        <div style={{ ...card, textAlign:"center" }}>
+
+          <h2 style={{ marginBottom: 12 }}>
+            AI-powered trading insights
+          </h2>
+
+          <p style={{ color: theme.text2, maxWidth: 700, margin:"0 auto" }}>
+            TradeLog analyzes your trades and identifies emotional decisions,
+            poor risk management and strategy mistakes.
+            Use data and AI insights to become a more disciplined trader.
+          </p>
+
+        </div>
+
+      </section>
+
 
 
       {/* PRICING */}
@@ -153,13 +211,15 @@ export default function Landing() {
           Pricing
         </h2>
 
-        <div style={grid}>
+        <div style={grid2}>
 
-          <div style={priceCard}>
+          <div style={{ ...card, textAlign:"center" }}>
             <h3 style={cardTitle}>Free</h3>
-            <p style={cardText}>Basic trade journal</p>
+            <p style={cardText}>Basic trading journal</p>
 
-            <h2 style={{ margin:"12px 0", color: theme.text }}>$0</h2>
+            <h2 style={{ margin:"16px 0", color: theme.text }}>
+              $0
+            </h2>
 
             <Link href="/register" style={buttonPrimary}>
               Start
@@ -167,23 +227,27 @@ export default function Landing() {
           </div>
 
           <div style={{
-            ...priceCard,
+            ...card,
+            textAlign:"center",
             background: theme.text,
             color: theme.bg
           }}>
             <h3>Pro</h3>
+
             <p style={{ opacity:.85 }}>
-              AI analysis and advanced stats
+              AI analysis and advanced statistics
             </p>
 
-            <h2 style={{ margin:"12px 0" }}>$19</h2>
+            <h2 style={{ margin:"16px 0" }}>
+              $19
+            </h2>
 
             <Link
               href="/register"
               style={{
                 background: theme.bg,
                 color: theme.text,
-                padding: "10px 22px",
+                padding: "12px 24px",
                 borderRadius: 12,
                 textDecoration: "none",
                 display: "inline-block"
@@ -198,16 +262,17 @@ export default function Landing() {
       </section>
 
 
-      {/* CTA */}
 
-      <section style={{ ...container, textAlign:"center", paddingBottom:60 }}>
+      {/* FINAL CTA */}
+
+      <section style={{ ...container, textAlign:"center", paddingBottom:80 }}>
 
         <h2 style={{ marginBottom: 16 }}>
-          Improve your trading discipline
+          Start improving your trading today
         </h2>
 
         <Link href="/register" style={buttonPrimary}>
-          Start your journal
+          Create your trading journal
         </Link>
 
       </section>
