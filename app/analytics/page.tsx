@@ -45,10 +45,12 @@ export default function AnalyticsPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase.from('trades')
-     .select('*')
-        .eq('user_id', user.id).order('date', { ascending: true })
-      setTrades(data || [])
+      const { data } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: true })
+      setTrades((data as Trade[]) || [])
       setLoading(false)
     }
     load()
@@ -124,9 +126,9 @@ export default function AnalyticsPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
           {[
-            { label: tr('analytics_discipline'), value: `${disciplineScore}%`,              color: disciplineScore >= 70 ? GREEN : RED },
-            { label: tr('analytics_long_wr'),    value: `${longWR}%`,                       color: longWR  >= 50 ? GREEN : RED },
-            { label: tr('analytics_short_wr'),   value: `${shortWR}%`,                      color: shortWR >= 50 ? GREEN : RED },
+            { label: tr('analytics_discipline'), value: `${disciplineScore}%`,                color: disciplineScore >= 70 ? GREEN : RED },
+            { label: tr('analytics_long_wr'),    value: `${longWR}%`,                         color: longWR  >= 50 ? GREEN : RED },
+            { label: tr('analytics_short_wr'),   value: `${shortWR}%`,                        color: shortWR >= 50 ? GREEN : RED },
             { label: tr('analytics_ls_ratio'),   value: `${longs.length} / ${shorts.length}`, color: t.text },
           ].map(sc => (
             <div key={sc.label} style={{ ...card(t), padding: '18px 20px' }}>
