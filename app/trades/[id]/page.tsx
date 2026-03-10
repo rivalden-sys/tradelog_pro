@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useTheme } from '@/components/layout/ThemeProvider'
-import { Header } from '@/components/layout/Header'
+import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
 
 function resultColor(r: string) {
@@ -23,8 +23,8 @@ export default function TradeDetailPage() {
   const { theme: c } = useTheme()
   const router = useRouter()
   const params = useParams()
-  const [trade, setTrade]     = useState<Trade | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [trade, setTrade]       = useState<Trade | null>(null)
+  const [loading, setLoading]   = useState(true)
   const [aiResult, setAiResult] = useState<any>(null)
   const [aiLoading, setAiLoading] = useState(false)
 
@@ -33,7 +33,8 @@ export default function TradeDetailPage() {
   }, [])
 
   const fetchTrade = async () => {
-    const res  = await fetch(`/api/trades/${params.id}`)
+    const id = Array.isArray(params.id) ? params.id[0] : params.id
+    const res  = await fetch(`/api/trades/${id}`)
     const json = await res.json()
     if (json.success) setTrade(json.data)
     setLoading(false)
@@ -54,21 +55,21 @@ export default function TradeDetailPage() {
 
   if (loading) return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
-      <Header />
+      <NavBar />
       <div style={{ textAlign: 'center', padding: '64px', color: c.text3 }}>Загрузка...</div>
     </div>
   )
 
   if (!trade) return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
-      <Header />
+      <NavBar />
       <div style={{ textAlign: 'center', padding: '64px', color: c.text3 }}>Сделка не найдена</div>
     </div>
   )
 
   return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
-      <Header />
+      <NavBar />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 24px' }}>
         <button onClick={() => router.back()} style={{
           background: 'transparent', border: 'none', color: c.text3,
@@ -76,7 +77,6 @@ export default function TradeDetailPage() {
         }}>← Назад к журналу</button>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-          {/* Trade info */}
           <div style={{
             background: c.surface, borderRadius: 18, padding: '22px',
             border: `1px solid ${c.border}`, boxShadow: c.shadow,
@@ -110,7 +110,6 @@ export default function TradeDetailPage() {
             </div>
           </div>
 
-          {/* Comment */}
           <div style={{
             background: c.surface, borderRadius: 18, padding: '22px',
             border: `1px solid ${c.border}`, boxShadow: c.shadow,
@@ -130,7 +129,6 @@ export default function TradeDetailPage() {
           </div>
         </div>
 
-        {/* AI Analysis */}
         <div style={{
           background: c.surface, borderRadius: 18, padding: '22px',
           border: `1px solid ${c.border}`, boxShadow: c.shadow,

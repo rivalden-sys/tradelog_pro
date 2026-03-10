@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'TradeLog Pro — AI Trading Journal',

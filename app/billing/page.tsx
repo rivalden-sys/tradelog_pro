@@ -1,11 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useTheme } from '@/components/layout/ThemeProvider';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import NavBar from '@/components/layout/NavBar';
 
-export default function BillingPage() {
+const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+function th(dark: boolean) {
+  return {
+    bg:       dark ? '#0a0a0b' : '#f2f2f7',
+    surface:  dark ? '#1c1c1e' : '#ffffff',
+    surface2: dark ? '#2c2c2e' : '#f2f2f7',
+    border:   dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    text:     dark ? '#f5f5f7' : '#1c1c1e',
+    sub:      '#8e8e93',
+    shadow:   dark
+      ? '0 1px 3px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06)'
+      : '0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.05)',
+  }
+}
+
+const GREEN  = '#30d158'
+const PURPLE = '#5e4ce6'
+
+function BillingContent() {
+  const { dark } = useTheme()
+  const t = th(dark)
   const [plan, setPlan] = useState<'free' | 'pro'>('free');
   const [status, setStatus] = useState<string>('');
   const [periodEnd, setPeriodEnd] = useState<string>('');
@@ -29,13 +51,11 @@ export default function BillingPage() {
   async function loadUserPlan() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push('/login'); return; }
-
     const { data } = await supabase
       .from('users')
       .select('plan, subscription_status, current_period_end')
       .eq('id', user.id)
       .single();
-
     if (data) {
       setPlan(data.plan || 'free');
       if (data.current_period_end) {
@@ -50,9 +70,7 @@ export default function BillingPage() {
       const res = await fetch('/api/stripe/checkout', { method: 'POST' });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
   }
 
@@ -62,169 +80,123 @@ export default function BillingPage() {
       const res = await fetch('/api/stripe/portal', { method: 'POST' });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push('/login');
+  const cardStyle: React.CSSProperties = {
+    background: t.surface, borderRadius: 18, padding: '28px',
+    boxShadow: t.shadow, border: '1.5px solid transparent',
+    position: 'relative', transition: 'box-shadow 0.2s',
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Navbar */}
-      <nav className="border-b border-gray-800 bg-gray-900 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <span className="text-lg font-bold text-purple-400">TradeLog Pro</span>
-            <div className="flex items-center gap-1">
-              {[
-                { href: '/dashboard', label: 'Dashboard' },
-                { href: '/trades', label: 'Trades' },
-                { href: '/ai', label: 'AI Coach' },
-                { href: '/billing', label: 'Billing' },
-              ].map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-4 py-2 rounded-lg text-sm transition ${
-                    href === '/billing'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-400 hover:text-white transition"
-          >
-            Выйти
-          </button>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
+      <NavBar />
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px 32px' }}>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-bold mb-2">Billing</h1>
-        <p className="text-gray-400 mb-8">Управление подпиской</p>
+        <div style={{ fontSize: 28, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', marginBottom: 4 }}>Billing</div>
+        <div style={{ fontSize: 14, color: t.sub, marginBottom: 32 }}>Управление подпиской</div>
 
         {status === 'success' && (
-          <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-6">
-            ✅ Подписка активирована! Добро пожаловать в Pro.
+          <div style={{ padding: '12px 16px', borderRadius: 10, background: '#f0faf3', border: '1px solid #c6efd3', color: '#1a7f37', fontSize: 13, marginBottom: 24 }}>
+            ✓ Подписка активирована — добро пожаловать в Pro
           </div>
         )}
         {status === 'canceled' && (
-          <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4 mb-6">
-            ⚠️ Оплата отменена. Ты остаёшься на Free плане.
+          <div style={{ padding: '12px 16px', borderRadius: 10, background: '#fffbf0', border: '1px solid #fde8a0', color: '#9a6700', fontSize: 13, marginBottom: 24 }}>
+            ⚠ Оплата отменена. Ты остаёшься на Free плане
           </div>
         )}
 
-        {/* Текущий план */}
-        <div className="bg-gray-900 rounded-xl p-6 mb-8 border border-gray-800">
-          <h2 className="text-lg font-semibold mb-4">Текущий план</h2>
-          <div className="flex items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-              plan === 'pro'
-                ? 'bg-purple-500/20 text-purple-400 border border-purple-500'
-                : 'bg-gray-700 text-gray-300'
-            }`}>
-              {plan === 'pro' ? '⚡ Pro' : '🆓 Free'}
+        {/* Current plan */}
+        <div style={{ background: t.surface, borderRadius: 16, padding: '20px 24px', marginBottom: 32, boxShadow: t.shadow, border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 500, color: t.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Текущий план</div>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 500,
+              background: plan === 'pro' ? '#f0eeff' : t.surface2,
+              color: plan === 'pro' ? PURPLE : t.sub,
+            }}>
+              {plan === 'pro' ? '⚡ Pro' : 'Free'}
             </span>
-            {periodEnd && plan === 'pro' && (
-              <span className="text-gray-400 text-sm">Следующее списание: {periodEnd}</span>
-            )}
           </div>
+          {periodEnd && plan === 'pro' && (
+            <span style={{ fontSize: 12, color: t.sub }}>Следующее списание: {periodEnd}</span>
+          )}
         </div>
 
-        {/* Планы */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Plans grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
           {/* Free */}
-          <div className={`rounded-xl p-6 border ${
-            plan === 'free'
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-gray-800 bg-gray-900'
-          }`}>
-            <div className="flex justify-between items-start mb-4">
+          <div style={{ ...cardStyle, borderColor: plan === 'free' ? t.border : 'transparent' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
-                <h3 className="text-xl font-bold">Free</h3>
-                <p className="text-gray-400 text-sm">Для начала</p>
+                <div style={{ fontSize: 17, fontWeight: 600, color: t.text, marginBottom: 3 }}>Free</div>
+                <div style={{ fontSize: 12, color: t.sub }}>Для начала работы</div>
               </div>
-              <div className="text-2xl font-bold">$0</div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 26, fontWeight: 700, color: t.text, letterSpacing: '-0.02em', lineHeight: 1 }}>$0</div>
+                <span style={{ fontSize: 11, color: t.sub }}>навсегда</span>
+              </div>
             </div>
-            <ul className="space-y-2 mb-6">
-              {['До 20 сделок', 'Базовая аналитика', 'Дашборд'].map(f => (
-                <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                  <span className="text-green-400">✓</span> {f}
-                </li>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 24 }}>
+              {[
+                { label: 'До 20 сделок',          yes: true  },
+                { label: 'Базовая аналитика',      yes: true  },
+                { label: 'Дашборд',                yes: true  },
+                { label: 'AI анализ',              yes: false },
+                { label: 'Расширенная аналитика',  yes: false },
+              ].map(f => (
+                <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13 }}>
+                  <span style={{ width: 15, height: 15, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, flexShrink: 0, background: f.yes ? '#e8f8ed' : t.surface2, color: f.yes ? '#1a7f37' : t.sub }}>
+                    {f.yes ? '✓' : '×'}
+                  </span>
+                  <span style={{ color: f.yes ? t.text : t.sub }}>{f.label}</span>
+                </div>
               ))}
-              {['AI анализ', 'Расширенная аналитика'].map(f => (
-                <li key={f} className="flex items-center gap-2 text-gray-500 text-sm">
-                  <span className="text-gray-600">✗</span> {f}
-                </li>
-              ))}
-            </ul>
-            {plan === 'free' && (
-              <div className="text-center text-sm text-blue-400 font-medium py-2">
-                ✓ Текущий план
-              </div>
-            )}
+            </div>
+            <div style={{ height: 1, background: t.border, marginBottom: 20 }} />
+            {plan === 'free'
+              ? <div style={{ textAlign: 'center', fontSize: 12, color: t.sub, padding: '11px 0' }}>— текущий план —</div>
+              : <div style={{ height: 44 }} />
+            }
           </div>
 
           {/* Pro */}
-          <div className={`rounded-xl p-6 border relative ${
-            plan === 'pro'
-              ? 'border-purple-500 bg-purple-500/10'
-              : 'border-purple-800 bg-gray-900'
-          }`}>
+          <div style={{ ...cardStyle, borderColor: plan === 'pro' ? '#c4b8ff' : 'transparent' }}>
             {plan !== 'pro' && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                РЕКОМЕНДУЕМ
+              <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: PURPLE, color: '#fff', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '3px 12px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                Рекомендуем
               </div>
             )}
-            <div className="flex justify-between items-start mb-4">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
-                <h3 className="text-xl font-bold">Pro ⚡</h3>
-                <p className="text-gray-400 text-sm">Для серьёзных трейдеров</p>
+                <div style={{ fontSize: 17, fontWeight: 600, color: t.text, marginBottom: 3 }}>Pro ⚡</div>
+                <div style={{ fontSize: 12, color: t.sub }}>Для серьёзных трейдеров</div>
               </div>
-              <div>
-                <span className="text-2xl font-bold">$19</span>
-                <span className="text-gray-400 text-sm">/mo</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 26, fontWeight: 700, color: t.text, letterSpacing: '-0.02em', lineHeight: 1 }}>$19</div>
+                <span style={{ fontSize: 11, color: t.sub }}>в месяц</span>
               </div>
             </div>
-            <ul className="space-y-2 mb-6">
-              {[
-                'Безлимитные сделки',
-                'Расширенная аналитика',
-                'AI Coach',
-                'AI анализ сделок',
-                'Приоритетная поддержка',
-              ].map(f => (
-                <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                  <span className="text-green-400">✓</span> {f}
-                </li>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 24 }}>
+              {['Безлимитные сделки', 'Расширенная аналитика', 'AI Coach', 'AI анализ сделок', 'Приоритетная поддержка'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13 }}>
+                  <span style={{ width: 15, height: 15, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, flexShrink: 0, background: '#e8f8ed', color: '#1a7f37' }}>✓</span>
+                  <span style={{ color: t.text }}>{f}</span>
+                </div>
               ))}
-            </ul>
+            </div>
+            <div style={{ height: 1, background: t.border, marginBottom: 20 }} />
             {plan === 'pro' ? (
-              <button
-                onClick={handlePortal}
-                disabled={loading}
-                className="w-full py-2 rounded-lg border border-purple-500 text-purple-400 hover:bg-purple-500/20 transition text-sm font-medium"
-              >
+              <button onClick={handlePortal} disabled={loading} style={{ width: '100%', padding: 11, borderRadius: 10, background: 'transparent', border: `1.5px solid ${t.border}`, color: PURPLE, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: FONT }}>
                 {loading ? 'Загрузка...' : 'Управлять подпиской'}
               </button>
             ) : (
-              <button
-                onClick={handleUpgrade}
-                disabled={loading}
-                className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition font-medium"
-              >
+              <button onClick={handleUpgrade} disabled={loading} style={{ width: '100%', padding: 11, borderRadius: 10, border: 'none', background: PURPLE, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: FONT }}>
                 {loading ? 'Загрузка...' : 'Upgrade to Pro →'}
               </button>
             )}
@@ -232,5 +204,13 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense>
+      <BillingContent />
+    </Suspense>
   );
 }

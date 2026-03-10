@@ -1,16 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/components/layout/ThemeProvider'
+import NavBar from '@/components/layout/NavBar'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
-
-function useDark() {
-  const [dark, setDark] = useState(false)
-  if (typeof window !== 'undefined') {
-    // sync with document class
-  }
-  return typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-}
 
 function th(dark: boolean) {
   return {
@@ -70,9 +64,7 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 export default function AIPage() {
-  const [dark] = useState(() =>
-    typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false
-  )
+  const { dark } = useTheme()
   const t = th(dark)
 
   const [coachData,    setCoachData]    = useState<any>(null)
@@ -111,165 +103,162 @@ export default function AIPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, padding: '32px 40px', transition: 'background 0.3s' }}>
+    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
+      <NavBar />
+      <div style={{ padding: '32px 40px' }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>AI Коуч</div>
-        <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>Анализ журнала и психологических паттернов</div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-
-        {/* ── AI Coach ─────────────────────────────────────────────────────── */}
-        <div style={card(t)}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
-                <Dot color={BLUE} />AI Анализ журнала
-              </div>
-              <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Разбор последних 50 сделок</div>
-            </div>
-            <button
-              onClick={runCoach}
-              disabled={coachLoading}
-              style={{
-                padding: '9px 20px', borderRadius: 12, border: 'none', cursor: coachLoading ? 'default' : 'pointer',
-                background: coachLoading ? t.surface2 : '#1c1c1e',
-                color: coachLoading ? t.sub : '#fff',
-                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                opacity: coachLoading ? 0.7 : 1,
-              }}
-            >
-              {coachLoading ? 'Анализирую...' : 'Запустить анализ'}
-            </button>
-          </div>
-
-          {coachError && (
-            <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
-              {coachError}
-            </div>
-          )}
-
-          {!coachData && !coachLoading && !coachError && (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-              Нажми "Запустить анализ" чтобы получить разбор своего журнала
-            </div>
-          )}
-
-          {coachLoading && (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-              AI анализирует твои сделки...
-            </div>
-          )}
-
-          {coachData && (
-            <div>
-              <Section title="Главная ошибка" color={RED} t={t}>{coachData.main_error}</Section>
-              <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-              <Section title="Лучший сетап" color={GREEN} t={t}>{coachData.best_setup}</Section>
-              <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-              <Section title="Худший сетап" color={ORANGE} t={t}>{coachData.worst_setup}</Section>
-              <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-              <Section title="Дисциплина" color={PURPLE} t={t}>{coachData.discipline}</Section>
-              <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-              <Section title="Риск-менеджмент" color={BLUE} t={t}>{coachData.risk_management}</Section>
-              {coachData.action_steps?.length > 0 && (
-                <>
-                  <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-                  <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-                    Конкретные шаги
-                  </div>
-                  {coachData.action_steps.map((step: string, i: number) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 7, background: `${BLUE}18`, color: BLUE, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
-                      <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6 }}>{step}</div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>AI Коуч</div>
+          <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>Анализ журнала и психологических паттернов</div>
         </div>
 
-        {/* ── Psychology ───────────────────────────────────────────────────── */}
-        <div style={card(t)}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
-                <Dot color={PURPLE} />AI Психология
-              </div>
-              <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Анализ комментариев и паттернов</div>
-            </div>
-            <button
-              onClick={runPsych}
-              disabled={psychLoading}
-              style={{
-                padding: '9px 20px', borderRadius: 12, border: 'none', cursor: psychLoading ? 'default' : 'pointer',
-                background: psychLoading ? t.surface2 : '#1c1c1e',
-                color: psychLoading ? t.sub : '#fff',
-                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                opacity: psychLoading ? 0.7 : 1,
-              }}
-            >
-              {psychLoading ? 'Анализирую...' : 'Запустить анализ'}
-            </button>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-          {psychError && (
-            <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
-              {psychError}
-            </div>
-          )}
-
-          {!psychData && !psychLoading && !psychError && (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-              Нажми "Запустить анализ" чтобы выявить психологические паттерны
-            </div>
-          )}
-
-          {psychLoading && (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
-              AI читает твои комментарии...
-            </div>
-          )}
-
-          {psychData && (
-            <div>
-              {/* Summary */}
-              <Section title="Психологический портрет" color={PURPLE} t={t}>{psychData.summary}</Section>
-              <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
-
-              {/* Top risk */}
-              <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}10`, marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: RED, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
-                  Главный риск
+          {/* AI Coach */}
+          <div style={card(t)}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+                  <Dot color={BLUE} />AI Анализ журнала
                 </div>
-                <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6 }}>{psychData.top_risk}</div>
+                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Разбор последних 50 сделок</div>
               </div>
-
-              {/* Patterns */}
-              {psychData.patterns?.length > 0 && (
-                <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>
-                    Выявленные паттерны
-                  </div>
-                  {psychData.patterns.map((p: any, i: number) => (
-                    <div key={i} style={{ border: `1px solid ${t.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.pattern}</div>
-                        <SeverityBadge severity={p.severity} />
-                      </div>
-                      <div style={{ fontSize: 13, color: t.sub, lineHeight: 1.6, marginBottom: 8 }}>{p.evidence}</div>
-                      <div style={{ fontSize: 13, color: GREEN, lineHeight: 1.6 }}>→ {p.action}</div>
-                    </div>
-                  ))}
-                </>
-              )}
+              <button
+                onClick={runCoach}
+                disabled={coachLoading}
+                style={{
+                  padding: '9px 20px', borderRadius: 12, border: 'none', cursor: coachLoading ? 'default' : 'pointer',
+                  background: coachLoading ? t.surface2 : t.text,
+                  color: coachLoading ? t.sub : t.bg,
+                  fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
+                  opacity: coachLoading ? 0.7 : 1,
+                }}
+              >
+                {coachLoading ? 'Анализирую...' : 'Запустить анализ'}
+              </button>
             </div>
-          )}
-        </div>
 
+            {coachError && (
+              <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
+                {coachError}
+              </div>
+            )}
+
+            {!coachData && !coachLoading && !coachError && (
+              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
+                Нажми "Запустить анализ" чтобы получить разбор своего журнала
+              </div>
+            )}
+
+            {coachLoading && (
+              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
+                AI анализирует твои сделки...
+              </div>
+            )}
+
+            {coachData && (
+              <div>
+                <Section title="Главная ошибка" color={RED} t={t}>{coachData.main_error}</Section>
+                <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                <Section title="Лучший сетап" color={GREEN} t={t}>{coachData.best_setup}</Section>
+                <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                <Section title="Худший сетап" color={ORANGE} t={t}>{coachData.worst_setup}</Section>
+                <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                <Section title="Дисциплина" color={PURPLE} t={t}>{coachData.discipline}</Section>
+                <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                <Section title="Риск-менеджмент" color={BLUE} t={t}>{coachData.risk_management}</Section>
+                {coachData.action_steps?.length > 0 && (
+                  <>
+                    <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
+                      Конкретные шаги
+                    </div>
+                    {coachData.action_steps.map((step: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
+                        <div style={{ width: 22, height: 22, borderRadius: 7, background: `${BLUE}18`, color: BLUE, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+                        <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6 }}>{step}</div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Psychology */}
+          <div style={card(t)}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+                  <Dot color={PURPLE} />AI Психология
+                </div>
+                <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>Анализ комментариев и паттернов</div>
+              </div>
+              <button
+                onClick={runPsych}
+                disabled={psychLoading}
+                style={{
+                  padding: '9px 20px', borderRadius: 12, border: 'none', cursor: psychLoading ? 'default' : 'pointer',
+                  background: psychLoading ? t.surface2 : t.text,
+                  color: psychLoading ? t.sub : t.bg,
+                  fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
+                  opacity: psychLoading ? 0.7 : 1,
+                }}
+              >
+                {psychLoading ? 'Анализирую...' : 'Запустить анализ'}
+              </button>
+            </div>
+
+            {psychError && (
+              <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>
+                {psychError}
+              </div>
+            )}
+
+            {!psychData && !psychLoading && !psychError && (
+              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
+                Нажми "Запустить анализ" чтобы выявить психологические паттерны
+              </div>
+            )}
+
+            {psychLoading && (
+              <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>
+                AI читает твои комментарии...
+              </div>
+            )}
+
+            {psychData && (
+              <div>
+                <Section title="Психологический портрет" color={PURPLE} t={t}>{psychData.summary}</Section>
+                <div style={{ height: 1, background: t.border, margin: '12px 0' }} />
+                <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}10`, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: RED, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    Главный риск
+                  </div>
+                  <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6 }}>{psychData.top_risk}</div>
+                </div>
+                {psychData.patterns?.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>
+                      Выявленные паттерны
+                    </div>
+                    {psychData.patterns.map((p: any, i: number) => (
+                      <div key={i} style={{ border: `1px solid ${t.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.pattern}</div>
+                          <SeverityBadge severity={p.severity} />
+                        </div>
+                        <div style={{ fontSize: 13, color: t.sub, lineHeight: 1.6, marginBottom: 8 }}>{p.evidence}</div>
+                        <div style={{ fontSize: 13, color: GREEN, lineHeight: 1.6 }}>→ {p.action}</div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
     </div>
   )

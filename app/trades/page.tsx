@@ -3,17 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/layout/ThemeProvider'
-import { Header } from '@/components/layout/Header'
+import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
-
-const SETUPS = [
-  'CHoCH + BOS + FVG',
-  'Breaker/Mitigation + iFVG',
-  'Order Block + FVG',
-  'Liquidity Sweep + Reversal',
-  'NWOG / NDOG',
-  'Premium/Discount + POI',
-]
 
 function resultColor(r: string) {
   if (r === 'Тейк') return '#30d158'
@@ -31,10 +22,10 @@ function gradeColor(g: string) {
 export default function TradesPage() {
   const { theme: c } = useTheme()
   const router = useRouter()
-  const [trades, setTrades]           = useState<Trade[]>([])
-  const [loading, setLoading]         = useState(true)
+  const [trades, setTrades]             = useState<Trade[]>([])
+  const [loading, setLoading]           = useState(true)
   const [filterResult, setFilterResult] = useState('')
-  const [filterPair, setFilterPair]   = useState('')
+  const [filterPair, setFilterPair]     = useState('')
 
   useEffect(() => {
     fetchTrades()
@@ -45,7 +36,6 @@ export default function TradesPage() {
     const params = new URLSearchParams()
     if (filterResult) params.set('result', filterResult)
     if (filterPair)   params.set('pair', filterPair)
-
     const res = await fetch(`/api/trades?${params}`)
     const json = await res.json()
     if (json.success) setTrades(json.data)
@@ -60,10 +50,9 @@ export default function TradesPage() {
 
   return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
-      <Header />
+      <NavBar />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: c.text, margin: 0 }}>Журнал сделок</h1>
           <button
@@ -76,7 +65,6 @@ export default function TradesPage() {
           >+ Добавить сделку</button>
         </div>
 
-        {/* Filters */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {['', 'Тейк', 'Стоп', 'БУ'].map(f => (
             <button key={f} onClick={() => setFilterResult(f)} style={{
@@ -103,7 +91,6 @@ export default function TradesPage() {
           </select>
         </div>
 
-        {/* Table */}
         <div style={{
           background: c.surface, borderRadius: 18, border: `1px solid ${c.border}`,
           boxShadow: c.shadow, overflow: 'hidden',
