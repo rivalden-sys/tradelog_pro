@@ -34,23 +34,34 @@ export default function Landing() {
     boxShadow: theme.shadow
   }
 
+  const cardTitle = {
+    color: theme.text,
+    fontWeight: 600
+  }
+
   const cardText = {
     color: theme.text2,
     marginTop: 6
   }
 
+  const priceCard = {
+    ...card,
+    textAlign: "center" as const
+  }
+
   const buttonPrimary = {
     background: theme.text,
     color: theme.bg,
-    padding: "10px 18px",
+    padding: "10px 20px",
     borderRadius: 12,
     textDecoration: "none",
     fontWeight: 500,
-    display: "inline-block"
+    display: "inline-block",
+    marginTop: 10
   }
 
   const buttonSecondary = {
-    padding: "10px 18px",
+    padding: "10px 20px",
     borderRadius: 12,
     border: `1px solid ${theme.border}`,
     textDecoration: "none",
@@ -92,21 +103,21 @@ export default function Landing() {
         <div style={grid}>
 
           <div style={card}>
-            <h3>Track trades</h3>
+            <h3 style={cardTitle}>Track trades</h3>
             <p style={cardText}>
               Log entries, exits, strategy and notes for every trade.
             </p>
           </div>
 
           <div style={card}>
-            <h3>AI analysis</h3>
+            <h3 style={cardTitle}>AI analysis</h3>
             <p style={cardText}>
               Get automatic insights on mistakes and improvements.
             </p>
           </div>
 
           <div style={card}>
-            <h3>Performance stats</h3>
+            <h3 style={cardTitle}>Performance stats</h3>
             <p style={cardText}>
               Understand win rate, expectancy and trading behavior.
             </p>
@@ -142,10 +153,11 @@ export default function Landing() {
 
         <div style={grid}>
 
-          <div style={card}>
-            <h3>Free</h3>
+          <div style={priceCard}>
+            <h3 style={cardTitle}>Free</h3>
             <p style={cardText}>Basic trade journal</p>
-            <h2 style={{ margin:"12px 0" }}>$0</h2>
+
+            <h2 style={{ margin:"12px 0", color: theme.text }}>$0</h2>
 
             <Link href="/register" style={buttonPrimary}>
               Start
@@ -153,7 +165,7 @@ export default function Landing() {
           </div>
 
           <div style={{
-            ...card,
+            ...priceCard,
             background: theme.text,
             color: theme.bg
           }}>
@@ -167,9 +179,13 @@ export default function Landing() {
             <Link
               href="/register"
               style={{
-                ...buttonPrimary,
                 background: theme.bg,
-                color: theme.text
+                color: theme.text,
+                padding: "10px 20px",
+                borderRadius: 12,
+                textDecoration: "none",
+                display: "inline-block",
+                marginTop: 10
               }}
             >
               Start Pro
