@@ -6,78 +6,89 @@ export default function LoginPage() {
 
   return (
 
-    <main style={{
-      minHeight:"100vh",
-      display:"flex",
-      alignItems:"center",
-      justifyContent:"center",
-      background:"#f5f5f7"
-    }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#212124"
+      }}
+    >
 
-      <div style={{
-        width:420,
-        background:"#ffffff",
-        padding:36,
-        borderRadius:18,
-        border:"1px solid rgba(0,0,0,0.08)",
-        boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
-      }}>
+      <div
+        style={{
+          width: 420,
+          padding: 36,
+          borderRadius: 18,
+          background: "#2a2a2e",
+          border: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.6)"
+        }}
+      >
 
         {/* header */}
 
-        <div style={{textAlign:"center",marginBottom:28}}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
 
-          <h1 style={{
-            fontSize:26,
-            fontWeight:700,
-            color:"#111"
-          }}>
-            TradeLog <span style={{color:"#22c55e"}}>Pro</span>
+          <h1
+            style={{
+              fontSize: 26,
+              fontWeight: 700,
+              color: "#ffffff"
+            }}
+          >
+            TradeLog <span style={{ color: "#22c55e" }}>Pro</span>
           </h1>
 
-          <p style={{
-            color:"#6b7280",
-            fontSize:14,
-            marginTop:6
-          }}>
+          <p
+            style={{
+              color: "#9ca3af",
+              fontSize: 14,
+              marginTop: 6
+            }}
+          >
             Sign in to your account
           </p>
 
         </div>
 
+        {/* EMAIL */}
 
-        {/* email */}
-
-        <label style={{
-          fontSize:13,
-          fontWeight:500,
-          color:"#374151"
-        }}>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: "#d1d5db"
+          }}
+        >
           Email
         </label>
 
         <input
           placeholder="you@email.com"
           style={{
-            width:"100%",
-            marginTop:6,
-            marginBottom:18,
-            padding:"12px 14px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#f9fafb",
-            fontSize:14
+            width: "100%",
+            marginTop: 6,
+            marginBottom: 18,
+            padding: "12px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#ffffff",
+            color: "#212124",
+            fontSize: 14
           }}
         />
 
+        {/* PASSWORD */}
 
-        {/* password */}
-
-        <label style={{
-          fontSize:13,
-          fontWeight:500,
-          color:"#374151"
-        }}>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: "#d1d5db"
+          }}
+        >
           Password
         </label>
 
@@ -85,63 +96,71 @@ export default function LoginPage() {
           type="password"
           placeholder="••••••••"
           style={{
-            width:"100%",
-            marginTop:6,
-            marginBottom:22,
-            padding:"12px 14px",
-            borderRadius:10,
-            border:"1px solid #e5e7eb",
-            background:"#f9fafb",
-            fontSize:14
+            width: "100%",
+            marginTop: 6,
+            marginBottom: 22,
+            padding: "12px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#ffffff",
+            color: "#212124",
+            fontSize: 14
           }}
         />
 
+        {/* LOGIN BUTTON */}
 
-        {/* login */}
-
-        <button style={{
-          width:"100%",
-          padding:"12px",
-          borderRadius:10,
-          background:"#0a0a0b",
-          color:"#fff",
-          fontWeight:500,
-          border:"none",
-          cursor:"pointer"
-        }}>
+        <button
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: 10,
+            background: "#000",
+            color: "#fff",
+            fontWeight: 500,
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
           Sign in
         </button>
 
+        {/* GOOGLE */}
 
-        {/* google */}
-
-        <button style={{
-          width:"100%",
-          padding:"12px",
-          borderRadius:10,
-          border:"1px solid #e5e7eb",
-          background:"#fff",
-          marginTop:12,
-          fontWeight:500,
-          cursor:"pointer"
-        }}>
+        <button
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: 10,
+            marginTop: 12,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#212124",
+            color: "#ffffff",
+            fontWeight: 500,
+            cursor: "pointer"
+          }}
+        >
           Continue with Google
         </button>
 
+        {/* REGISTER */}
 
-        {/* register */}
-
-        <p style={{
-          textAlign:"center",
-          fontSize:14,
-          marginTop:18,
-          color:"#6b7280"
-        }}>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: 14,
+            marginTop: 18,
+            color: "#9ca3af"
+          }}
+        >
           No account?{" "}
-          <Link href="/register" style={{
-            color:"#22c55e",
-            fontWeight:500
-          }}>
+          <Link
+            href="/register"
+            style={{
+              color: "#22c55e",
+              fontWeight: 500
+            }}
+          >
             Create account
           </Link>
         </p>
