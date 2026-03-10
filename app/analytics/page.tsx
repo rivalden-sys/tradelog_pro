@@ -46,7 +46,7 @@ export default function AnalyticsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data } = await supabase.from('trades')
-        .select('id, date, pair, setup, direction, result, rr, profit_usd, profit_pct, self_grade')
+     .select('*')
         .eq('user_id', user.id).order('date', { ascending: true })
       setTrades(data || [])
       setLoading(false)
