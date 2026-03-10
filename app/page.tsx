@@ -33,9 +33,21 @@ export default function Landing() {
   }
 
   const subtitle = {
-    color: "#555",
+    color: "#6b7280",
     maxWidth: 640,
     margin: "0 auto 28px"
+  }
+
+  const label = {
+    fontSize: 14,
+    color: "#6b7280"
+  }
+
+  const value = {
+    fontSize: 28,
+    fontWeight: 700,
+    color: "#111",
+    marginTop: 4
   }
 
   const cardTitle = {
@@ -45,7 +57,7 @@ export default function Landing() {
   }
 
   const cardText = {
-    color: "#555"
+    color: "#6b7280"
   }
 
   const buttonPrimary = {
@@ -106,23 +118,23 @@ export default function Landing() {
         }}>
 
           <div style={card}>
-            <div style={cardTitle}>Trades logged</div>
-            <div style={{fontSize:24,fontWeight:600}}>12,430+</div>
+            <div style={label}>Trades logged</div>
+            <div style={value}>12,430+</div>
           </div>
 
           <div style={card}>
-            <div style={cardTitle}>Average win rate</div>
-            <div style={{fontSize:24,fontWeight:600}}>57%</div>
+            <div style={label}>Average win rate</div>
+            <div style={value}>57%</div>
           </div>
 
           <div style={card}>
-            <div style={cardTitle}>AI insights</div>
-            <div style={{fontSize:24,fontWeight:600}}>84k</div>
+            <div style={label}>AI insights</div>
+            <div style={value}>84k</div>
           </div>
 
           <div style={card}>
-            <div style={cardTitle}>Active traders</div>
-            <div style={{fontSize:24,fontWeight:600}}>2,300+</div>
+            <div style={label}>Active traders</div>
+            <div style={value}>2,300+</div>
           </div>
 
         </div>
@@ -214,10 +226,17 @@ export default function Landing() {
 
           <div style={{...card,textAlign:"center"}}>
 
-            <div style={cardTitle}>Free</div>
+            <div style={label}>Free</div>
             <div style={cardText}>Basic trade journal</div>
 
-            <div style={{fontSize:32,fontWeight:700,margin:"12px 0"}}>$0</div>
+            <div style={{
+              fontSize:36,
+              fontWeight:700,
+              color:"#111",
+              margin:"14px 0"
+            }}>
+              $0
+            </div>
 
             <Link href="/register" style={buttonPrimary}>
               Start
@@ -231,13 +250,20 @@ export default function Landing() {
             border:"2px solid #22c55e"
           }}>
 
-            <div style={cardTitle}>Pro</div>
+            <div style={label}>Pro</div>
 
             <div style={cardText}>
               AI analysis and advanced statistics
             </div>
 
-            <div style={{fontSize:32,fontWeight:700,margin:"12px 0"}}>$19</div>
+            <div style={{
+              fontSize:36,
+              fontWeight:700,
+              color:"#111",
+              margin:"14px 0"
+            }}>
+              $19
+            </div>
 
             <Link href="/register" style={buttonPrimary}>
               Start Pro
