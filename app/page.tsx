@@ -30,8 +30,13 @@ export default function Landing() {
     background: theme.surface,
     border: `1px solid ${theme.border}`,
     borderRadius: 16,
-    padding: 20,
+    padding: 24,
     boxShadow: theme.shadow
+  }
+
+  const cardText = {
+    color: theme.text2,
+    marginTop: 6
   }
 
   const buttonPrimary = {
@@ -40,14 +45,16 @@ export default function Landing() {
     padding: "10px 18px",
     borderRadius: 12,
     textDecoration: "none",
-    fontWeight: 500
+    fontWeight: 500,
+    display: "inline-block"
   }
 
   const buttonSecondary = {
     padding: "10px 18px",
     borderRadius: 12,
     border: `1px solid ${theme.border}`,
-    textDecoration: "none"
+    textDecoration: "none",
+    display: "inline-block"
   }
 
   return (
@@ -61,7 +68,7 @@ export default function Landing() {
           AI Trading Journal
         </h1>
 
-        <p style={{ opacity: .7, marginBottom: 24 }}>
+        <p style={{ color: theme.text2, marginBottom: 24 }}>
           Track every trade, analyze performance and get AI insights to improve your trading decisions.
         </p>
 
@@ -85,22 +92,22 @@ export default function Landing() {
         <div style={grid}>
 
           <div style={card}>
-            <h3 style={{ marginBottom: 8 }}>Track trades</h3>
-            <p style={{ opacity:.7 }}>
+            <h3>Track trades</h3>
+            <p style={cardText}>
               Log entries, exits, strategy and notes for every trade.
             </p>
           </div>
 
           <div style={card}>
-            <h3 style={{ marginBottom: 8 }}>AI analysis</h3>
-            <p style={{ opacity:.7 }}>
+            <h3>AI analysis</h3>
+            <p style={cardText}>
               Get automatic insights on mistakes and improvements.
             </p>
           </div>
 
           <div style={card}>
-            <h3 style={{ marginBottom: 8 }}>Performance stats</h3>
-            <p style={{ opacity:.7 }}>
+            <h3>Performance stats</h3>
+            <p style={cardText}>
               Understand win rate, expectancy and trading behavior.
             </p>
           </div>
@@ -118,7 +125,7 @@ export default function Landing() {
           Built for serious traders
         </h2>
 
-        <p style={{ opacity:.7 }}>
+        <p style={{ color: theme.text2 }}>
           TradeLog analyzes your trades and helps you understand patterns in your decision making.
         </p>
 
@@ -137,7 +144,7 @@ export default function Landing() {
 
           <div style={card}>
             <h3>Free</h3>
-            <p style={{ opacity:.7 }}>Basic trade journal</p>
+            <p style={cardText}>Basic trade journal</p>
             <h2 style={{ margin:"12px 0" }}>$0</h2>
 
             <Link href="/register" style={buttonPrimary}>
@@ -151,7 +158,7 @@ export default function Landing() {
             color: theme.bg
           }}>
             <h3>Pro</h3>
-            <p style={{ opacity:.8 }}>
+            <p style={{ opacity:.85 }}>
               AI analysis and advanced stats
             </p>
 
