@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         console.log('✅ invoice.payment_succeeded');
         console.log('customerId:', customerId);
 
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription;
 
         const { data, error } = await supabaseAdmin
           .from('users')
