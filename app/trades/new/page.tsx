@@ -3,28 +3,29 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/layout/ThemeProvider'
+import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 
-const PAIRS   = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT']
-const SETUPS  = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
-const RESULTS = ['Тейк', 'Стоп', 'БУ']
-const GRADES  = ['A', 'B', 'C', 'D']
+const PAIRS  = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT']
+const SETUPS = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
+const GRADES = ['A', 'B', 'C', 'D']
 
 export default function NewTradePage() {
   const { theme: c } = useTheme()
+  const { t } = useLocale()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    date:           new Date().toISOString().split('T')[0],
-    pair:           'BTC/USDT',
-    setup:          SETUPS[0],
-    direction:      'Long',
-    result:         'Тейк',
-    rr:             '',
-    profit_usd:     '',
-    profit_pct:     '',
-    self_grade:     'A',
-    comment:        '',
+    date:            new Date().toISOString().split('T')[0],
+    pair:            'BTC/USDT',
+    setup:           SETUPS[0],
+    direction:       'Long',
+    result:          'Тейк',
+    rr:              '',
+    profit_usd:      '',
+    profit_pct:      '',
+    self_grade:      'A',
+    comment:         '',
     tradingview_url: '',
   })
 
@@ -44,7 +45,7 @@ export default function NewTradePage() {
     })
     const json = await res.json()
     if (json.success) router.push('/trades')
-    else { alert('Ошибка сохранения'); setSaving(false) }
+    else { alert(t('new_trade_error_required')); setSaving(false) }
   }
 
   const inputStyle = {
@@ -55,15 +56,15 @@ export default function NewTradePage() {
 
   const labelStyle = { fontSize: 12, color: c.text3, marginBottom: 6, display: 'block', fontWeight: 500 }
 
-  const segmented = (key: string, options: string[]) => (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-      {options.map(o => (
+  const segmented = (key: string, options: string[], labels?: string[]) => (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+      {options.map((o, i) => (
         <button key={o} onClick={() => set(key, o)} style={{
           padding: '8px 16px', borderRadius: 10, border: `1px solid ${c.border}`,
           background: (form as any)[key] === o ? c.text : 'transparent',
           color:      (form as any)[key] === o ? c.surface : c.text3,
           fontSize: 13, fontWeight: 500, cursor: 'pointer',
-        }}>{o}</button>
+        }}>{labels ? labels[i] : o}</button>
       ))}
     </div>
   )
@@ -77,8 +78,8 @@ export default function NewTradePage() {
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: 'none', color: c.text3,
             fontSize: 14, cursor: 'pointer',
-          }}>← Назад</button>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: c.text, margin: 0 }}>Новая сделка</h1>
+          }}>{t('new_trade_back')}</button>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: c.text, margin: 0 }}>{t('new_trade_title')}</h1>
         </div>
 
         <div style={{
@@ -87,14 +88,14 @@ export default function NewTradePage() {
           display: 'grid', gap: 20,
         }}>
 
-          {/* Row 1 */}
+          {/* Date + Pair */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
-              <label style={labelStyle}>Дата</label>
+              <label style={labelStyle}>{t('new_trade_date')}</label>
               <input type="date" value={form.date} onChange={e => set('date', e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Пара</label>
+              <label style={labelStyle}>{t('new_trade_pair')}</label>
               <select value={form.pair} onChange={e => set('pair', e.target.value)} style={inputStyle}>
                 {PAIRS.map(p => <option key={p}>{p}</option>)}
               </select>
@@ -103,7 +104,7 @@ export default function NewTradePage() {
 
           {/* Setup */}
           <div>
-            <label style={labelStyle}>Сетап</label>
+            <label style={labelStyle}>{t('new_trade_setup')}</label>
             <select value={form.setup} onChange={e => set('setup', e.target.value)} style={inputStyle}>
               {SETUPS.map(s => <option key={s}>{s}</option>)}
             </select>
@@ -111,30 +112,30 @@ export default function NewTradePage() {
 
           {/* Direction */}
           <div>
-            <label style={labelStyle}>Направление</label>
-            {segmented('direction', ['Long', 'Short'])}
+            <label style={labelStyle}>{t('new_trade_direction')}</label>
+            {segmented('direction', ['Long', 'Short'], [t('new_trade_long'), t('new_trade_short')])}
           </div>
 
           {/* Result */}
           <div>
-            <label style={labelStyle}>Результат</label>
-            {segmented('result', RESULTS)}
+            <label style={labelStyle}>{t('new_trade_result')}</label>
+            {segmented('result', ['Тейк', 'Стоп', 'БУ'], [t('new_trade_take'), t('new_trade_stop'), t('new_trade_bu')])}
           </div>
 
-          {/* Row numbers */}
+          {/* RR + P&L */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div>
-              <label style={labelStyle}>RR</label>
+              <label style={labelStyle}>{t('new_trade_rr')}</label>
               <input type="number" step="0.1" placeholder="2.5" value={form.rr}
                 onChange={e => set('rr', e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>P&L $</label>
+              <label style={labelStyle}>{t('new_trade_profit_usd')}</label>
               <input type="number" step="0.01" placeholder="150.00" value={form.profit_usd}
                 onChange={e => set('profit_usd', e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>P&L %</label>
+              <label style={labelStyle}>{t('new_trade_profit_pct')}</label>
               <input type="number" step="0.01" placeholder="1.5" value={form.profit_pct}
                 onChange={e => set('profit_pct', e.target.value)} style={inputStyle} />
             </div>
@@ -142,22 +143,22 @@ export default function NewTradePage() {
 
           {/* Grade */}
           <div>
-            <label style={labelStyle}>Самооценка</label>
+            <label style={labelStyle}>{t('new_trade_grade')}</label>
             {segmented('self_grade', GRADES)}
           </div>
 
           {/* Comment */}
           <div>
-            <label style={labelStyle}>Комментарий</label>
+            <label style={labelStyle}>{t('new_trade_comment')}</label>
             <textarea value={form.comment} onChange={e => set('comment', e.target.value)}
-              placeholder="Описание сделки, наблюдения..."
+              placeholder={t('new_trade_comment_ph')}
               rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
           </div>
 
           {/* TradingView */}
           <div>
-            <label style={labelStyle}>Ссылка TradingView (необязательно)</label>
-            <input type="url" placeholder="https://tradingview.com/..." value={form.tradingview_url}
+            <label style={labelStyle}>{t('new_trade_tv')}</label>
+            <input type="url" placeholder={t('new_trade_tv_ph')} value={form.tradingview_url}
               onChange={e => set('tradingview_url', e.target.value)} style={inputStyle} />
           </div>
 
@@ -168,7 +169,7 @@ export default function NewTradePage() {
             fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.6 : 1,
           }}>
-            {saving ? 'Сохраняем...' : 'Сохранить сделку'}
+            {saving ? t('new_trade_saving') : t('new_trade_save')}
           </button>
 
         </div>

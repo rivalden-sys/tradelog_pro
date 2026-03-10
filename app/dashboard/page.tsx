@@ -154,6 +154,20 @@ export default function DashboardPage() {
     { label: tr('dashboard_all'),   value: 'all'   as Period },
   ]
 
+  // Translate result stored in DB (always Russian) to current locale
+  const resultLabel = (r: string) => {
+    if (r === 'Тейк') return tr('result_take')
+    if (r === 'Стоп') return tr('result_stop')
+    if (r === 'БУ')   return tr('result_bu')
+    return r
+  }
+
+  const resultColor = (r: string) => {
+    if (r === 'Тейк') return GREEN
+    if (r === 'Стоп') return RED
+    return GRAY
+  }
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -253,14 +267,14 @@ export default function DashboardPage() {
                     <Pie data={pie} dataKey="value" cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3}>
                       {pie.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % 3]} />)}
                     </Pie>
-                    <Tooltip formatter={(v: any, n: any) => [`${v} сделок`, n]} contentStyle={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT }} />
+                    <Tooltip formatter={(v: any, n: any) => [`${v}`, n]} contentStyle={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 4 }}>
                   {pie.map((p, i) => (
                     <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: PIE_COLORS[i] }} />
-                      <span style={{ fontSize: 12, color: t.sub }}>{p.name} {p.value}</span>
+                      <span style={{ fontSize: 12, color: t.sub }}>{resultLabel(p.name)} {p.value}</span>
                     </div>
                   ))}
                 </div>
@@ -309,6 +323,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Recent Trades */}
         <div style={card(t)}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, letterSpacing: '-0.02em' }}>{tr('dashboard_recent')}</div>
@@ -330,28 +345,32 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recent.map((tr2, i) => (
-                    <tr key={tr2.id} onClick={() => window.location.href = `/trades/${tr2.id}`}
+                  {recent.map((trade, i) => (
+                    <tr key={trade.id} onClick={() => window.location.href = `/trades/${trade.id}`}
                       style={{ background: i % 2 === 0 ? 'transparent' : `${t.surface2}70`, cursor: 'pointer' }}>
-                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 13 }}>{tr2.date}</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: t.text }}>{tr2.pair}</td>
-                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 12 }}>{tr2.setup}</td>
-                      <td style={{ padding: '10px 12px', color: t.sub }}>{tr2.rr}</td>
+                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 13 }}>{trade.date}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: t.text }}>{trade.pair}</td>
+                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 12 }}>{trade.setup}</td>
+                      <td style={{ padding: '10px 12px', color: t.sub }}>{trade.rr}</td>
                       <td style={{ padding: '10px 12px' }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: tr2.direction === 'Long' ? GREEN : RED }}>{tr2.direction}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
                       </td>
                       <td style={{ padding: '10px 12px' }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: tr2.result === 'Тейк' ? `${GREEN}18` : tr2.result === 'Стоп' ? `${RED}18` : `${GRAY}18`, color: tr2.result === 'Тейк' ? GREEN : tr2.result === 'Стоп' ? RED : GRAY }}>
-                          {tr2.result}
+                        <span style={{
+                          fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                          background: resultColor(trade.result) + '18',
+                          color: resultColor(trade.result),
+                        }}>
+                          {resultLabel(trade.result)}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: (tr2.profit_usd || 0) >= 0 ? GREEN : RED }}>
-                        {(tr2.profit_usd || 0) >= 0 ? '+' : ''}{(tr2.profit_usd || 0).toFixed(2)}$
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: (trade.profit_usd || 0) >= 0 ? GREEN : RED }}>
+                        {(trade.profit_usd || 0) >= 0 ? '+' : ''}{(trade.profit_usd || 0).toFixed(2)}$
                       </td>
                       <td style={{ padding: '10px 12px' }}>
-                        {tr2.self_grade && (
-                          <span style={{ fontSize: 12, fontWeight: 800, padding: '3px 9px', borderRadius: 8, background: tr2.self_grade === 'A' ? `${GREEN}18` : tr2.self_grade === 'D' ? `${RED}18` : `${ORANGE}18`, color: tr2.self_grade === 'A' ? GREEN : tr2.self_grade === 'D' ? RED : ORANGE }}>
-                            {tr2.self_grade}
+                        {trade.self_grade && (
+                          <span style={{ fontSize: 12, fontWeight: 800, padding: '3px 9px', borderRadius: 8, background: trade.self_grade === 'A' ? `${GREEN}18` : trade.self_grade === 'D' ? `${RED}18` : `${ORANGE}18`, color: trade.self_grade === 'A' ? GREEN : trade.self_grade === 'D' ? RED : ORANGE }}>
+                            {trade.self_grade}
                           </span>
                         )}
                       </td>
