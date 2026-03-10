@@ -4,99 +4,144 @@ import Link from "next/link"
 
 export default function LoginPage() {
 
-  const card = {
-    background:"#ffffff",
-    padding:"36px",
-    borderRadius:"16px",
-    width:"420px",
-    boxShadow:"0 10px 30px rgba(0,0,0,0.08)",
-    border:"1px solid rgba(0,0,0,0.06)"
-  }
-
-  const input = {
-    width:"100%",
-    padding:"12px 14px",
-    borderRadius:"10px",
-    border:"1px solid #e5e7eb",
-    marginTop:"6px",
-    marginBottom:"18px",
-    fontSize:"14px"
-  }
-
-  const button = {
-    width:"100%",
-    background:"#111",
-    color:"#fff",
-    padding:"12px",
-    borderRadius:"10px",
-    border:"none",
-    fontWeight:500,
-    cursor:"pointer"
-  }
-
-  const buttonGoogle = {
-    width:"100%",
-    background:"#fff",
-    border:"1px solid #e5e7eb",
-    padding:"12px",
-    borderRadius:"10px",
-    marginTop:"12px",
-    cursor:"pointer"
-  }
-
   return (
+
     <main style={{
       minHeight:"100vh",
-      background:"#f5f5f7",
       display:"flex",
       alignItems:"center",
       justifyContent:"center",
-      padding:"40px"
+      background:"#f5f5f7"
     }}>
 
-      <div style={card}>
+      <div style={{
+        width:420,
+        background:"#ffffff",
+        padding:36,
+        borderRadius:18,
+        border:"1px solid rgba(0,0,0,0.08)",
+        boxShadow:"0 20px 40px rgba(0,0,0,0.08)"
+      }}>
 
-        <div style={{textAlign:"center",marginBottom:"24px"}}>
+        {/* header */}
 
-          <h1 style={{fontSize:26,fontWeight:700}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+
+          <h1 style={{
+            fontSize:26,
+            fontWeight:700,
+            color:"#111"
+          }}>
             TradeLog <span style={{color:"#22c55e"}}>Pro</span>
           </h1>
 
-          <p style={{color:"#6b7280",marginTop:"4px"}}>
+          <p style={{
+            color:"#6b7280",
+            fontSize:14,
+            marginTop:6
+          }}>
             Sign in to your account
           </p>
 
         </div>
 
-        <label>Email</label>
+
+        {/* email */}
+
+        <label style={{
+          fontSize:13,
+          fontWeight:500,
+          color:"#374151"
+        }}>
+          Email
+        </label>
+
         <input
-          style={input}
           placeholder="you@email.com"
+          style={{
+            width:"100%",
+            marginTop:6,
+            marginBottom:18,
+            padding:"12px 14px",
+            borderRadius:10,
+            border:"1px solid #e5e7eb",
+            background:"#f9fafb",
+            fontSize:14
+          }}
         />
 
-        <label>Password</label>
+
+        {/* password */}
+
+        <label style={{
+          fontSize:13,
+          fontWeight:500,
+          color:"#374151"
+        }}>
+          Password
+        </label>
+
         <input
           type="password"
-          style={input}
           placeholder="••••••••"
+          style={{
+            width:"100%",
+            marginTop:6,
+            marginBottom:22,
+            padding:"12px 14px",
+            borderRadius:10,
+            border:"1px solid #e5e7eb",
+            background:"#f9fafb",
+            fontSize:14
+          }}
         />
 
-        <button style={button}>
+
+        {/* login */}
+
+        <button style={{
+          width:"100%",
+          padding:"12px",
+          borderRadius:10,
+          background:"#0a0a0b",
+          color:"#fff",
+          fontWeight:500,
+          border:"none",
+          cursor:"pointer"
+        }}>
           Sign in
         </button>
 
-        <button style={buttonGoogle}>
+
+        {/* google */}
+
+        <button style={{
+          width:"100%",
+          padding:"12px",
+          borderRadius:10,
+          border:"1px solid #e5e7eb",
+          background:"#fff",
+          marginTop:12,
+          fontWeight:500,
+          cursor:"pointer"
+        }}>
           Continue with Google
         </button>
 
+
+        {/* register */}
+
         <p style={{
           textAlign:"center",
-          marginTop:"18px",
-          fontSize:"14px",
+          fontSize:14,
+          marginTop:18,
           color:"#6b7280"
         }}>
           No account?{" "}
-          <Link href="/register" style={{color:"#22c55e"}}>
+          <Link href="/register" style={{
+            color:"#22c55e",
+            fontWeight:500
+          }}>
             Create account
           </Link>
         </p>
