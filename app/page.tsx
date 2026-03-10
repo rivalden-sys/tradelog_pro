@@ -5,100 +5,95 @@ import Link from "next/link"
 export default function Landing() {
 
   const container = {
-    maxWidth: 1100,
+    maxWidth: 1300,
     margin: "0 auto",
-    padding: "80px 24px"
+    padding: "120px 24px",
   }
 
   const grid = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+    gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
     gap: 24,
-    marginTop: 32
   }
 
   const card = {
-    background: "#ffffff",
-    border: "1px solid rgba(0,0,0,0.06)",
+    background: "#2a2a2e",
     borderRadius: 16,
     padding: 28,
-    boxShadow: "0 4px 16px rgba(0,0,0,0.04)"
-  }
-
-  const title = {
-    fontSize: 44,
-    fontWeight: 700,
-    color: "#111",
-    marginBottom: 12
-  }
-
-  const subtitle = {
-    color: "#6b7280",
-    maxWidth: 640,
-    margin: "0 auto 28px"
-  }
-
-  const label = {
-    fontSize: 14,
-    color: "#6b7280"
-  }
-
-  const value = {
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#111",
-    marginTop: 4
-  }
-
-  const cardTitle = {
-    fontWeight: 600,
-    color: "#111",
-    marginBottom: 6
-  }
-
-  const cardText = {
-    color: "#6b7280"
-  }
-
-  const buttonPrimary = {
-    background: "#111",
-    color: "#fff",
-    padding: "12px 22px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 500
-  }
-
-  const buttonOutline = {
-    border: "1px solid rgba(0,0,0,0.15)",
-    padding: "12px 22px",
-    borderRadius: 12,
-    textDecoration: "none",
-    color: "#111"
+    border: "1px solid rgba(255,255,255,0.05)",
   }
 
   return (
-    <main style={{ background:"#f5f5f7", minHeight:"100vh" }}>
+
+    <main
+      style={{
+        background: "#1c1c1e",
+        minHeight: "100vh",
+        color: "#ffffff"
+      }}
+    >
 
       {/* HERO */}
 
-      <section style={{...container, textAlign:"center"}}>
+      <section
+        style={{
+          ...container,
+          textAlign: "center"
+        }}
+      >
 
-        <h1 style={title}>
+        <h1
+          style={{
+            fontSize: 44,
+            fontWeight: 700,
+            marginBottom: 16
+          }}
+        >
           AI Trading Journal
         </h1>
 
-        <p style={subtitle}>
-          Track every trade, analyze performance and improve you trading decisions with AI insights.
+        <p
+          style={{
+            color: "#9CA3AF",
+            marginBottom: 32,
+            whiteSpace: "nowrap"
+          }}
+        >
+          Track every trade, analyze performance and improve your trading decisions with AI insights.
         </p>
 
-        <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "center"
+          }}
+        >
 
-          <Link href="/register" style={buttonPrimary}>
+          <Link
+            href="/register"
+            style={{
+              background: "#000",
+              padding: "12px 22px",
+              borderRadius: 12,
+              textDecoration: "none",
+              color: "#fff",
+              fontWeight: 500
+            }}
+          >
             Start free
           </Link>
 
-          <Link href="/login" style={buttonOutline}>
+          <Link
+            href="/login"
+            style={{
+              border: "1px solid rgba(255,255,255,0.15)",
+              padding: "12px 22px",
+              borderRadius: 12,
+              textDecoration: "none",
+              color: "#fff"
+            }}
+          >
             Login
           </Link>
 
@@ -109,32 +104,25 @@ export default function Landing() {
 
       {/* STATS */}
 
-      <section style={container}>
+      <section
+        style={{
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: "0 24px 80px"
+        }}
+      >
 
-        <div style={{
-          ...grid,
-          gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"
-        }}>
+        <div
+          style={{
+            ...grid,
+            gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))"
+          }}
+        >
 
-          <div style={card}>
-            <div style={label}>Trades logged</div>
-            <div style={value}>12,430+</div>
-          </div>
-
-          <div style={card}>
-            <div style={label}>Average win rate</div>
-            <div style={value}>57%</div>
-          </div>
-
-          <div style={card}>
-            <div style={label}>AI insights</div>
-            <div style={value}>84k</div>
-          </div>
-
-          <div style={card}>
-            <div style={label}>Active traders</div>
-            <div style={value}>2,300+</div>
-          </div>
+          <Stat label="Trades logged" value="12,430+" />
+          <Stat label="Average win rate" value="57%" />
+          <Stat label="AI insights" value="84k" />
+          <Stat label="Active traders" value="2,300+" />
 
         </div>
 
@@ -143,70 +131,40 @@ export default function Landing() {
 
       {/* FEATURES */}
 
-      <section style={container}>
+      <section
+        style={{
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: "0 24px 100px"
+        }}
+      >
 
-        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
+        <h2
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            marginBottom: 32
+          }}
+        >
           Everything you need to improve your trading
         </h2>
 
         <div style={grid}>
 
-          <div style={card}>
-            <div style={cardTitle}>Trade journal</div>
-            <div style={cardText}>
-              Log entries, exits, strategy and notes for every trade.
-            </div>
-          </div>
+          <Card
+            title="Trade journal"
+            text="Log entries, exits, strategy and notes for every trade."
+          />
 
-          <div style={card}>
-            <div style={cardTitle}>Performance analytics</div>
-            <div style={cardText}>
-              Track win rate, risk-reward and performance statistics.
-            </div>
-          </div>
+          <Card
+            title="Performance analytics"
+            text="Track win rate, risk-reward and performance statistics."
+          />
 
-          <div style={card}>
-            <div style={cardTitle}>AI trade analysis</div>
-            <div style={cardText}>
-              Identify emotional trades and strategy mistakes.
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* HOW IT WORKS */}
-
-      <section style={container}>
-
-        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
-          How it works
-        </h2>
-
-        <div style={grid}>
-
-          <div style={card}>
-            <div style={cardTitle}>1. Log trades</div>
-            <div style={cardText}>
-              Record entries, exits and strategy.
-            </div>
-          </div>
-
-          <div style={card}>
-            <div style={cardTitle}>2. Analyze performance</div>
-            <div style={cardText}>
-              View statistics and patterns in your trading.
-            </div>
-          </div>
-
-          <div style={card}>
-            <div style={cardTitle}>3. Improve with AI</div>
-            <div style={cardText}>
-              AI highlights mistakes and improvements.
-            </div>
-          </div>
+          <Card
+            title="AI trade analysis"
+            text="Identify emotional trades and strategy mistakes."
+          />
 
         </div>
 
@@ -215,65 +173,163 @@ export default function Landing() {
 
       {/* PRICING */}
 
-      <section style={container}>
+      <section
+        style={{
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: "0 24px 120px"
+        }}
+      >
 
-        <h2 style={{fontSize:28,fontWeight:700,color:"#111"}}>
+        <h2
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            marginBottom: 32
+          }}
+        >
           Pricing
         </h2>
 
         <div style={grid}>
 
-          <div style={{...card,textAlign:"center"}}>
+          <Price
+            title="Free"
+            desc="Basic trade journal"
+            price="$0"
+            button="Start"
+          />
 
-            <div style={label}>Free</div>
-            <div style={cardText}>Basic trade journal</div>
-
-            <div style={{
-              fontSize:36,
-              fontWeight:700,
-              color:"#111",
-              margin:"14px 0"
-            }}>
-              $0
-            </div>
-
-            <Link href="/register" style={buttonPrimary}>
-              Start
-            </Link>
-
-          </div>
-
-          <div style={{
-            ...card,
-            textAlign:"center",
-            border:"2px solid #22c55e"
-          }}>
-
-            <div style={label}>Pro</div>
-
-            <div style={cardText}>
-              AI analysis and advanced statistics
-            </div>
-
-            <div style={{
-              fontSize:36,
-              fontWeight:700,
-              color:"#111",
-              margin:"14px 0"
-            }}>
-              $19
-            </div>
-
-            <Link href="/register" style={buttonPrimary}>
-              Start Pro
-            </Link>
-
-          </div>
+          <Price
+            title="Pro"
+            desc="AI analysis and advanced statistics"
+            price="$19"
+            button="Start Pro"
+            highlight
+          />
 
         </div>
 
       </section>
 
     </main>
+  )
+}
+
+
+function Stat({label,value}:{label:string,value:string}) {
+
+  return (
+
+    <div
+      style={{
+        background:"#2a2a2e",
+        padding:26,
+        borderRadius:16,
+        border:"1px solid rgba(255,255,255,0.05)"
+      }}
+    >
+
+      <div style={{color:"#9CA3AF",fontSize:14}}>
+        {label}
+      </div>
+
+      <div
+        style={{
+          fontSize:28,
+          fontWeight:700,
+          marginTop:4
+        }}
+      >
+        {value}
+      </div>
+
+    </div>
+
+  )
+}
+
+
+function Card({title,text}:{title:string,text:string}) {
+
+  return (
+
+    <div
+      style={{
+        background:"#2a2a2e",
+        padding:28,
+        borderRadius:16,
+        border:"1px solid rgba(255,255,255,0.05)"
+      }}
+    >
+
+      <div
+        style={{
+          fontWeight:600,
+          marginBottom:8
+        }}
+      >
+        {title}
+      </div>
+
+      <div style={{color:"#9CA3AF"}}>
+        {text}
+      </div>
+
+    </div>
+
+  )
+}
+
+
+function Price({title,desc,price,button,highlight}:{title:string,desc:string,price:string,button:string,highlight?:boolean}) {
+
+  return (
+
+    <div
+      style={{
+        background:"#2a2a2e",
+        padding:32,
+        borderRadius:18,
+        border: highlight
+          ? "2px solid #22c55e"
+          : "1px solid rgba(255,255,255,0.05)",
+        textAlign:"center"
+      }}
+    >
+
+      <div style={{color:"#9CA3AF"}}>
+        {title}
+      </div>
+
+      <div style={{marginTop:6}}>
+        {desc}
+      </div>
+
+      <div
+        style={{
+          fontSize:36,
+          fontWeight:700,
+          margin:"16px 0"
+        }}
+      >
+        {price}
+      </div>
+
+      <Link
+        href="/register"
+        style={{
+          background:"#000",
+          color:"#fff",
+          padding:"10px 20px",
+          borderRadius:10,
+          textDecoration:"none"
+        }}
+      >
+        {button}
+      </Link>
+
+    </div>
+
   )
 }
