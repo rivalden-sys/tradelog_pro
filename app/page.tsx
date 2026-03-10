@@ -1,128 +1,157 @@
-import Link from "next/link";
+'use client'
+
+import Link from "next/link"
+import { useTheme } from "@/components/layout/ThemeProvider"
 
 export default function Landing() {
+
+  const { theme } = useTheme()
+
+  const section = {
+    maxWidth: 1100,
+    margin: "0 auto",
+    padding: "80px 24px"
+  }
+
+  const card = {
+    background: theme.surface,
+    border: `1px solid ${theme.border}`,
+    borderRadius: 16,
+    padding: 24,
+    boxShadow: theme.shadow
+  }
+
+  const button = {
+    background: theme.text,
+    color: theme.bg,
+    padding: "12px 20px",
+    borderRadius: 12,
+    fontWeight: 500,
+    textDecoration: "none"
+  }
+
   return (
-    <main className="min-h-screen bg-white text-black">
-
-      {/* NAVBAR */}
-      <nav className="flex justify-between items-center px-8 py-6 max-w-6xl mx-auto">
-        <div className="font-bold text-xl">TradeLog</div>
-
-        <div className="flex gap-6 items-center">
-          <Link href="/login" className="text-sm opacity-70 hover:opacity-100">
-            Login
-          </Link>
-
-          <Link
-            href="/register"
-            className="px-4 py-2 bg-black text-white rounded-lg text-sm"
-          >
-            Start free
-          </Link>
-        </div>
-      </nav>
+    <main>
 
       {/* HERO */}
-      <section className="text-center px-6 py-20 max-w-4xl mx-auto">
-        <h1 className="text-5xl font-bold leading-tight mb-6">
+
+      <section style={{ ...section, textAlign: "center" }}>
+
+        <h1 style={{ fontSize: 48, marginBottom: 16 }}>
           AI Trading Journal
         </h1>
 
-        <p className="text-lg text-gray-500 mb-10">
-          Track every trade, analyze performance and get AI insights
-          to improve your trading decisions.
+        <p style={{ opacity: .7, marginBottom: 32 }}>
+          Track every trade, analyze performance and get AI insights to improve your trading decisions.
         </p>
 
-        <div className="flex justify-center gap-4">
-          <Link
-            href="/register"
-            className="px-6 py-3 bg-black text-white rounded-xl"
-          >
+        <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
+
+          <Link href="/register" style={button}>
             Start free
           </Link>
 
-          <Link
-            href="/login"
-            className="px-6 py-3 border rounded-xl"
-          >
+          <Link href="/login">
             Login
           </Link>
+
         </div>
+
       </section>
+
 
       {/* FEATURES */}
-      <section className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 px-8 py-20">
 
-        <div className="p-6 border rounded-xl">
-          <h3 className="font-semibold mb-2">Track trades</h3>
-          <p className="text-sm text-gray-500">
-            Log entries, exits, strategy and notes for every trade.
-          </p>
-        </div>
+      <section style={section}>
 
-        <div className="p-6 border rounded-xl">
-          <h3 className="font-semibold mb-2">AI analysis</h3>
-          <p className="text-sm text-gray-500">
-            Get automatic insights on mistakes and improvements.
-          </p>
-        </div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))",
+          gap: 24
+        }}>
 
-        <div className="p-6 border rounded-xl">
-          <h3 className="font-semibold mb-2">Performance stats</h3>
-          <p className="text-sm text-gray-500">
-            Understand win rate, expectancy and trading behavior.
-          </p>
+          <div style={card}>
+            <h3>Track trades</h3>
+            <p style={{ opacity:.7 }}>
+              Log entries, exits, strategy and notes for every trade.
+            </p>
+          </div>
+
+          <div style={card}>
+            <h3>AI analysis</h3>
+            <p style={{ opacity:.7 }}>
+              Get automatic insights on mistakes and improvements.
+            </p>
+          </div>
+
+          <div style={card}>
+            <h3>Performance stats</h3>
+            <p style={{ opacity:.7 }}>
+              Understand win rate, expectancy and trading behavior.
+            </p>
+          </div>
+
         </div>
 
       </section>
 
+
       {/* AI SECTION */}
-      <section className="bg-gray-50 py-24 text-center px-6">
-        <h2 className="text-3xl font-bold mb-6">
+
+      <section style={{ ...section, textAlign: "center" }}>
+
+        <h2 style={{ fontSize: 32, marginBottom: 12 }}>
           Built for serious traders
         </h2>
 
-        <p className="max-w-xl mx-auto text-gray-500">
-          TradeLog analyzes your trades and helps you understand
-          patterns in your decision making.
+        <p style={{ opacity:.7 }}>
+          TradeLog analyzes your trades and helps you understand patterns in your decision making.
         </p>
+
       </section>
 
+
       {/* PRICING */}
-      <section className="max-w-4xl mx-auto py-24 px-6 text-center">
 
-        <h2 className="text-3xl font-bold mb-12">Pricing</h2>
+      <section style={section}>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <h2 style={{ textAlign: "center", marginBottom: 40 }}>
+          Pricing
+        </h2>
 
-          <div className="border p-8 rounded-xl">
-            <h3 className="font-semibold text-lg mb-2">Free</h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Basic trade journal
-            </p>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px,1fr))",
+          gap: 24
+        }}>
 
-            <p className="text-3xl font-bold mb-6">$0</p>
+          <div style={card}>
+            <h3>Free</h3>
+            <p style={{ opacity:.7 }}>Basic trade journal</p>
+            <h2>$0</h2>
 
-            <Link
-              href="/register"
-              className="px-6 py-3 border rounded-xl inline-block"
-            >
+            <Link href="/register" style={button}>
               Start
             </Link>
           </div>
 
-          <div className="border p-8 rounded-xl bg-black text-white">
-            <h3 className="font-semibold text-lg mb-2">Pro</h3>
-            <p className="text-gray-300 text-sm mb-6">
+          <div style={{
+            ...card,
+            background: theme.text,
+            color: theme.bg
+          }}>
+            <h3>Pro</h3>
+            <p style={{ opacity:.8 }}>
               AI analysis and advanced stats
             </p>
 
-            <p className="text-3xl font-bold mb-6">$19</p>
+            <h2>$19</h2>
 
-            <Link
-              href="/register"
-              className="px-6 py-3 bg-white text-black rounded-xl inline-block"
-            >
+            <Link href="/register" style={{
+              ...button,
+              background: theme.bg,
+              color: theme.text
+            }}>
               Start Pro
             </Link>
           </div>
@@ -131,25 +160,21 @@ export default function Landing() {
 
       </section>
 
+
       {/* CTA */}
-      <section className="text-center py-20 px-6">
-        <h2 className="text-3xl font-bold mb-6">
+
+      <section style={{ ...section, textAlign: "center" }}>
+
+        <h2 style={{ marginBottom: 20 }}>
           Improve your trading discipline
         </h2>
 
-        <Link
-          href="/register"
-          className="px-8 py-4 bg-black text-white rounded-xl"
-        >
+        <Link href="/register" style={button}>
           Start your journal
         </Link>
+
       </section>
 
-      {/* FOOTER */}
-      <footer className="text-center text-sm text-gray-400 py-10">
-        TradeLog © {new Date().getFullYear()}
-      </footer>
-
     </main>
-  );
+  )
 }
