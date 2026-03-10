@@ -89,8 +89,7 @@ export default function Landing() {
         </h1>
 
         <p style={subtitle}>
-          Track every trade, analyze performance and improve your
-          trading decisions with AI insights.
+          Track every trade, analyze performance and improve you trading decisions with AI insights.
         </p>
 
         <div style={{display:"flex",gap:12,justifyContent:"center"}}>
