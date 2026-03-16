@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
+import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -46,6 +47,39 @@ function Section({ title, color, children, t }: any) {
   )
 }
 
+function HistoryItem({ session, t, onLoad }: { session: any; t: ReturnType<typeof th>; onLoad: (data: any, type: string) => void }) {
+  const date = new Date(session.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const typeLabel: Record<string, string> = { coach: 'Анализ журнала', psychology: 'Психология' }
+  const typeColor: Record<string, string> = { coach: BLUE, psychology: PURPLE }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: `1px solid ${t.border}`, marginBottom: 8 }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <Dot color={typeColor[session.type] || BLUE} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{typeLabel[session.type] || session.type}</span>
+        </div>
+        <div style={{ fontSize: 12, color: t.sub, paddingLeft: 16 }}>{date}</div>
+      </div>
+      <button
+        onClick={() => {
+          try {
+            const data = JSON.parse(session.response)
+            onLoad(data, session.type)
+          } catch {}
+        }}
+        style={{
+          padding: '6px 14px', borderRadius: 8, border: `1px solid ${t.border}`,
+          background: 'transparent', color: BLUE, fontSize: 12, fontWeight: 600,
+          cursor: 'pointer', fontFamily: FONT,
+        }}
+      >
+        Загрузить
+      </button>
+    </div>
+  )
+}
+
 export default function AIPage() {
   const { dark } = useTheme()
   const t = th(dark)
@@ -57,6 +91,25 @@ export default function AIPage() {
   const [psychLoading, setPsychLoading] = useState(false)
   const [coachError,   setCoachError]   = useState('')
   const [psychError,   setPsychError]   = useState('')
+  const [history,      setHistory]      = useState<any[]>([])
+  const [historyOpen,  setHistoryOpen]  = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('ai_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('type', ['coach', 'psychology'])
+        .order('created_at', { ascending: false })
+        .limit(20)
+      setHistory(data || [])
+    }
+    load()
+  }, [coachData, psychData])
 
   async function runCoach() {
     setCoachLoading(true); setCoachError('')
@@ -80,6 +133,12 @@ export default function AIPage() {
     setPsychLoading(false)
   }
 
+  function loadFromHistory(data: any, type: string) {
+    if (type === 'coach')      setCoachData(data)
+    if (type === 'psychology') setPsychData(data)
+    setHistoryOpen(false)
+  }
+
   const severityMap: Record<string, { label: string; color: string; bg: string }> = {
     high:   { label: tr('ai_high'),   color: RED,    bg: `${RED}18`    },
     medium: { label: tr('ai_medium'), color: ORANGE, bg: `${ORANGE}18` },
@@ -91,10 +150,37 @@ export default function AIPage() {
       <NavBar />
       <div style={{ padding: '32px 40px' }}>
 
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
-          <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('ai_subtitle')}</div>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
+            <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('ai_subtitle')}</div>
+          </div>
+          {history.length > 0 && (
+            <button
+              onClick={() => setHistoryOpen(v => !v)}
+              style={{
+                padding: '9px 18px', borderRadius: 12, border: `1px solid ${t.border}`,
+                background: t.surface, color: t.text, fontFamily: FONT,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              История анализов ({history.length})
+            </button>
+          )}
         </div>
+
+        {/* History panel */}
+        {historyOpen && history.length > 0 && (
+          <div style={{ ...card(t), marginBottom: 24 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
+              История анализов
+            </div>
+            {history.map(s => (
+              <HistoryItem key={s.id} session={s} t={t} onLoad={loadFromHistory} />
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
