@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getOpenAI, AI_MODEL, AI_TEMP, AI_MAX_TOKENS } from '@/lib/openai'
+import { getOpenAI, AI_MODEL, AI_TEMP } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
+
+    // Check Pro plan
+    const { data: profile } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.plan !== 'pro') {
+      return NextResponse.json({
+        success: false,
+        error: 'Trade Score is available on Pro plan only.',
+        code: 'PRO_REQUIRED',
+      }, { status: 403 })
+    }
 
     const { trade } = await req.json()
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
@@ -24,20 +39,16 @@ export async function POST(req: NextRequest) {
     const win_rate = similar.length ? Math.round((wins / similar.length) * 100) : 0
 
     const openai = getOpenAI()
-
     const prompt = `Ты профессиональный трейдинг-коуч. Оцени вероятность успеха этой сделки на основе исторических данных трейдера.
-
 Планируемая сделка:
 - Пара: ${trade.pair}
 - Сетап: ${trade.setup}
 - Направление: ${trade.direction}
 - RR: ${trade.rr}
-
 Исторические данные трейдера по похожим сделкам (${trade.setup} + ${trade.direction}):
 - Всего похожих сделок: ${similar.length}
 - Win rate: ${win_rate}%
 - Последние результаты: ${similar.slice(-5).map(t => t.result).join(', ') || 'нет данных'}
-
 Ответь ТОЛЬКО JSON без markdown:
 {
   "score": число от 0 до 100 (вероятность успеха),
@@ -57,7 +68,6 @@ export async function POST(req: NextRequest) {
 
     const content = response.choices[0]?.message?.content
     if (!content) throw new Error('Empty AI response')
-
     const result = JSON.parse(content)
 
     await supabase.from('ai_sessions').insert({
