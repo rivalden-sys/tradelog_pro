@@ -15,7 +15,7 @@ const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 
-function resultColor(r: string) {A
+function resultColor(r: string) {
   if (r === 'Тейк') return GREEN
   if (r === 'Стоп') return RED
   return '#8e8e93'
