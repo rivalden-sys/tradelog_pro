@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getTrades, createTrade } from '@/services/tradesService'
 import { z } from 'zod'
 
+const FREE_TRADE_LIMIT = 20
+
 const TradeSchema = z.object({
   date:            z.string().min(1),
   pair:            z.string().min(1),
@@ -43,6 +45,31 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
+
+    // Check user plan
+    const { data: profile } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    const plan = profile?.plan ?? 'free'
+
+    // Free plan limit check
+    if (plan === 'free') {
+      const { count } = await supabase
+        .from('trades')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      if ((count ?? 0) >= FREE_TRADE_LIMIT) {
+        return NextResponse.json({
+          success: false,
+          error: `Free plan is limited to ${FREE_TRADE_LIMIT} trades. Upgrade to Pro for unlimited trades.`,
+          code: 'FREE_LIMIT_REACHED',
+        }, { status: 403 })
+      }
+    }
 
     const body = await request.json()
     const parsed = TradeSchema.safeParse(body)
