@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
+import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
+
+const FREE_LIMIT = 20
 
 function resultColor(r: string) {
   if (r === 'Тейк') return '#30d158'
@@ -28,8 +31,24 @@ export default function TradesPage() {
   const [loading, setLoading]           = useState(true)
   const [filterResult, setFilterResult] = useState('')
   const [filterPair, setFilterPair]     = useState('')
+  const [plan, setPlan]                 = useState<string>('free')
+  const [totalCount, setTotalCount]     = useState(0)
+
+  useEffect(() => {
+    loadPlan()
+  }, [])
 
   useEffect(() => { fetchTrades() }, [filterResult, filterPair])
+
+  const loadPlan = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('users').select('plan').eq('id', user.id).single()
+    setPlan(data?.plan ?? 'free')
+    const { count } = await supabase.from('trades').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+    setTotalCount(count ?? 0)
+  }
 
   const fetchTrades = async () => {
     setLoading(true)
@@ -46,9 +65,9 @@ export default function TradesPage() {
     if (!confirm(t('settings_confirm'))) return
     await fetch(`/api/trades/${id}`, { method: 'DELETE' })
     fetchTrades()
+    loadPlan()
   }
 
-  // Result display label — always show translated value
   const resultLabel = (r: string) => {
     if (r === 'Тейк') return t('result_take')
     if (r === 'Стоп') return t('result_stop')
@@ -56,23 +75,73 @@ export default function TradesPage() {
     return r
   }
 
+  const isFree    = plan === 'free'
+  const isAtLimit = isFree && totalCount >= FREE_LIMIT
+  const isNearLimit = isFree && totalCount >= FREE_LIMIT - 5 && totalCount < FREE_LIMIT
+
   return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
       <NavBar />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: c.text, margin: 0 }}>{t('trades_title')}</h1>
           <button
-            onClick={() => router.push('/trades/new')}
+            onClick={() => isAtLimit ? router.push('/billing') : router.push('/trades/new')}
             style={{
-              background: '#30d158', color: '#fff', border: 'none',
+              background: isAtLimit ? '#ff9f0a' : '#30d158',
+              color: '#fff', border: 'none',
               borderRadius: 12, padding: '10px 20px', fontSize: 14,
               fontWeight: 600, cursor: 'pointer',
             }}
-          >{t('trades_add')}</button>
+          >{isAtLimit ? 'Upgrade to Pro ⚡' : t('trades_add')}</button>
         </div>
+
+        {/* Free limit banner — at limit */}
+        {isAtLimit && (
+          <div style={{
+            background: 'linear-gradient(135deg, #ff9f0a18, #ff453a12)',
+            border: '1px solid #ff9f0a44',
+            borderRadius: 14, padding: '16px 20px',
+            marginBottom: 16, display: 'flex',
+            alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#ff9f0a', marginBottom: 4 }}>
+                ⚠️ Ліміт Free плану вичерпано
+              </div>
+              <div style={{ fontSize: 13, color: c.text3 }}>
+                Ви використали {totalCount} з {FREE_LIMIT} безкоштовних угод. Перейдіть на Pro для необмеженого журналу.
+              </div>
+            </div>
+            <a href="/billing" style={{
+              background: '#ff9f0a', color: '#fff',
+              borderRadius: 10, padding: '8px 16px',
+              fontSize: 13, fontWeight: 700,
+              textDecoration: 'none', whiteSpace: 'nowrap', marginLeft: 16,
+            }}>
+              Upgrade →
+            </a>
+          </div>
+        )}
+
+        {/* Free limit banner — near limit */}
+        {isNearLimit && (
+          <div style={{
+            background: '#0a84ff12',
+            border: '1px solid #0a84ff30',
+            borderRadius: 14, padding: '14px 20px',
+            marginBottom: 16, display: 'flex',
+            alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ fontSize: 13, color: c.text3 }}>
+              <span style={{ color: '#0a84ff', fontWeight: 600 }}>ℹ️ </span>
+              Залишилось {FREE_LIMIT - totalCount} безкоштовних угод з {FREE_LIMIT}.{' '}
+              <a href="/billing" style={{ color: '#0a84ff', fontWeight: 600 }}>Upgrade to Pro →</a>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
