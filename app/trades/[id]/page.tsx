@@ -15,7 +15,7 @@ const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 
-function resultColor(r: string) {
+function resultColor(r: string) {A
   if (r === 'Тейк') return GREEN
   if (r === 'Стоп') return RED
   return '#8e8e93'
@@ -46,9 +46,36 @@ function ScoreBar({ score }: { score: number }) {
         <span style={{ fontSize: 13, color: '#8e8e93' }}>Probability of success</span>
         <span style={{ fontSize: 20, fontWeight: 900, color, letterSpacing: '-0.03em' }}>{score}%</span>
       </div>
-      <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+      <div style={{ height: 8, borderRadius: 4, background: 'rgba(128,128,128,0.15)', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${score}%`, background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
       </div>
+    </div>
+  )
+}
+
+function ProGate({ feature }: { feature: string }) {
+  return (
+    <div style={{
+      padding: '28px 20px', textAlign: 'center',
+      background: `linear-gradient(135deg, ${PURPLE}12, ${BLUE}12)`,
+      borderRadius: 14, border: `1px solid ${PURPLE}30`,
+    }}>
+      <div style={{ fontSize: 24, marginBottom: 10 }}>⚡</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#f5f5f7', marginBottom: 6 }}>
+        Pro Feature
+      </div>
+      <div style={{ fontSize: 13, color: '#8e8e93', marginBottom: 18, lineHeight: 1.6 }}>
+        {feature} is available on Pro plan only.
+      </div>
+      <a href="/billing" style={{
+        display: 'inline-block',
+        background: PURPLE, color: '#fff',
+        borderRadius: 10, padding: '9px 22px',
+        fontSize: 13, fontWeight: 700,
+        textDecoration: 'none',
+      }}>
+        Upgrade to Pro →
+      </a>
     </div>
   )
 }
@@ -58,14 +85,16 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const { t } = useLocale()
   const router = useRouter()
 
-  const [trade,       setTrade]       = useState<Trade | null>(null)
-  const [loading,     setLoading]     = useState(true)
-  const [aiData,      setAiData]      = useState<any>(null)
-  const [scoreData,   setScoreData]   = useState<any>(null)
-  const [aiLoading,   setAiLoading]   = useState(false)
-  const [scoreLoading,setScoreLoading]= useState(false)
-  const [aiError,     setAiError]     = useState('')
-  const [scoreError,  setScoreError]  = useState('')
+  const [trade,        setTrade]        = useState<Trade | null>(null)
+  const [loading,      setLoading]      = useState(true)
+  const [aiData,       setAiData]       = useState<any>(null)
+  const [scoreData,    setScoreData]    = useState<any>(null)
+  const [aiLoading,    setAiLoading]    = useState(false)
+  const [scoreLoading, setScoreLoading] = useState(false)
+  const [aiError,      setAiError]      = useState('')
+  const [scoreError,   setScoreError]   = useState('')
+  const [aiProGate,    setAiProGate]    = useState(false)
+  const [scoreProGate, setScoreProGate] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -80,7 +109,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   const runAIReview = async () => {
     if (!trade) return
-    setAiLoading(true); setAiError('')
+    setAiLoading(true); setAiError(''); setAiProGate(false)
     try {
       const res  = await fetch('/api/ai/trade-review', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -88,6 +117,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       })
       const json = await res.json()
       if (json.success) setAiData(json.data)
+      else if (json.code === 'PRO_REQUIRED') setAiProGate(true)
       else setAiError(json.error || 'AI error')
     } catch { setAiError('Network error') }
     setAiLoading(false)
@@ -95,7 +125,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   const runTradeScore = async () => {
     if (!trade) return
-    setScoreLoading(true); setScoreError('')
+    setScoreLoading(true); setScoreError(''); setScoreProGate(false)
     try {
       const res  = await fetch('/api/ai/trade-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -103,6 +133,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       })
       const json = await res.json()
       if (json.success) setScoreData(json.data)
+      else if (json.code === 'PRO_REQUIRED') setScoreProGate(true)
       else setScoreError(json.error || 'AI error')
     } catch { setScoreError('Network error') }
     setScoreLoading(false)
@@ -220,19 +251,20 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{ fontSize: 14, fontWeight: 700, color: c.text, letterSpacing: '-0.02em' }}>🎯 Trade Score</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
                 </div>
-                <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
-                  {scoreLoading ? 'Analyzing...' : 'Get Score'}
-                </button>
+                {!scoreProGate && (
+                  <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
+                    {scoreLoading ? 'Analyzing...' : 'Get Score'}
+                  </button>
+                )}
               </div>
 
+              {scoreProGate && <ProGate feature="Trade Score" />}
               {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
-
-              {!scoreData && !scoreLoading && !scoreError && (
+              {!scoreData && !scoreLoading && !scoreError && !scoreProGate && (
                 <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>
                   Click "Get Score" to see AI probability
                 </div>
               )}
-
               {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Analyzing your history...</div>}
 
               {scoreData && (
@@ -267,19 +299,20 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{ fontSize: 14, fontWeight: 700, color: c.text, letterSpacing: '-0.02em' }}>🧠 AI Analysis</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>Detailed review of this trade</div>
                 </div>
-                <button onClick={runAIReview} disabled={aiLoading} style={btnStyle(BLUE, '#fff', aiLoading)}>
-                  {aiLoading ? 'Analyzing...' : 'Analyze'}
-                </button>
+                {!aiProGate && (
+                  <button onClick={runAIReview} disabled={aiLoading} style={btnStyle(BLUE, '#fff', aiLoading)}>
+                    {aiLoading ? 'Analyzing...' : 'Analyze'}
+                  </button>
+                )}
               </div>
 
+              {aiProGate && <ProGate feature="AI Analysis" />}
               {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
-
-              {!aiData && !aiLoading && !aiError && (
+              {!aiData && !aiLoading && !aiError && !aiProGate && (
                 <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>
                   Click "Analyze" to get AI feedback on this trade
                 </div>
               )}
-
               {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>AI is reviewing your trade...</div>}
 
               {aiData && (
