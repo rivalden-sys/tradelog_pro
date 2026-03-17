@@ -7,28 +7,28 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const APP = 'https://tradelog-ai.vercel.app';
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');
-  const userId = searchParams.get('user_id');
+  const userId    = searchParams.get('user_id');
 
   if (!sessionId || !userId) {
-    return NextResponse.redirect('http://localhost:3000/billing?canceled=true');
+    return NextResponse.redirect(`${APP}/billing?canceled=true`);
   }
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-
     if (session.payment_status === 'paid') {
       await supabaseAdmin
         .from('users')
         .update({ plan: 'pro', stripe_subscription_id: session.subscription as string })
         .eq('id', userId);
     }
-
-    return NextResponse.redirect('http://localhost:3000/billing?success=true');
+    return NextResponse.redirect(`${APP}/billing?success=true`);
   } catch (error) {
     console.error(error);
-    return NextResponse.redirect('http://localhost:3000/billing?canceled=true');
+    return NextResponse.redirect(`${APP}/billing?canceled=true`);
   }
 }
