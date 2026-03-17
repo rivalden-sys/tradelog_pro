@@ -8,13 +8,26 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
+    // Check Pro plan
+    const { data: profile } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.plan !== 'pro') {
+      return NextResponse.json({
+        success: false,
+        error: 'AI Analysis is available on Pro plan only.',
+        code: 'PRO_REQUIRED',
+      }, { status: 403 })
+    }
+
     const { trade } = await req.json()
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
 
     const openai = getOpenAI()
-
     const prompt = `Ты профессиональный трейдинг-коуч. Проанализируй эту сделку и дай структурированный ответ строго в JSON формате.
-
 Сделка:
 - Пара: ${trade.pair}
 - Сетап: ${trade.setup}
@@ -24,7 +37,6 @@ export async function POST(req: NextRequest) {
 - P&L: ${trade.profit_usd}$
 - Комментарий трейдера: ${trade.comment || 'нет комментария'}
 - Самооценка трейдера: ${trade.self_grade || 'не указана'}
-
 Ответь ТОЛЬКО JSON без markdown:
 {
   "entry_quality": "оценка качества входа — что сделано правильно (2-3 предложения)",
@@ -45,10 +57,8 @@ export async function POST(req: NextRequest) {
 
     const content = response.choices[0]?.message?.content
     if (!content) throw new Error('Empty AI response')
-
     const result = JSON.parse(content)
 
-    // Save to ai_sessions
     await supabase.from('ai_sessions').insert({
       user_id:  user.id,
       type:     'trade_review',
