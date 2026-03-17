@@ -8,6 +8,21 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
+    // Check Pro plan
+    const { data: profile } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.plan !== 'pro') {
+      return NextResponse.json({
+        success: false,
+        error: 'AI Psychology is available on Pro plan only.',
+        code: 'PRO_REQUIRED',
+      }, { status: 403 })
+    }
+
     // Get trades with comments
     const { data: trades } = await supabase
       .from('trades')
@@ -22,14 +37,10 @@ export async function POST(req: NextRequest) {
     }
 
     const openai = getOpenAI()
-
     const prompt = `Ты профессиональный трейдинг-психолог. Проанализируй комментарии трейдера и выяви психологические паттерны.
-
 Сделки с комментариями:
 ${trades.map(t => `${t.date} | ${t.pair} | ${t.direction} | ${t.result} | ${t.profit_usd}$ | Оценка:${t.self_grade || '-'} | "${t.comment}"`).join('\n')}
-
 Ищи паттерны: страх, жадность, revenge trading, передвижение стопов, нарушение системы, неуверенность, импульсивность.
-
 Ответь ТОЛЬКО JSON без markdown:
 {
   "patterns": [
@@ -54,7 +65,6 @@ ${trades.map(t => `${t.date} | ${t.pair} | ${t.direction} | ${t.result} | ${t.pr
 
     const content = response.choices[0]?.message?.content
     if (!content) throw new Error('Empty AI response')
-
     const result = JSON.parse(content)
 
     await supabase.from('ai_sessions').insert({
