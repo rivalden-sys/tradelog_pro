@@ -1,74 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getOpenAI, AI_MODEL, AI_TEMP, AI_MAX_TOKENS } from '@/lib/openai'
+import { getTrades, createTrade } from '@/services/tradesService'
+import { z } from 'zod'
 
-export async function POST(req: NextRequest) {
+const FREE_TRADE_LIMIT = 20
+
+const TradeSchema = z.object({
+  date:            z.string().min(1),
+  pair:            z.string().min(1),
+  setup:           z.string().min(1),
+  rr:              z.number().positive(),
+  direction:       z.enum(['Long', 'Short']),
+  result:          z.enum(['Тейк', 'Стоп', 'БУ']),
+  profit_usd:      z.number(),
+  profit_pct:      z.number(),
+  tradingview_url: z.string().optional(),
+  comment:         z.string().optional(),
+  self_grade:      z.enum(['A', 'B', 'C', 'D']).optional(),
+})
+
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
 
-    // Get last 50 trades
-    const { data: trades } = await supabase
-      .from('trades')
-      .select('date, pair, setup, direction, result, rr, profit_usd, comment, self_grade')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .limit(50)
-
-    if (!trades || trades.length === 0) {
-      return NextResponse.json({ success: false, error: 'No trades to analyze', code: 'NO_DATA' }, { status: 400 })
+    const { searchParams } = new URL(request.url)
+    const filters = {
+      result:    searchParams.get('result')    || undefined,
+      pair:      searchParams.get('pair')      || undefined,
+      setup:     searchParams.get('setup')     || undefined,
+      direction: searchParams.get('direction') || undefined,
     }
 
-    const wins = trades.filter(t => t.result === 'Тейк').length
-    const win_rate = Math.round((wins / trades.length) * 100)
-    const total_pnl = trades.reduce((s, t) => s + (t.profit_usd || 0), 0).toFixed(2)
+    const trades = await getTrades(user.id, filters)
+    return NextResponse.json({ success: true, data: trades })
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error), code: 'FETCH_ERROR' }, { status: 500 })
+  }
+}
 
-    const openai = getOpenAI()
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
 
-    const prompt = `Ты профессиональный трейдинг-коуч. Проанализируй журнал трейдера и дай подробный разбор.
+    // Check user plan
+    const { data: profile } = await supabase
+      .from('users')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
 
-Статистика:
-- Всего сделок: ${trades.length}
-- Win rate: ${win_rate}%
-- Total P&L: ${total_pnl}$
+    const plan = profile?.plan ?? 'free'
 
-Сделки (последние ${trades.length}):
-${trades.map(t => `${t.date} | ${t.pair} | ${t.setup} | ${t.direction} | ${t.result} | RR:${t.rr} | ${t.profit_usd}$ | Оценка:${t.self_grade || '-'} | "${t.comment || ''}"`).join('\n')}
+    // Free plan limit check
+    if (plan === 'free') {
+      const { count } = await supabase
+        .from('trades')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
 
-Ответь ТОЛЬКО JSON без markdown:
-{
-  "main_error": "главная ошибка этого периода (3-4 предложения)",
-  "best_setup": "лучший сетап и почему он работает (2-3 предложения)",
-  "worst_setup": "худший сетап и почему не работает (2-3 предложения)",
-  "discipline": "оценка дисциплины трейдера A/B/C/D с обоснованием (2-3 предложения)",
-  "risk_management": "анализ риск-менеджмента и рекомендации (2-3 предложения)",
-  "action_steps": ["конкретный шаг 1", "конкретный шаг 2", "конкретный шаг 3", "конкретный шаг 4"]
-}`
+      if ((count ?? 0) >= FREE_TRADE_LIMIT) {
+        return NextResponse.json({
+          success: false,
+          error: `Free plan is limited to ${FREE_TRADE_LIMIT} trades. Upgrade to Pro for unlimited trades.`,
+          code: 'FREE_LIMIT_REACHED',
+        }, { status: 403 })
+      }
+    }
 
-    const response = await openai.chat.completions.create({
-      model: AI_MODEL,
-      temperature: AI_TEMP,
-      max_tokens: AI_MAX_TOKENS,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    })
+    const body = await request.json()
+    const parsed = TradeSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.message, code: 'VALIDATION_ERROR' }, { status: 400 })
+    }
 
-    const content = response.choices[0]?.message?.content
-    if (!content) throw new Error('Empty AI response')
-
-    const result = JSON.parse(content)
-
-    await supabase.from('ai_sessions').insert({
-      user_id:  user.id,
-      type:     'coach',
-      trade_id: null,
-      prompt,
-      response: content,
-    })
-
-    return NextResponse.json({ success: true, data: result })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message, code: 'AI_ERROR' }, { status: 500 })
+    const trade = await createTrade(user.id, parsed.data as any)
+    return NextResponse.json({ success: true, data: trade }, { status: 201 })
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error), code: 'CREATE_ERROR' }, { status: 500 })
   }
 }
