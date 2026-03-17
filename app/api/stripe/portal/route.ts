@@ -4,9 +4,6 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 
 export async function POST() {
-  console.log('APP_URL:', process.env.APP_URL)
-  console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
-
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
