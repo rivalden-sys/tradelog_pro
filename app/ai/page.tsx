@@ -47,9 +47,37 @@ function Section({ title, color, children, t }: any) {
   )
 }
 
+function ProGate({ t }: { t: ReturnType<typeof th> }) {
+  return (
+    <div style={{
+      padding: '32px 24px', textAlign: 'center',
+      background: `linear-gradient(135deg, ${PURPLE}12, ${BLUE}12)`,
+      borderRadius: 14, border: `1px solid ${PURPLE}30`,
+    }}>
+      <div style={{ fontSize: 28, marginBottom: 12 }}>⚡</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 8 }}>
+        Pro функция
+      </div>
+      <div style={{ fontSize: 13, color: t.sub, marginBottom: 20, lineHeight: 1.6 }}>
+        AI анализ доступен только на Pro плане.<br />
+        Апгрейди чтобы разблокировать полный анализ журнала.
+      </div>
+      <a href="/billing" style={{
+        display: 'inline-block',
+        background: PURPLE, color: '#fff',
+        borderRadius: 12, padding: '10px 24px',
+        fontSize: 14, fontWeight: 700,
+        textDecoration: 'none',
+      }}>
+        Upgrade to Pro →
+      </a>
+    </div>
+  )
+}
+
 function HistoryItem({ session, t, onLoad }: { session: any; t: ReturnType<typeof th>; onLoad: (data: any, type: string) => void }) {
   const date = new Date(session.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  const typeLabel: Record<string, string> = { coach: 'Анализ журнала', psychology: 'Психология' }
+  const typeLabel: Record<string, string> = { coach: 'Анализ журнала', psychology: 'Психологія' }
   const typeColor: Record<string, string> = { coach: BLUE, psychology: PURPLE }
 
   return (
@@ -74,7 +102,7 @@ function HistoryItem({ session, t, onLoad }: { session: any; t: ReturnType<typeo
           cursor: 'pointer', fontFamily: FONT,
         }}
       >
-        Загрузить
+        Завантажити
       </button>
     </div>
   )
@@ -91,6 +119,8 @@ export default function AIPage() {
   const [psychLoading, setPsychLoading] = useState(false)
   const [coachError,   setCoachError]   = useState('')
   const [psychError,   setPsychError]   = useState('')
+  const [coachPro,     setCoachPro]     = useState(false)
+  const [psychPro,     setPsychPro]     = useState(false)
   const [history,      setHistory]      = useState<any[]>([])
   const [historyOpen,  setHistoryOpen]  = useState(false)
 
@@ -112,23 +142,33 @@ export default function AIPage() {
   }, [coachData, psychData])
 
   async function runCoach() {
-    setCoachLoading(true); setCoachError('')
+    setCoachLoading(true); setCoachError(''); setCoachPro(false)
     try {
       const res  = await fetch('/api/ai/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
       const json = await res.json()
-      if (json.success) setCoachData(json.data)
-      else setCoachError(json.error || 'Error')
+      if (json.success) {
+        setCoachData(json.data)
+      } else if (json.code === 'PRO_REQUIRED') {
+        setCoachPro(true)
+      } else {
+        setCoachError(json.error || 'Error')
+      }
     } catch { setCoachError(tr('ai_net_error')) }
     setCoachLoading(false)
   }
 
   async function runPsych() {
-    setPsychLoading(true); setPsychError('')
+    setPsychLoading(true); setPsychError(''); setPsychPro(false)
     try {
       const res  = await fetch('/api/ai/psychology', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
       const json = await res.json()
-      if (json.success) setPsychData(json.data)
-      else setPsychError(json.error || 'Error')
+      if (json.success) {
+        setPsychData(json.data)
+      } else if (json.code === 'PRO_REQUIRED') {
+        setPsychPro(true)
+      } else {
+        setPsychError(json.error || 'Error')
+      }
     } catch { setPsychError(tr('ai_net_error')) }
     setPsychLoading(false)
   }
@@ -165,7 +205,7 @@ export default function AIPage() {
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}
             >
-              История анализов ({history.length})
+              Історія аналізів ({history.length})
             </button>
           )}
         </div>
@@ -174,7 +214,7 @@ export default function AIPage() {
         {historyOpen && history.length > 0 && (
           <div style={{ ...card(t), marginBottom: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              История анализов
+              Історія аналізів
             </div>
             {history.map(s => (
               <HistoryItem key={s.id} session={s} t={t} onLoad={loadFromHistory} />
@@ -202,8 +242,9 @@ export default function AIPage() {
               </button>
             </div>
 
+            {coachPro && <ProGate t={t} />}
             {coachError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{coachError}</div>}
-            {!coachData && !coachLoading && !coachError && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_coach')}</div>}
+            {!coachData && !coachLoading && !coachError && !coachPro && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_coach')}</div>}
             {coachLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_loading_coach')}</div>}
 
             {coachData && (
@@ -251,8 +292,9 @@ export default function AIPage() {
               </button>
             </div>
 
+            {psychPro && <ProGate t={t} />}
             {psychError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{psychError}</div>}
-            {!psychData && !psychLoading && !psychError && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_psych')}</div>}
+            {!psychData && !psychLoading && !psychError && !psychPro && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_empty_psych')}</div>}
             {psychLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: t.sub, fontSize: 13 }}>{tr('ai_loading_psych')}</div>}
 
             {psychData && (
@@ -284,6 +326,7 @@ export default function AIPage() {
               </div>
             )}
           </div>
+
         </div>
       </div>
     </div>
