@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
-    // Check Pro plan
     const { data: profile } = await supabase
       .from('users')
       .select('plan')
@@ -16,14 +15,11 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (profile?.plan !== 'pro') {
-      return NextResponse.json({
-        success: false,
-        error: 'AI Psychology is available on Pro plan only.',
-        code: 'PRO_REQUIRED',
-      }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'AI Psychology is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
     }
 
-    // Get trades with comments
+    const { locale } = await req.json()
+
     const { data: trades } = await supabase
       .from('trades')
       .select('date, pair, result, profit_usd, comment, self_grade, direction')
@@ -36,23 +32,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No comments to analyze', code: 'NO_DATA' }, { status: 400 })
     }
 
+    const lang = locale === 'uk' ? 'Ukrainian' : 'English'
     const openai = getOpenAI()
-    const prompt = `Ты профессиональный трейдинг-психолог. Проанализируй комментарии трейдера и выяви психологические паттерны.
-Сделки с комментариями:
-${trades.map(t => `${t.date} | ${t.pair} | ${t.direction} | ${t.result} | ${t.profit_usd}$ | Оценка:${t.self_grade || '-'} | "${t.comment}"`).join('\n')}
-Ищи паттерны: страх, жадность, revenge trading, передвижение стопов, нарушение системы, неуверенность, импульсивность.
-Ответь ТОЛЬКО JSON без markdown:
+
+    const prompt = `You are a professional trading psychologist. Analyze the trader's comments and identify psychological patterns. Write all text values in ${lang}.
+
+Trades with comments:
+${trades.map(t => `${t.date} | ${t.pair} | ${t.direction} | ${t.result} | ${t.profit_usd}$ | Grade:${t.self_grade || '-'} | "${t.comment}"`).join('\n')}
+
+Look for patterns: fear, greed, revenge trading, moving stops, system violations, hesitation, impulsiveness.
+
+Respond ONLY with JSON, no markdown:
 {
   "patterns": [
     {
-      "pattern": "название паттерна",
-      "severity": "high" или "medium" или "low",
-      "evidence": "конкретные примеры из комментариев (1-2 предложения)",
-      "action": "что делать чтобы исправить (1-2 предложения)"
+      "pattern": "pattern name",
+      "severity": "high" or "medium" or "low",
+      "evidence": "specific examples from comments (1-2 sentences)",
+      "action": "what to do to fix it (1-2 sentences)"
     }
   ],
-  "summary": "общий психологический портрет трейдера (3-4 предложения)",
-  "top_risk": "главный психологический риск на данный момент (1-2 предложения)"
+  "summary": "overall psychological profile of the trader (3-4 sentences)",
+  "top_risk": "main psychological risk at the moment (1-2 sentences)"
 }`
 
     const response = await openai.chat.completions.create({
