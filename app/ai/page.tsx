@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
@@ -85,9 +85,7 @@ function HistoryItem({ session, t, onLoad, locale }: { session: any; t: ReturnTy
         <div style={{ fontSize: 12, color: t.sub, paddingLeft: 16 }}>{date}</div>
       </div>
       <button
-        onClick={() => {
-          try { onLoad(JSON.parse(session.response), session.type) } catch {}
-        }}
+        onClick={() => { try { onLoad(JSON.parse(session.response), session.type) } catch {} }}
         style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${t.border}`, background: 'transparent', color: BLUE, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
       >
         {locale === 'uk' ? 'Завантажити' : 'Load'}
@@ -96,10 +94,16 @@ function HistoryItem({ session, t, onLoad, locale }: { session: any; t: ReturnTy
   )
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export default function AIPage() {
   const { dark } = useTheme()
   const t = th(dark)
   const { t: tr, locale } = useLocale()
+  const chatEndRef = useRef<HTMLDivElement>(null)
 
   const [coachData,    setCoachData]    = useState<any>(null)
   const [psychData,    setPsychData]    = useState<any>(null)
@@ -111,6 +115,12 @@ export default function AIPage() {
   const [psychPro,     setPsychPro]     = useState(false)
   const [history,      setHistory]      = useState<any[]>([])
   const [historyOpen,  setHistoryOpen]  = useState(false)
+
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatInput,    setChatInput]    = useState('')
+  const [chatLoading,  setChatLoading]  = useState(false)
+  const [chatPro,      setChatPro]      = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -128,6 +138,10 @@ export default function AIPage() {
     }
     load()
   }, [coachData, psychData])
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   async function runCoach() {
     setCoachLoading(true); setCoachError(''); setCoachPro(false)
@@ -153,6 +167,36 @@ export default function AIPage() {
     setPsychLoading(false)
   }
 
+  async function sendChat() {
+    if (!chatInput.trim() || chatLoading) return
+    const userMsg = chatInput.trim()
+    setChatInput('')
+    setChatPro(false)
+
+    const newMessages: ChatMessage[] = [...chatMessages, { role: 'user', content: userMsg }]
+    setChatMessages(newMessages)
+    setChatLoading(true)
+
+    try {
+      const res  = await fetch('/api/ai/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg, history: chatMessages, locale }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setChatMessages([...newMessages, { role: 'assistant', content: json.data.answer }])
+      } else if (json.code === 'PRO_REQUIRED') {
+        setChatPro(true)
+        setChatMessages(chatMessages)
+      } else {
+        setChatMessages([...newMessages, { role: 'assistant', content: '⚠ ' + (json.error || 'Error') }])
+      }
+    } catch {
+      setChatMessages([...newMessages, { role: 'assistant', content: '⚠ Network error' }])
+    }
+    setChatLoading(false)
+  }
+
   function loadFromHistory(data: any, type: string) {
     if (type === 'coach')      setCoachData(data)
     if (type === 'psychology') setPsychData(data)
@@ -168,11 +212,27 @@ export default function AIPage() {
   const historyLabel = locale === 'uk' ? `Історія аналізів (${history.length})` : `Analysis History (${history.length})`
   const historyTitle = locale === 'uk' ? 'Історія аналізів' : 'Analysis History'
 
+  const chatPlaceholder = locale === 'uk'
+    ? 'Запитай про свій журнал... "Чому я втрачаю на Short?" або "Який мій кращий день?"'
+    : 'Ask about your journal... "Why do I lose on Shorts?" or "What is my best day?"'
+
+  const chatTitle    = locale === 'uk' ? 'AI Чат' : 'AI Chat'
+  const chatSubtitle = locale === 'uk' ? 'Задавай питання — AI відповідає на основі твого журналу' : 'Ask questions — AI answers based on your journal data'
+  const chatEmpty    = locale === 'uk' ? 'Постав перше питання щоб почати розмову' : 'Ask your first question to start the conversation'
+  const clearLabel   = locale === 'uk' ? 'Очистити' : 'Clear'
+  const sendLabel    = locale === 'uk' ? 'Надіслати' : 'Send'
+  const sendingLabel = locale === 'uk' ? 'Відповідає...' : 'Thinking...'
+
+  const suggestions = locale === 'uk'
+    ? ['Який мій кращий сетап?', 'Чому я втрачаю на Short?', 'Оціни мою дисципліну', 'Що покращити?']
+    : ['What is my best setup?', 'Why do I lose on Shorts?', 'Rate my discipline', 'What to improve?']
+
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
       <NavBar />
       <div style={{ padding: '32px 40px' }}>
 
+        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <div>
             <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
@@ -188,6 +248,7 @@ export default function AIPage() {
           )}
         </div>
 
+        {/* History panel */}
         {historyOpen && history.length > 0 && (
           <div style={{ ...card(t), marginBottom: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>{historyTitle}</div>
@@ -197,7 +258,8 @@ export default function AIPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        {/* Coach + Psychology */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
 
           {/* AI Coach */}
           <div style={card(t)}>
@@ -302,6 +364,117 @@ export default function AIPage() {
             )}
           </div>
         </div>
+
+        {/* AI Chat */}
+        <div style={card(t)}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+                <Dot color={GREEN} />{chatTitle}
+              </div>
+              <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{chatSubtitle}</div>
+            </div>
+            {chatMessages.length > 0 && (
+              <button onClick={() => setChatMessages([])} style={{
+                padding: '7px 14px', borderRadius: 10, border: `1px solid ${t.border}`,
+                background: 'transparent', color: t.sub, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+              }}>
+                {clearLabel}
+              </button>
+            )}
+          </div>
+
+          {chatPro && <ProGate t={t} />}
+
+          {!chatPro && (
+            <>
+              {/* Messages */}
+              <div style={{
+                minHeight: 200, maxHeight: 400, overflowY: 'auto',
+                marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12,
+              }}>
+                {chatMessages.length === 0 && (
+                  <div style={{ padding: '32px 0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{chatEmpty}</div>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      {suggestions.map(s => (
+                        <button key={s} onClick={() => setChatInput(s)} style={{
+                          padding: '7px 14px', borderRadius: 20,
+                          border: `1px solid ${t.border}`, background: t.surface2,
+                          color: t.sub, fontSize: 12, cursor: 'pointer', fontFamily: FONT,
+                        }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {chatMessages.map((msg, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  }}>
+                    <div style={{
+                      maxWidth: '80%',
+                      padding: '12px 16px',
+                      borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      background: msg.role === 'user' ? t.text : t.surface2,
+                      color: msg.role === 'user' ? t.bg : t.text,
+                      fontSize: 14, lineHeight: 1.6,
+                      border: msg.role === 'assistant' ? `1px solid ${t.border}` : 'none',
+                    }}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+
+                {chatLoading && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <div style={{
+                      padding: '12px 16px', borderRadius: '18px 18px 18px 4px',
+                      background: t.surface2, border: `1px solid ${t.border}`,
+                      fontSize: 13, color: t.sub, display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.sub, animation: 'pulse 1s infinite' }} />
+                      {sendingLabel}
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Input */}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <input
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendChat()}
+                  placeholder={chatPlaceholder}
+                  style={{
+                    flex: 1, padding: '12px 16px', borderRadius: 12,
+                    border: `1px solid ${t.border}`, background: t.surface2,
+                    color: t.text, fontSize: 14, outline: 'none', fontFamily: FONT,
+                  }}
+                />
+                <button
+                  onClick={sendChat}
+                  disabled={chatLoading || !chatInput.trim()}
+                  style={{
+                    padding: '12px 22px', borderRadius: 12, border: 'none',
+                    background: chatLoading || !chatInput.trim() ? t.surface2 : GREEN,
+                    color: chatLoading || !chatInput.trim() ? t.sub : '#000',
+                    fontSize: 14, fontWeight: 700, cursor: chatLoading || !chatInput.trim() ? 'default' : 'pointer',
+                    fontFamily: FONT, transition: 'all 0.2s', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {chatLoading ? '...' : sendLabel}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
       </div>
     </div>
   )
