@@ -186,46 +186,51 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   )
 
   const cardStyle = {
-    background: c.surface, borderRadius: 18, padding: '24px',
+    background: c.surface, borderRadius: 18, padding: '20px',
     border: `1px solid ${c.border}`, boxShadow: c.shadow,
   }
 
   const btnStyle = (bg: string, color: string, disabled?: boolean): React.CSSProperties => ({
-    padding: '10px 20px', borderRadius: 12, border: 'none',
+    padding: '9px 18px', borderRadius: 12, border: 'none',
     background: disabled ? c.surface2 : bg, color: disabled ? c.text3 : color,
     fontSize: 13, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
     fontFamily: FONT, opacity: disabled ? 0.7 : 1, transition: 'all 0.2s',
     boxShadow: disabled ? 'none' : `0 0 20px ${bg}44`,
+    whiteSpace: 'nowrap' as const,
   })
 
   return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: `1px solid ${c.border}`,
             borderRadius: 10, padding: '8px 14px', color: c.text3,
             fontSize: 13, cursor: 'pointer', fontFamily: FONT,
           }}>← Back</button>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
               {trade.pair} <span style={{ color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
             </div>
             <div style={{ fontSize: 13, color: c.text3, marginTop: 2 }}>{trade.date} · {trade.setup}</div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Badge label={trade.result} color={resultColor(trade.result)} />
             {trade.self_grade && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        {/* Content grid */}
+        <div className="trade-detail-grid">
+
+          {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16, letterSpacing: '-0.02em' }}>Trade Details</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>Trade Details</div>
+              <div className="trade-fields-grid">
                 {[
                   { label: 'Date',      value: trade.date },
                   { label: 'Pair',      value: trade.pair },
@@ -246,7 +251,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
             {trade.comment && (
               <div style={cardStyle}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12, letterSpacing: '-0.02em' }}>Comment</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>Comment</div>
                 <div style={{ fontSize: 14, color: c.text2, lineHeight: 1.7, background: c.surface2, borderRadius: 12, padding: '14px 16px' }}>
                   {trade.comment}
                 </div>
@@ -255,7 +260,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
             {trade.tradingview_url && (
               <div style={cardStyle}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12, letterSpacing: '-0.02em' }}>TradingView</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>TradingView</div>
                 <a href={trade.tradingview_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BLUE, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
                   Open chart →
                 </a>
@@ -263,14 +268,17 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </div>
 
+          {/* Right column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Trade Score */}
             <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text, letterSpacing: '-0.02em' }}>🎯 Trade Score</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🎯 Trade Score</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {scoreHistory.length > 1 && (
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {scoreHistory.slice(1, 4).map((s, i) => (
@@ -318,13 +326,14 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
+            {/* AI Analysis */}
             <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text, letterSpacing: '-0.02em' }}>🧠 AI Analysis</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🧠 AI Analysis</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>Detailed review of this trade</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {aiHistory.length > 1 && (
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {aiHistory.slice(1, 4).map((s, i) => (
@@ -374,6 +383,27 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
       </div>
+
+      <style>{`
+        .trade-detail-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+        .trade-fields-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        @media (max-width: 768px) {
+          .trade-detail-grid {
+            grid-template-columns: 1fr;
+          }
+          .trade-fields-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
     </div>
   )
 }
