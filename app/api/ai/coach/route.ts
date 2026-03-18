@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOpenAI, AI_MODEL, AI_TEMP, AI_MAX_TOKENS } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,15 @@ export async function POST(req: NextRequest) {
 
     if (profile?.plan !== 'pro') {
       return NextResponse.json({ success: false, error: 'AI Coach is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'coach')
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: 'Rate limit exceeded. Try again in 1 hour.',
+        code: 'RATE_LIMIT_EXCEEDED',
+      }, { status: 429 })
     }
 
     const { locale } = await req.json()
