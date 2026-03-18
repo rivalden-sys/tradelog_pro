@@ -86,7 +86,7 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { theme: c } = useTheme()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const router = useRouter()
 
   const [trade,        setTrade]        = useState<Trade | null>(null)
@@ -110,7 +110,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       if (!json.success) { setLoading(false); return }
       setTrade(json.data)
 
-      // Load AI history for this trade
       const supabase = createClient()
       const { data: sessions } = await supabase
         .from('ai_sessions')
@@ -125,14 +124,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         const scores  = sessions.filter(s => s.type === 'trade_score')
         setAiHistory(reviews)
         setScoreHistory(scores)
-
-        // Auto-load latest results
-        if (reviews.length > 0) {
-          try { setAiData(JSON.parse(reviews[0].response)) } catch {}
-        }
-        if (scores.length > 0) {
-          try { setScoreData(JSON.parse(scores[0].response)) } catch {}
-        }
+        if (reviews.length > 0) { try { setAiData(JSON.parse(reviews[0].response)) } catch {} }
+        if (scores.length > 0)  { try { setScoreData(JSON.parse(scores[0].response)) } catch {} }
       }
 
       setLoading(false)
@@ -146,7 +139,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     try {
       const res  = await fetch('/api/ai/trade-review', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trade }),
+        body: JSON.stringify({ trade, locale }),
       })
       const json = await res.json()
       if (json.success) {
@@ -165,7 +158,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     try {
       const res  = await fetch('/api/ai/trade-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trade }),
+        body: JSON.stringify({ trade, locale }),
       })
       const json = await res.json()
       if (json.success) {
@@ -210,7 +203,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       <NavBar />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: `1px solid ${c.border}`,
@@ -230,8 +222,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-
-          {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={cardStyle}>
               <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16, letterSpacing: '-0.02em' }}>Trade Details</div>
@@ -273,10 +263,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </div>
 
-          {/* Right column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Trade Score */}
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
@@ -331,7 +318,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
-            {/* AI Review */}
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
@@ -385,7 +371,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>
