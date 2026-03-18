@@ -18,19 +18,6 @@ interface FormErrors {
   profit_pct?: string
 }
 
-function validate(form: typeof initialForm): FormErrors {
-  const errors: FormErrors = {}
-  if (!form.pair.trim())           errors.pair = 'Вкажіть пару'
-  if (!form.setup.trim())          errors.setup = 'Вкажіть сетап'
-  const rr = parseFloat(form.rr)
-  if (!form.rr || isNaN(rr) || rr <= 0) errors.rr = 'RR має бути > 0'
-  const usd = parseFloat(form.profit_usd)
-  if (form.profit_usd === '' || isNaN(usd)) errors.profit_usd = 'Вкажіть P&L $'
-  const pct = parseFloat(form.profit_pct)
-  if (form.profit_pct === '' || isNaN(pct)) errors.profit_pct = 'Вкажіть P&L %'
-  return errors
-}
-
 const initialForm = {
   date:            new Date().toISOString().split('T')[0],
   pair:            '',
@@ -45,6 +32,19 @@ const initialForm = {
   tradingview_url: '',
 }
 
+function validate(form: typeof initialForm): FormErrors {
+  const errors: FormErrors = {}
+  if (!form.pair.trim())  errors.pair = 'Вкажіть пару'
+  if (!form.setup.trim()) errors.setup = 'Вкажіть сетап'
+  const rr = parseFloat(form.rr)
+  if (!form.rr || isNaN(rr) || rr <= 0) errors.rr = 'RR має бути > 0'
+  const usd = parseFloat(form.profit_usd)
+  if (form.profit_usd === '' || isNaN(usd)) errors.profit_usd = 'Вкажіть P&L $'
+  const pct = parseFloat(form.profit_pct)
+  if (form.profit_pct === '' || isNaN(pct)) errors.profit_pct = 'Вкажіть P&L %'
+  return errors
+}
+
 export default function NewTradePage() {
   const { theme: c } = useTheme()
   const { t } = useLocale()
@@ -55,7 +55,6 @@ export default function NewTradePage() {
 
   const set = (k: string, v: string) => {
     setForm(f => ({ ...f, [k]: v }))
-    // Clear error on change
     if (errors[k as keyof FormErrors]) {
       setErrors(e => ({ ...e, [k]: undefined }))
     }
@@ -67,7 +66,6 @@ export default function NewTradePage() {
       setErrors(validationErrors)
       return
     }
-
     setSaving(true)
     const res = await fetch('/api/trades', {
       method: 'POST',
@@ -93,7 +91,7 @@ export default function NewTradePage() {
   const inputStyle = (hasError?: boolean) => ({
     width: '100%', background: c.surface2,
     border: `1px solid ${hasError ? '#ff453a' : c.border}`,
-    borderRadius: 10, padding: '10px 14px', fontSize: 14, color: c.text,
+    borderRadius: 10, padding: '11px 14px', fontSize: 14, color: c.text,
     outline: 'none', boxSizing: 'border-box' as const,
   })
 
@@ -104,10 +102,10 @@ export default function NewTradePage() {
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
       {options.map((o, i) => (
         <button key={o} onClick={() => set(key, o)} style={{
-          padding: '8px 16px', borderRadius: 10, border: `1px solid ${c.border}`,
+          padding: '9px 16px', borderRadius: 10, border: `1px solid ${c.border}`,
           background: (form as any)[key] === o ? c.text : 'transparent',
           color:      (form as any)[key] === o ? c.surface : c.text3,
-          fontSize: 13, fontWeight: 500, cursor: 'pointer',
+          fontSize: 13, fontWeight: 500, cursor: 'pointer', flex: '0 0 auto',
         }}>{labels ? labels[i] : o}</button>
       ))}
     </div>
@@ -116,7 +114,7 @@ export default function NewTradePage() {
   return (
     <div style={{ background: c.bg, minHeight: '100vh' }}>
       <NavBar />
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 24px' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button onClick={() => router.back()} style={{
@@ -127,13 +125,13 @@ export default function NewTradePage() {
         </div>
 
         <div style={{
-          background: c.surface, borderRadius: 18, padding: '24px',
+          background: c.surface, borderRadius: 18, padding: '20px 16px',
           border: `1px solid ${c.border}`, boxShadow: c.shadow,
-          display: 'grid', gap: 20,
+          display: 'grid', gap: 18,
         }}>
 
           {/* Date + Pair */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="form-grid-2">
             <div>
               <label style={labelStyle}>{t('new_trade_date')}</label>
               <input type="date" value={form.date} onChange={e => set('date', e.target.value)} style={inputStyle()} />
@@ -141,16 +139,11 @@ export default function NewTradePage() {
             <div>
               <label style={labelStyle}>{t('new_trade_pair')} *</label>
               <input
-                type="text" list="pairs-list"
-                placeholder="BTC/USDT"
-                value={form.pair}
-                onChange={e => set('pair', e.target.value.toUpperCase())}
-                style={inputStyle(!!errors.pair)}
-                autoComplete="off"
+                type="text" list="pairs-list" placeholder="BTC/USDT"
+                value={form.pair} onChange={e => set('pair', e.target.value.toUpperCase())}
+                style={inputStyle(!!errors.pair)} autoComplete="off"
               />
-              <datalist id="pairs-list">
-                {PAIRS.map(p => <option key={p} value={p} />)}
-              </datalist>
+              <datalist id="pairs-list">{PAIRS.map(p => <option key={p} value={p} />)}</datalist>
               {errors.pair && <div style={errorStyle}>{errors.pair}</div>}
             </div>
           </div>
@@ -159,16 +152,11 @@ export default function NewTradePage() {
           <div>
             <label style={labelStyle}>{t('new_trade_setup')} *</label>
             <input
-              type="text" list="setups-list"
-              placeholder="CHoCH + BOS + FVG"
-              value={form.setup}
-              onChange={e => set('setup', e.target.value)}
-              style={inputStyle(!!errors.setup)}
-              autoComplete="off"
+              type="text" list="setups-list" placeholder="CHoCH + BOS + FVG"
+              value={form.setup} onChange={e => set('setup', e.target.value)}
+              style={inputStyle(!!errors.setup)} autoComplete="off"
             />
-            <datalist id="setups-list">
-              {SETUPS.map(s => <option key={s} value={s} />)}
-            </datalist>
+            <datalist id="setups-list">{SETUPS.map(s => <option key={s} value={s} />)}</datalist>
             {errors.setup && <div style={errorStyle}>{errors.setup}</div>}
           </div>
 
@@ -185,7 +173,7 @@ export default function NewTradePage() {
           </div>
 
           {/* RR + P&L */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <div className="form-grid-3">
             <div>
               <label style={labelStyle}>{t('new_trade_rr')} *</label>
               <input type="number" step="0.1" placeholder="2.5" value={form.rr}
@@ -239,6 +227,27 @@ export default function NewTradePage() {
 
         </div>
       </div>
+
+      <style>{`
+        .form-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .form-grid-3 {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 600px) {
+          .form-grid-2 {
+            grid-template-columns: 1fr;
+          }
+          .form-grid-3 {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
     </div>
   )
 }
