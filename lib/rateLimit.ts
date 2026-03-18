@@ -1,9 +1,4 @@
-interface RateLimitEntry {
-  count:     number
-  windowEnd: number
-}
-
-const store = new Map<string, RateLimitEntry>()
+import { createClient } from '@/lib/supabase/server'
 
 interface RateLimitConfig {
   maxRequests: number
@@ -25,26 +20,58 @@ export interface RateLimitResult {
   resetAt:   number
 }
 
-export function checkRateLimit(userId: string, endpoint: string): RateLimitResult {
+export async function checkRateLimit(userId: string, endpoint: string): Promise<RateLimitResult> {
   const config = LIMITS[endpoint] ?? { maxRequests: 10, windowMs: 60 * 60 * 1000 }
-  const key    = `${userId}:${endpoint}`
-  const now    = Date.now()
+  const now = Date.now()
+  const windowEnd = new Date(now + config.windowMs).toISOString()
 
-  const entry = store.get(key)
+  const supabase = await createClient()
 
-  if (!entry || now > entry.windowEnd) {
-    store.set(key, { count: 1, windowEnd: now + config.windowMs })
-    return { allowed: true, remaining: config.maxRequests - 1, resetAt: now + config.windowMs }
+  // Try to get existing record
+  const { data: existing } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('endpoint', endpoint)
+    .single()
+
+  // If no record or window expired — reset
+  if (!existing || new Date(existing.window_end).getTime() <= now) {
+    await supabase
+      .from('rate_limits')
+      .upsert({
+        user_id:    userId,
+        endpoint,
+        count:      1,
+        window_end: windowEnd,
+      }, { onConflict: 'user_id,endpoint' })
+
+    return {
+      allowed:   true,
+      remaining: config.maxRequests - 1,
+      resetAt:   now + config.windowMs,
+    }
   }
 
-  if (entry.count >= config.maxRequests) {
-    return { allowed: false, remaining: 0, resetAt: entry.windowEnd }
+  // Window active — check limit
+  if (existing.count >= config.maxRequests) {
+    return {
+      allowed:   false,
+      remaining: 0,
+      resetAt:   new Date(existing.window_end).getTime(),
+    }
   }
 
-  entry.count++
+  // Increment counter
+  await supabase
+    .from('rate_limits')
+    .update({ count: existing.count + 1 })
+    .eq('user_id', userId)
+    .eq('endpoint', endpoint)
+
   return {
     allowed:   true,
-    remaining: config.maxRequests - entry.count,
-    resetAt:   entry.windowEnd,
+    remaining: config.maxRequests - existing.count - 1,
+    resetAt:   new Date(existing.window_end).getTime(),
   }
 }
