@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOpenAI, AI_MODEL, AI_TEMP, AI_MAX_TOKENS } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,15 @@ export async function POST(req: NextRequest) {
 
     if (profile?.plan !== 'pro') {
       return NextResponse.json({ success: false, error: 'AI Analysis is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'trade_review')
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: 'Rate limit exceeded. Try again in 1 hour.',
+        code: 'RATE_LIMIT_EXCEEDED',
+      }, { status: 429 })
     }
 
     const { trade, locale } = await req.json()
@@ -38,10 +48,10 @@ Trade:
 
 Respond ONLY with JSON, no markdown:
 {
-  "entry_quality": "assessment of entry quality — what was done right (2-3 sentences)",
-  "errors": "errors and notes — what was ignored or violated (2-3 sentences)",
-  "system_compliance": "compliance with the setup — was the trade according to the system (1-2 sentences)",
-  "verdict": "was it worth entering this trade and why (2-3 sentences)",
+  "entry_quality": "assessment of entry quality (2-3 sentences)",
+  "errors": "errors and notes (2-3 sentences)",
+  "system_compliance": "compliance with the setup (1-2 sentences)",
+  "verdict": "was it worth entering this trade (2-3 sentences)",
   "ai_grade": "A, B, C or D",
   "recommendation": "specific recommendation for the future (1-2 sentences)"
 }`
