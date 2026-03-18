@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'TradeLog Pro — AI Trading Journal',
-  description: 'Профессиональный дневник трейдера с AI-аналитикой. by dnproduction',
+  description: 'Професійний щоденник трейдера з AI-аналітикою. by dnproduction',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
