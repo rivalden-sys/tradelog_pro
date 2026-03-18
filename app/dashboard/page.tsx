@@ -154,7 +154,6 @@ export default function DashboardPage() {
     { label: tr('dashboard_all'),   value: 'all'   as Period },
   ]
 
-  // Translate result stored in DB (always Russian) to current locale
   const resultLabel = (r: string) => {
     if (r === 'Тейк') return tr('result_take')
     if (r === 'Стоп') return tr('result_stop')
@@ -210,17 +209,18 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
       <NavBar />
-      <div style={{ padding: '32px 40px' }}>
+      <div style={{ padding: '24px 16px' }} className="dashboard-container">
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('dashboard_title')}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('dashboard_title')}</div>
             <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{filtered.length} {tr('dashboard_subtitle')}</div>
           </div>
           <div style={{ display: 'flex', gap: 6, background: t.surface2, borderRadius: 12, padding: 4, border: `1px solid ${t.border}` }}>
             {PERIODS.map(p => (
               <button key={p.value} onClick={() => setPeriod(p.value)} style={{
-                padding: '7px 18px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
                 background: period === p.value ? t.surface : 'transparent',
                 color: period === p.value ? t.text : t.sub,
                 fontFamily: FONT, fontSize: 13, fontWeight: period === p.value ? 700 : 400,
@@ -232,29 +232,31 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14, marginBottom: 24 }}>
+        {/* Stat cards — адаптивна сітка */}
+        <div className="stat-grid" style={{ marginBottom: 20 }}>
           {statCards.map(sc => (
-            <div key={sc.label} style={{ ...card(t), padding: '18px 20px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>{sc.label}</div>
-              <div style={{ fontSize: sc.label === tr('dashboard_bestsetup') ? 11 : 22, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em', lineHeight: 1.2 }}>{sc.value}</div>
+            <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>{sc.label}</div>
+              <div style={{ fontSize: sc.label === tr('dashboard_bestsetup') ? 11 : 20, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em', lineHeight: 1.2 }}>{sc.value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
+        {/* Charts row 1 */}
+        <div className="chart-grid-2" style={{ marginBottom: 16 }}>
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_balance')}</div>
             {balance.length > 1 ? (
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={balance}>
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} width={52} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={46} />
                   <Tooltip content={<CustomTooltip dark={dark} />} />
                   <Line type="monotone" dataKey="pnl" stroke={stats.total_pnl >= 0 ? GREEN : RED} strokeWidth={2.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_insufficient')}</div>
+              <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_insufficient')}</div>
             )}
           </div>
 
@@ -262,15 +264,15 @@ export default function DashboardPage() {
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_results')}</div>
             {pie.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={160}>
+                <ResponsiveContainer width="100%" height={140}>
                   <PieChart>
-                    <Pie data={pie} dataKey="value" cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3}>
+                    <Pie data={pie} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={62} paddingAngle={3}>
                       {pie.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % 3]} />)}
                     </Pie>
                     <Tooltip formatter={(v: any, n: any) => [`${v}`, n]} contentStyle={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap' }}>
                   {pie.map((p, i) => (
                     <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: PIE_COLORS[i] }} />
@@ -280,19 +282,20 @@ export default function DashboardPage() {
                 </div>
               </>
             ) : (
-              <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
+              <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
             )}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        {/* Charts row 2 */}
+        <div className="chart-grid-2" style={{ marginBottom: 24 }}>
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_pnl_pairs')}</div>
             {byPair.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={byPair} barSize={24}>
-                  <XAxis dataKey="pair" tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} width={46} />
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={byPair} barSize={22}>
+                  <XAxis dataKey="pair" tick={{ fontSize: 9, fill: t.sub }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} />
                   <Tooltip content={<CustomTooltip dark={dark} />} />
                   <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
                     {byPair.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
@@ -300,17 +303,17 @@ export default function DashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
+              <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
             )}
           </div>
 
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_pnl_setups')}</div>
             {bySetup.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={bySetup} barSize={24}>
-                  <XAxis dataKey="setup" tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} width={46} />
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={bySetup} barSize={22}>
+                  <XAxis dataKey="setup" tick={{ fontSize: 9, fill: t.sub }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} />
                   <Tooltip content={<CustomTooltip dark={dark} />} />
                   <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
                     {bySetup.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
@@ -318,7 +321,7 @@ export default function DashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
+              <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
             )}
           </div>
         </div>
@@ -336,11 +339,11 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 600 }}>
                 <thead>
                   <tr>
                     {[tr('th_date'), tr('th_pair'), tr('th_setup'), tr('th_rr'), tr('th_direction'), tr('th_result'), tr('th_pnl'), tr('th_grade')].map(h => (
-                      <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}` }}>{h}</th>
+                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${t.border}` }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -348,28 +351,24 @@ export default function DashboardPage() {
                   {recent.map((trade, i) => (
                     <tr key={trade.id} onClick={() => window.location.href = `/trades/${trade.id}`}
                       style={{ background: i % 2 === 0 ? 'transparent' : `${t.surface2}70`, cursor: 'pointer' }}>
-                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 13 }}>{trade.date}</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: t.text }}>{trade.pair}</td>
-                      <td style={{ padding: '10px 12px', color: t.sub, fontSize: 12 }}>{trade.setup}</td>
-                      <td style={{ padding: '10px 12px', color: t.sub }}>{trade.rr}</td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
+                      <td style={{ padding: '10px 10px', color: t.sub, fontSize: 12 }}>{trade.date}</td>
+                      <td style={{ padding: '10px 10px', fontWeight: 700, color: t.text }}>{trade.pair}</td>
+                      <td style={{ padding: '10px 10px', color: t.sub, fontSize: 11, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trade.setup}</td>
+                      <td style={{ padding: '10px 10px', color: t.sub }}>{trade.rr}</td>
+                      <td style={{ padding: '10px 10px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
                       </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                          background: resultColor(trade.result) + '18',
-                          color: resultColor(trade.result),
-                        }}>
+                      <td style={{ padding: '10px 10px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: resultColor(trade.result) + '18', color: resultColor(trade.result) }}>
                           {resultLabel(trade.result)}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 12px', fontWeight: 700, color: (trade.profit_usd || 0) >= 0 ? GREEN : RED }}>
+                      <td style={{ padding: '10px 10px', fontWeight: 700, color: (trade.profit_usd || 0) >= 0 ? GREEN : RED, fontSize: 12 }}>
                         {(trade.profit_usd || 0) >= 0 ? '+' : ''}{(trade.profit_usd || 0).toFixed(2)}$
                       </td>
-                      <td style={{ padding: '10px 12px' }}>
+                      <td style={{ padding: '10px 10px' }}>
                         {trade.self_grade && (
-                          <span style={{ fontSize: 12, fontWeight: 800, padding: '3px 9px', borderRadius: 8, background: trade.self_grade === 'A' ? `${GREEN}18` : trade.self_grade === 'D' ? `${RED}18` : `${ORANGE}18`, color: trade.self_grade === 'A' ? GREEN : trade.self_grade === 'D' ? RED : ORANGE }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 8px', borderRadius: 8, background: trade.self_grade === 'A' ? `${GREEN}18` : trade.self_grade === 'D' ? `${RED}18` : `${ORANGE}18`, color: trade.self_grade === 'A' ? GREEN : trade.self_grade === 'D' ? RED : ORANGE }}>
                             {trade.self_grade}
                           </span>
                         )}
@@ -383,6 +382,46 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* Responsive CSS */}
+      <style>{`
+        .dashboard-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .stat-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 12px;
+        }
+        .chart-grid-2 {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 1024px) {
+          .stat-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .dashboard-container {
+            padding: 16px 12px !important;
+          }
+          .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+          .chart-grid-2 {
+            grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 480px) {
+          .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+      `}</style>
     </div>
   )
 }
