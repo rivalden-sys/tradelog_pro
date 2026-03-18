@@ -94,7 +94,7 @@ export default function NavBar() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={toggleLocale} style={btnStyle}>
-          {locale === 'ru' ? 'EN' : 'RU'}
+          {locale === 'uk' ? 'EN' : 'UK'}
         </button>
         <button onClick={toggle} style={btnStyle}>
           {dark ? '☀️' : '🌙'}
