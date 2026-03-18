@@ -15,19 +15,16 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (profile?.plan !== 'pro') {
-      return NextResponse.json({
-        success: false,
-        error: 'AI Analysis is available on Pro plan only.',
-        code: 'PRO_REQUIRED',
-      }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'AI Analysis is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
     }
 
-    const { trade } = await req.json()
+    const { trade, locale } = await req.json()
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
 
+    const lang = locale === 'uk' ? 'Ukrainian' : 'English'
     const openai = getOpenAI()
 
-    const prompt = `You are a professional trading coach. Analyze this trade and respond strictly in JSON format.
+    const prompt = `You are a professional trading coach. Analyze this trade and respond strictly in JSON format. Write all text values in ${lang}.
 
 Trade:
 - Pair: ${trade.pair}
@@ -59,7 +56,6 @@ Respond ONLY with JSON, no markdown:
 
     const content = response.choices[0]?.message?.content
     if (!content) throw new Error('Empty AI response')
-
     const result = JSON.parse(content)
 
     await supabase.from('ai_sessions').insert({
