@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
-    // Check Pro plan
     const { data: profile } = await supabase
       .from('users')
       .select('plan')
@@ -16,17 +15,12 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (profile?.plan !== 'pro') {
-      return NextResponse.json({
-        success: false,
-        error: 'Trade Score is available on Pro plan only.',
-        code: 'PRO_REQUIRED',
-      }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'Trade Score is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
     }
 
-    const { trade } = await req.json()
+    const { trade, locale } = await req.json()
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
 
-    // Get historical trades with same setup/direction
     const { data: history } = await supabase
       .from('trades')
       .select('setup, direction, result, rr, profit_usd, pair')
@@ -38,24 +32,29 @@ export async function POST(req: NextRequest) {
     const wins = similar.filter(t => t.result === 'Тейк').length
     const win_rate = similar.length ? Math.round((wins / similar.length) * 100) : 0
 
+    const lang = locale === 'uk' ? 'Ukrainian' : 'English'
     const openai = getOpenAI()
-    const prompt = `Ты профессиональный трейдинг-коуч. Оцени вероятность успеха этой сделки на основе исторических данных трейдера.
-Планируемая сделка:
-- Пара: ${trade.pair}
-- Сетап: ${trade.setup}
-- Направление: ${trade.direction}
+
+    const prompt = `You are a professional trading coach. Estimate the probability of success for this trade based on the trader's historical data. Write all text values in ${lang}.
+
+Planned trade:
+- Pair: ${trade.pair}
+- Setup: ${trade.setup}
+- Direction: ${trade.direction}
 - RR: ${trade.rr}
-Исторические данные трейдера по похожим сделкам (${trade.setup} + ${trade.direction}):
-- Всего похожих сделок: ${similar.length}
+
+Trader's historical data for similar trades (${trade.setup} + ${trade.direction}):
+- Total similar trades: ${similar.length}
 - Win rate: ${win_rate}%
-- Последние результаты: ${similar.slice(-5).map(t => t.result).join(', ') || 'нет данных'}
-Ответь ТОЛЬКО JSON без markdown:
+- Last results: ${similar.slice(-5).map(t => t.result).join(', ') || 'no data'}
+
+Respond ONLY with JSON, no markdown:
 {
-  "score": число от 0 до 100 (вероятность успеха),
+  "score": number from 0 to 100 (probability of success),
   "similar_trades": ${similar.length},
   "win_rate": ${win_rate},
-  "explanation": "объяснение оценки (2-3 предложения)",
-  "recommendation": "enter" или "skip" или "reduce_risk"
+  "explanation": "explanation of the score (2-3 sentences)",
+  "recommendation": "enter" or "skip" or "reduce_risk"
 }`
 
     const response = await openai.chat.completions.create({
