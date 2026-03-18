@@ -29,7 +29,7 @@ const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 
 function card(t: ReturnType<typeof th>): React.CSSProperties {
-  return { background: t.surface, borderRadius: 18, padding: '24px 26px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
+  return { background: t.surface, borderRadius: 18, padding: '20px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
 }
 
 function Dot({ color }: { color: string }) {
@@ -50,7 +50,7 @@ function Section({ title, color, children, t }: any) {
 function ProGate({ t }: { t: ReturnType<typeof th> }) {
   return (
     <div style={{
-      padding: '32px 24px', textAlign: 'center',
+      padding: '28px 20px', textAlign: 'center',
       background: `linear-gradient(135deg, ${PURPLE}12, ${BLUE}12)`,
       borderRadius: 14, border: `1px solid ${PURPLE}30`,
     }}>
@@ -76,7 +76,7 @@ function HistoryItem({ session, t, onLoad, locale }: { session: any; t: ReturnTy
   const label = typeLabel[session.type]?.[locale] || session.type
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: `1px solid ${t.border}`, marginBottom: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 12, border: `1px solid ${t.border}`, marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <Dot color={typeColor[session.type] || BLUE} />
@@ -127,7 +127,6 @@ export default function AIPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Load coach/psychology history
       const { data: sessions } = await supabase
         .from('ai_sessions')
         .select('*')
@@ -137,7 +136,6 @@ export default function AIPage() {
         .limit(20)
       setHistory(sessions || [])
 
-      // Load chat history — reconstruct conversation
       const { data: chatSessions } = await supabase
         .from('ai_sessions')
         .select('prompt, response, created_at')
@@ -228,17 +226,15 @@ export default function AIPage() {
     low:    { label: tr('ai_low'),    color: GREEN,  bg: `${GREEN}18`  },
   }
 
-  const historyLabel = locale === 'uk' ? `Історія аналізів (${history.length})` : `Analysis History (${history.length})`
+  const historyLabel = locale === 'uk' ? `Історія (${history.length})` : `History (${history.length})`
   const historyTitle = locale === 'uk' ? 'Історія аналізів' : 'Analysis History'
   const chatTitle    = locale === 'uk' ? 'AI Чат' : 'AI Chat'
-  const chatSubtitle = locale === 'uk' ? 'Задавай питання — AI відповідає на основі твого журналу' : 'Ask questions — AI answers based on your journal data'
-  const chatEmpty    = locale === 'uk' ? 'Постав перше питання щоб почати розмову' : 'Ask your first question to start the conversation'
+  const chatSubtitle = locale === 'uk' ? 'Задавай питання — AI відповідає на основі твого журналу' : 'Ask questions — AI answers based on your journal'
+  const chatEmpty    = locale === 'uk' ? 'Постав перше питання щоб почати розмову' : 'Ask your first question to start'
   const clearLabel   = locale === 'uk' ? 'Очистити' : 'Clear'
   const sendLabel    = locale === 'uk' ? 'Надіслати' : 'Send'
   const sendingLabel = locale === 'uk' ? 'Відповідає...' : 'Thinking...'
-  const chatPlaceholder = locale === 'uk'
-    ? 'Запитай про свій журнал...'
-    : 'Ask about your journal...'
+  const chatPlaceholder = locale === 'uk' ? 'Запитай про свій журнал...' : 'Ask about your journal...'
 
   const suggestions = locale === 'uk'
     ? ['Який мій кращий сетап?', 'Чому я втрачаю на Short?', 'Оціни мою дисципліну', 'Що покращити?']
@@ -247,11 +243,12 @@ export default function AIPage() {
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
       <NavBar />
-      <div style={{ padding: '32px 40px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('ai_title')}</div>
             <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('ai_subtitle')}</div>
           </div>
           {history.length > 0 && (
@@ -264,22 +261,24 @@ export default function AIPage() {
           )}
         </div>
 
+        {/* History */}
         {historyOpen && history.length > 0 && (
-          <div style={{ ...card(t), marginBottom: 24 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>{historyTitle}</div>
+          <div style={{ ...card(t), marginBottom: 20 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16 }}>{historyTitle}</div>
             {history.map(s => (
               <HistoryItem key={s.id} session={s} t={t} onLoad={loadFromHistory} locale={locale} />
             ))}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        {/* Coach + Psychology — адаптивна сітка */}
+        <div className="ai-grid" style={{ marginBottom: 20 }}>
 
           {/* AI Coach */}
           <div style={card(t)}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: t.text, display: 'flex', alignItems: 'center' }}>
                   <Dot color={BLUE} />{tr('ai_journal')}
                 </div>
                 <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{tr('ai_journal_sub')}</div>
@@ -287,7 +286,8 @@ export default function AIPage() {
               <button onClick={runCoach} disabled={coachLoading} style={{
                 padding: '9px 20px', borderRadius: 12, border: 'none', cursor: coachLoading ? 'default' : 'pointer',
                 background: coachLoading ? t.surface2 : t.text, color: coachLoading ? t.sub : t.bg,
-                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', opacity: coachLoading ? 0.7 : 1,
+                fontFamily: FONT, fontSize: 13, fontWeight: 700, opacity: coachLoading ? 0.7 : 1,
+                whiteSpace: 'nowrap' as const,
               }}>
                 {coachLoading ? tr('ai_running') : tr('ai_run')}
               </button>
@@ -327,9 +327,9 @@ export default function AIPage() {
 
           {/* Psychology */}
           <div style={card(t)}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: t.text, display: 'flex', alignItems: 'center' }}>
                   <Dot color={PURPLE} />{tr('ai_psych')}
                 </div>
                 <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{tr('ai_psych_sub')}</div>
@@ -337,7 +337,8 @@ export default function AIPage() {
               <button onClick={runPsych} disabled={psychLoading} style={{
                 padding: '9px 20px', borderRadius: 12, border: 'none', cursor: psychLoading ? 'default' : 'pointer',
                 background: psychLoading ? t.surface2 : t.text, color: psychLoading ? t.sub : t.bg,
-                fontFamily: FONT, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', opacity: psychLoading ? 0.7 : 1,
+                fontFamily: FONT, fontSize: 13, fontWeight: 700, opacity: psychLoading ? 0.7 : 1,
+                whiteSpace: 'nowrap' as const,
               }}>
                 {psychLoading ? tr('ai_running') : tr('ai_run')}
               </button>
@@ -363,7 +364,7 @@ export default function AIPage() {
                       const s = severityMap[p.severity] || severityMap.medium
                       return (
                         <div key={i} style={{ border: `1px solid ${t.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
                             <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.pattern}</div>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color }}>{s.label}</span>
                           </div>
@@ -381,9 +382,9 @@ export default function AIPage() {
 
         {/* AI Chat */}
         <div style={card(t)}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: t.text, letterSpacing: '-0.03em', display: 'flex', alignItems: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: t.text, display: 'flex', alignItems: 'center' }}>
                 <Dot color={GREEN} />{chatTitle}
               </div>
               <div style={{ fontSize: 12, color: t.sub, marginTop: 3, paddingLeft: 16 }}>{chatSubtitle}</div>
@@ -402,10 +403,10 @@ export default function AIPage() {
 
           {!chatPro && (
             <>
-              <div style={{ minHeight: 200, maxHeight: 400, overflowY: 'auto', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ minHeight: 160, maxHeight: 360, overflowY: 'auto', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {chatMessages.length === 0 && (
-                  <div style={{ padding: '32px 0', textAlign: 'center' }}>
-                    <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{chatEmpty}</div>
+                  <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, color: t.sub, marginBottom: 14 }}>{chatEmpty}</div>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                       {suggestions.map(s => (
                         <button key={s} onClick={() => setChatInput(s)} style={{
@@ -422,7 +423,7 @@ export default function AIPage() {
                 {chatMessages.map((msg, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                     <div style={{
-                      maxWidth: '80%', padding: '12px 16px',
+                      maxWidth: '85%', padding: '12px 16px',
                       borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                       background: msg.role === 'user' ? t.text : t.surface2,
                       color: msg.role === 'user' ? t.bg : t.text,
@@ -464,12 +465,12 @@ export default function AIPage() {
                   onClick={sendChat}
                   disabled={chatLoading || !chatInput.trim()}
                   style={{
-                    padding: '12px 22px', borderRadius: 12, border: 'none',
+                    padding: '12px 20px', borderRadius: 12, border: 'none',
                     background: chatLoading || !chatInput.trim() ? t.surface2 : GREEN,
                     color: chatLoading || !chatInput.trim() ? t.sub : '#000',
                     fontSize: 14, fontWeight: 700,
                     cursor: chatLoading || !chatInput.trim() ? 'default' : 'pointer',
-                    fontFamily: FONT, transition: 'all 0.2s', whiteSpace: 'nowrap',
+                    fontFamily: FONT, whiteSpace: 'nowrap' as const,
                   }}
                 >
                   {chatLoading ? '...' : sendLabel}
@@ -478,8 +479,20 @@ export default function AIPage() {
             </>
           )}
         </div>
-
       </div>
+
+      <style>{`
+        .ai-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+        @media (max-width: 768px) {
+          .ai-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   )
 }
