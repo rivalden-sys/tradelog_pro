@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
-    // Check Pro plan
     const { data: profile } = await supabase
       .from('users')
       .select('plan')
@@ -27,24 +26,27 @@ export async function POST(req: NextRequest) {
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
 
     const openai = getOpenAI()
-    const prompt = `Ты профессиональный трейдинг-коуч. Проанализируй эту сделку и дай структурированный ответ строго в JSON формате.
-Сделка:
-- Пара: ${trade.pair}
-- Сетап: ${trade.setup}
-- Направление: ${trade.direction}
-- Результат: ${trade.result}
+
+    const prompt = `You are a professional trading coach. Analyze this trade and respond strictly in JSON format.
+
+Trade:
+- Pair: ${trade.pair}
+- Setup: ${trade.setup}
+- Direction: ${trade.direction}
+- Result: ${trade.result}
 - RR: ${trade.rr}
 - P&L: ${trade.profit_usd}$
-- Комментарий трейдера: ${trade.comment || 'нет комментария'}
-- Самооценка трейдера: ${trade.self_grade || 'не указана'}
-Ответь ТОЛЬКО JSON без markdown:
+- Trader comment: ${trade.comment || 'no comment'}
+- Self grade: ${trade.self_grade || 'not set'}
+
+Respond ONLY with JSON, no markdown:
 {
-  "entry_quality": "оценка качества входа — что сделано правильно (2-3 предложения)",
-  "errors": "ошибки и замечания — что проигнорировано или нарушено (2-3 предложения)",
-  "system_compliance": "соответствие сетапу — была ли сделка по системе (1-2 предложения)",
-  "verdict": "стоило ли входить в эту сделку и почему (2-3 предложения)",
-  "ai_grade": "A, B, C или D",
-  "recommendation": "конкретная рекомендация на будущее (1-2 предложения)"
+  "entry_quality": "assessment of entry quality — what was done right (2-3 sentences)",
+  "errors": "errors and notes — what was ignored or violated (2-3 sentences)",
+  "system_compliance": "compliance with the setup — was the trade according to the system (1-2 sentences)",
+  "verdict": "was it worth entering this trade and why (2-3 sentences)",
+  "ai_grade": "A, B, C or D",
+  "recommendation": "specific recommendation for the future (1-2 sentences)"
 }`
 
     const response = await openai.chat.completions.create({
@@ -57,6 +59,7 @@ export async function POST(req: NextRequest) {
 
     const content = response.choices[0]?.message?.content
     if (!content) throw new Error('Empty AI response')
+
     const result = JSON.parse(content)
 
     await supabase.from('ai_sessions').insert({
