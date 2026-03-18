@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useTheme } from '@/components/layout/ThemeProvider';
 import { useLocale } from '@/hooks/useLocale';
@@ -13,6 +14,7 @@ export default function NavBar() {
   const router = useRouter();
   const { dark, toggle } = useTheme();
   const { locale, toggleLocale, t } = useLocale();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,77 +37,150 @@ export default function NavBar() {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
-  const btnStyle: React.CSSProperties = {
-    background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-    border: 'none',
-    borderRadius: 8,
-    width: 32,
-    height: 32,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    fontSize: 13,
-    fontWeight: 700,
-    color: dark ? '#f5f5f7' : '#1c1c1e',
-    fontFamily: FONT,
-  }
+  const navBg = dark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.95)';
+  const borderColor = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = dark ? '#f5f5f7' : '#1d1d1f';
+  const subColor = '#6e6e73';
 
   return (
-    <nav style={{
-      fontFamily: FONT,
-      background: dark ? 'rgba(28,28,30,0.9)' : 'rgba(255,255,255,0.85)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
-      padding: '0 40px',
-      height: 52,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-    }}>
-      <span style={{ fontSize: 15, fontWeight: 700, color: dark ? '#f5f5f7' : '#1d1d1f', letterSpacing: '-0.02em' }}>
-        TradeLog <span style={{ color: '#30d158' }}>Pro</span>
-      </span>
+    <>
+      {/* Main NavBar */}
+      <nav style={{
+        fontFamily: FONT,
+        background: navBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: `1px solid ${borderColor}`,
+        padding: '0 24px',
+        height: 52,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        {/* Logo */}
+        <span style={{ fontSize: 15, fontWeight: 700, color: textColor, letterSpacing: '-0.02em' }}>
+          TradeLog <span style={{ color: '#30d158' }}>Pro</span>
+        </span>
 
-      <div style={{ display: 'flex', gap: 2 }}>
-        {links.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            style={{
-              padding: '5px 14px',
-              borderRadius: 7,
-              fontSize: 13,
+        {/* Desktop links */}
+        <div style={{ display: 'flex', gap: 2 }} className="desktop-nav">
+          {links.map(({ href, label }) => (
+            <Link key={href} href={href} style={{
+              padding: '5px 14px', borderRadius: 7, fontSize: 13,
               fontWeight: isActive(href) ? 600 : 400,
-              color: isActive(href) ? (dark ? '#f5f5f7' : '#1d1d1f') : '#6e6e73',
+              color: isActive(href) ? textColor : subColor,
               textDecoration: 'none',
               background: isActive(href) ? (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)') : 'transparent',
               transition: 'all 0.15s ease',
+            }}>{label}</Link>
+          ))}
+        </div>
+
+        {/* Right controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Desktop only controls */}
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={toggleLocale} style={{
+              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+              border: 'none', borderRadius: 8, width: 32, height: 32,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 13, fontWeight: 700, color: textColor, fontFamily: FONT,
+            }}>{locale === 'uk' ? 'EN' : 'UK'}</button>
+            <button onClick={toggle} style={{
+              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+              border: 'none', borderRadius: 8, width: 32, height: 32,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 14, fontFamily: FONT,
+            }}>{dark ? '☀️' : '🌙'}</button>
+            <button onClick={handleLogout} style={{
+              fontSize: 13, color: subColor, background: 'none',
+              border: 'none', cursor: 'pointer', fontFamily: FONT, marginLeft: 4,
+            }}>{t('nav_logout')}</button>
+          </div>
+
+          {/* Burger button — mobile only */}
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className="mobile-nav"
+            style={{
+              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+              border: 'none', borderRadius: 8, width: 36, height: 36,
+              display: 'none', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', flexDirection: 'column', gap: 5, padding: '10px 8px',
             }}
           >
-            {label}
-          </Link>
-        ))}
-      </div>
+            <span style={{ display: 'block', width: 18, height: 2, background: textColor, borderRadius: 2, transition: 'all 0.2s',
+              transform: menuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
+            <span style={{ display: 'block', width: 18, height: 2, background: textColor, borderRadius: 2, transition: 'all 0.2s',
+              opacity: menuOpen ? 0 : 1 }} />
+            <span style={{ display: 'block', width: 18, height: 2, background: textColor, borderRadius: 2, transition: 'all 0.2s',
+              transform: menuOpen ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
+          </button>
+        </div>
+      </nav>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button onClick={toggleLocale} style={btnStyle}>
-          {locale === 'uk' ? 'EN' : 'UK'}
-        </button>
-        <button onClick={toggle} style={btnStyle}>
-          {dark ? '☀️' : '🌙'}
-        </button>
-        <button
-          onClick={handleLogout}
-          style={{ fontSize: 13, color: '#6e6e73', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, marginLeft: 4 }}
-        >
-          {t('nav_logout')}
-        </button>
-      </div>
-    </nav>
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div style={{
+          position: 'fixed', top: 52, left: 0, right: 0, zIndex: 99,
+          background: navBg,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: `1px solid ${borderColor}`,
+          padding: '12px 16px 20px',
+        }} className="mobile-nav">
+          {links.map(({ href, label }) => (
+            <Link key={href} href={href}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                display: 'block', padding: '12px 16px', borderRadius: 10,
+                fontSize: 15, fontWeight: isActive(href) ? 600 : 400,
+                color: isActive(href) ? textColor : subColor,
+                textDecoration: 'none',
+                background: isActive(href) ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
+                marginBottom: 4,
+              }}
+            >{label}</Link>
+          ))}
+
+          <div style={{ height: 1, background: borderColor, margin: '12px 0' }} />
+
+          <div style={{ display: 'flex', gap: 8, padding: '0 16px' }}>
+            <button onClick={toggleLocale} style={{
+              flex: 1, padding: '10px', borderRadius: 10,
+              background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+              border: 'none', fontSize: 13, fontWeight: 700,
+              color: textColor, cursor: 'pointer', fontFamily: FONT,
+            }}>{locale === 'uk' ? 'EN' : 'UK'}</button>
+            <button onClick={toggle} style={{
+              flex: 1, padding: '10px', borderRadius: 10,
+              background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+              border: 'none', fontSize: 14, cursor: 'pointer', fontFamily: FONT,
+            }}>{dark ? '☀️ Light' : '🌙 Dark'}</button>
+            <button onClick={handleLogout} style={{
+              flex: 1, padding: '10px', borderRadius: 10,
+              background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+              border: 'none', fontSize: 13, color: '#ff453a',
+              cursor: 'pointer', fontFamily: FONT,
+            }}>{t('nav_logout')}</button>
+          </div>
+        </div>
+      )}
+
+      {/* CSS for responsive */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-nav { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-nav { display: none !important; }
+          .desktop-nav { display: flex !important; }
+        }
+      `}</style>
+    </>
   );
 }
