@@ -30,7 +30,7 @@ const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 
 function card(t: ReturnType<typeof th>): React.CSSProperties {
-  return { background: t.surface, borderRadius: 18, padding: '22px 24px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
+  return { background: t.surface, borderRadius: 18, padding: '20px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
 }
 
 export default function AnalyticsPage() {
@@ -117,30 +117,35 @@ export default function AnalyticsPage() {
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
       <NavBar />
-      <div style={{ padding: '32px 40px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
 
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('analytics_title')}</div>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('analytics_title')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{trades.length} {tr('analytics_trades')}</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        {/* Stat cards */}
+        <div className="analytics-stat-grid" style={{ marginBottom: 20 }}>
           {[
-            { label: tr('analytics_discipline'), value: `${disciplineScore}%`,                color: disciplineScore >= 70 ? GREEN : RED },
-            { label: tr('analytics_long_wr'),    value: `${longWR}%`,                         color: longWR  >= 50 ? GREEN : RED },
-            { label: tr('analytics_short_wr'),   value: `${shortWR}%`,                        color: shortWR >= 50 ? GREEN : RED },
+            { label: tr('analytics_discipline'), value: `${disciplineScore}%`, color: disciplineScore >= 70 ? GREEN : RED },
+            { label: tr('analytics_long_wr'),    value: `${longWR}%`,          color: longWR  >= 50 ? GREEN : RED },
+            { label: tr('analytics_short_wr'),   value: `${shortWR}%`,         color: shortWR >= 50 ? GREEN : RED },
             { label: tr('analytics_ls_ratio'),   value: `${longs.length} / ${shorts.length}`, color: t.text },
           ].map(sc => (
-            <div key={sc.label} style={{ ...card(t), padding: '18px 20px' }}>
+            <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>{sc.label}</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em' }}>{sc.value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        {/* Charts row 1 */}
+        <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
+
+          {/* Win Rate by Setup */}
           <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('analytics_wr_setups')}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_wr_setups')}</div>
             {bySetup.length === 0 ? (
               <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
             ) : (
@@ -152,7 +157,7 @@ export default function AnalyticsPage() {
                       <span style={{ fontSize: 13, color: s.wr >= 50 ? GREEN : RED, fontWeight: 700 }}>{s.wr}% <span style={{ color: t.sub, fontWeight: 400 }}>({s.total})</span></span>
                     </div>
                     <div style={{ height: 6, background: t.surface2, borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${s.wr}%`, background: s.wr >= 50 ? GREEN : RED, borderRadius: 3, transition: 'width 0.5s ease' }} />
+                      <div style={{ height: '100%', width: `${s.wr}%`, background: s.wr >= 50 ? GREEN : RED, borderRadius: 3 }} />
                     </div>
                   </div>
                 ))}
@@ -160,8 +165,9 @@ export default function AnalyticsPage() {
             )}
           </div>
 
+          {/* P&L by Month */}
           <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('analytics_pnl_month')}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_pnl_month')}</div>
             {byMonth.length === 0 ? (
               <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
             ) : (
@@ -179,44 +185,50 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        {/* Charts row 2 */}
+        <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
+
+          {/* Stats by Pair — таблиця з overflow */}
           <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('analytics_by_pairs')}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_by_pairs')}</div>
             {byPair.length === 0 ? (
               <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    {[tr('analytics_th_pair'), tr('analytics_th_trades'), tr('analytics_th_wr'), tr('analytics_th_pnl')].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: t.sub, fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {byPair.map(p => (
-                    <tr key={p.pair} style={{ borderTop: `1px solid ${t.border}` }}>
-                      <td style={{ padding: '10px 8px', fontWeight: 600, color: t.text }}>{p.pair}</td>
-                      <td style={{ padding: '10px 8px', color: t.sub }}>{p.total}</td>
-                      <td style={{ padding: '10px 8px', color: p.wr >= 50 ? GREEN : RED, fontWeight: 600 }}>{p.wr}%</td>
-                      <td style={{ padding: '10px 8px', color: p.pnl >= 0 ? GREEN : RED, fontWeight: 600 }}>{p.pnl >= 0 ? '+' : ''}{p.pnl}$</td>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 280 }}>
+                  <thead>
+                    <tr>
+                      {[tr('analytics_th_pair'), tr('analytics_th_trades'), tr('analytics_th_wr'), tr('analytics_th_pnl')].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: t.sub, fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {byPair.map(p => (
+                      <tr key={p.pair} style={{ borderTop: `1px solid ${t.border}` }}>
+                        <td style={{ padding: '10px 8px', fontWeight: 600, color: t.text }}>{p.pair}</td>
+                        <td style={{ padding: '10px 8px', color: t.sub }}>{p.total}</td>
+                        <td style={{ padding: '10px 8px', color: p.wr >= 50 ? GREEN : RED, fontWeight: 600 }}>{p.wr}%</td>
+                        <td style={{ padding: '10px 8px', color: p.pnl >= 0 ? GREEN : RED, fontWeight: 600 }}>{p.pnl >= 0 ? '+' : ''}{p.pnl}$</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
+          {/* Grades + RR */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={card(t)}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>{tr('analytics_grades')}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16 }}>{tr('analytics_grades')}</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {byGrade.map(g => {
                   const colors: Record<string, string> = { A: GREEN, B: BLUE, C: ORANGE, D: RED }
                   return (
-                    <div key={g.grade} style={{ flex: 1, textAlign: 'center', padding: '14px 8px', borderRadius: 12, background: (colors[g.grade] || t.sub) + '18' }}>
+                    <div key={g.grade} style={{ flex: 1, textAlign: 'center', padding: '12px 8px', borderRadius: 12, background: (colors[g.grade] || t.sub) + '18' }}>
                       <div style={{ fontSize: 20, fontWeight: 800, color: colors[g.grade] || t.sub }}>{g.count}</div>
-                      <div style={{ fontSize: 12, color: t.sub, marginTop: 4 }}>Grade {g.grade}</div>
+                      <div style={{ fontSize: 11, color: t.sub, marginTop: 4 }}>Grade {g.grade}</div>
                     </div>
                   )
                 })}
@@ -224,7 +236,7 @@ export default function AnalyticsPage() {
             </div>
 
             <div style={card(t)}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>{tr('analytics_rr_dist')}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16 }}>{tr('analytics_rr_dist')}</div>
               {rrDist.length === 0 ? (
                 <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>{tr('analytics_no_data')}</div>
               ) : (
@@ -242,6 +254,32 @@ export default function AnalyticsPage() {
         </div>
 
       </div>
+
+      <style>{`
+        .analytics-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+        .analytics-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 768px) {
+          .analytics-stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .analytics-grid-2 {
+            grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 400px) {
+          .analytics-stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+      `}</style>
     </div>
   )
 }
