@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOpenAI, AI_MODEL, AI_TEMP } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,15 @@ export async function POST(req: NextRequest) {
 
     if (profile?.plan !== 'pro') {
       return NextResponse.json({ success: false, error: 'Trade Score is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
+    }
+
+    const rateLimit = await checkRateLimit(user.id, 'trade_score')
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: 'Rate limit exceeded. Try again in 1 hour.',
+        code: 'RATE_LIMIT_EXCEEDED',
+      }, { status: 429 })
     }
 
     const { trade, locale } = await req.json()
@@ -35,7 +45,7 @@ export async function POST(req: NextRequest) {
     const lang = locale === 'uk' ? 'Ukrainian' : 'English'
     const openai = getOpenAI()
 
-    const prompt = `You are a professional trading coach. Estimate the probability of success for this trade based on the trader's historical data. Write all text values in ${lang}.
+    const prompt = `You are a professional trading coach. Estimate the probability of success for this trade. Write all text values in ${lang}.
 
 Planned trade:
 - Pair: ${trade.pair}
@@ -43,14 +53,14 @@ Planned trade:
 - Direction: ${trade.direction}
 - RR: ${trade.rr}
 
-Trader's historical data for similar trades (${trade.setup} + ${trade.direction}):
+Historical data for similar trades (${trade.setup} + ${trade.direction}):
 - Total similar trades: ${similar.length}
 - Win rate: ${win_rate}%
 - Last results: ${similar.slice(-5).map(t => t.result).join(', ') || 'no data'}
 
 Respond ONLY with JSON, no markdown:
 {
-  "score": number from 0 to 100 (probability of success),
+  "score": number from 0 to 100,
   "similar_trades": ${similar.length},
   "win_rate": ${win_rate},
   "explanation": "explanation of the score (2-3 sentences)",
