@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
 
-    // Check Pro plan
     const { data: profile } = await supabase
       .from('users')
       .select('plan')
@@ -16,14 +15,11 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (profile?.plan !== 'pro') {
-      return NextResponse.json({
-        success: false,
-        error: 'AI Coach is available on Pro plan only.',
-        code: 'PRO_REQUIRED',
-      }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'AI Coach is available on Pro plan only.', code: 'PRO_REQUIRED' }, { status: 403 })
     }
 
-    // Get last 50 trades
+    const { locale } = await req.json()
+
     const { data: trades } = await supabase
       .from('trades')
       .select('date, pair, setup, direction, result, rr, profit_usd, comment, self_grade')
@@ -39,22 +35,27 @@ export async function POST(req: NextRequest) {
     const win_rate = Math.round((wins / trades.length) * 100)
     const total_pnl = trades.reduce((s, t) => s + (t.profit_usd || 0), 0).toFixed(2)
 
+    const lang = locale === 'uk' ? 'Ukrainian' : 'English'
     const openai = getOpenAI()
-    const prompt = `Ты профессиональный трейдинг-коуч. Проанализируй журнал трейдера и дай подробный разбор.
-Статистика:
-- Всего сделок: ${trades.length}
+
+    const prompt = `You are a professional trading coach. Analyze the trader's journal and give a detailed breakdown. Write all text values in ${lang}.
+
+Statistics:
+- Total trades: ${trades.length}
 - Win rate: ${win_rate}%
 - Total P&L: ${total_pnl}$
-Сделки (последние ${trades.length}):
-${trades.map(t => `${t.date} | ${t.pair} | ${t.setup} | ${t.direction} | ${t.result} | RR:${t.rr} | ${t.profit_usd}$ | Оценка:${t.self_grade || '-'} | "${t.comment || ''}"`).join('\n')}
-Ответь ТОЛЬКО JSON без markdown:
+
+Trades (last ${trades.length}):
+${trades.map(t => `${t.date} | ${t.pair} | ${t.setup} | ${t.direction} | ${t.result} | RR:${t.rr} | ${t.profit_usd}$ | Grade:${t.self_grade || '-'} | "${t.comment || ''}"`).join('\n')}
+
+Respond ONLY with JSON, no markdown:
 {
-  "main_error": "главная ошибка этого периода (3-4 предложения)",
-  "best_setup": "лучший сетап и почему он работает (2-3 предложения)",
-  "worst_setup": "худший сетап и почему не работает (2-3 предложения)",
-  "discipline": "оценка дисциплины трейдера A/B/C/D с обоснованием (2-3 предложения)",
-  "risk_management": "анализ риск-менеджмента и рекомендации (2-3 предложения)",
-  "action_steps": ["конкретный шаг 1", "конкретный шаг 2", "конкретный шаг 3", "конкретный шаг 4"]
+  "main_error": "main mistake of this period (3-4 sentences)",
+  "best_setup": "best setup and why it works (2-3 sentences)",
+  "worst_setup": "worst setup and why it doesn't work (2-3 sentences)",
+  "discipline": "discipline assessment A/B/C/D with reasoning (2-3 sentences)",
+  "risk_management": "risk management analysis and recommendations (2-3 sentences)",
+  "action_steps": ["specific step 1", "specific step 2", "specific step 3", "specific step 4"]
 }`
 
     const response = await openai.chat.completions.create({
