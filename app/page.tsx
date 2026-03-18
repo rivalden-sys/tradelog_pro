@@ -98,7 +98,7 @@ export default function Landing() {
           </h1>
 
           <p style={{ fontSize: 20, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, maxWidth: 560, margin: '0 auto 48px' }}>
-            A trading journal with AI coaching, psychological analysis and Trade Score. Stop losing money on the same mistakes.
+            A trading journal with AI coaching, psychological analysis, Trade Score and AI Chat. Stop losing money on the same mistakes.
           </p>
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -157,12 +157,15 @@ export default function Landing() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
           {[
-            { icon: '📊', title: 'Trade Journal', desc: 'All fields a real trader needs: setup, RR, direction, result, screenshot, self-grade.', color: '#0a84ff' },
-            { icon: '🧠', title: 'AI Coach', desc: 'Analyzes your full journal: best setup, worst setup, main mistake, concrete next steps.', color: '#30d158' },
-            { icon: '🎯', title: 'Trade Score', desc: 'AI estimates the probability of success before you enter, based on your own history.', color: '#ff9f0a' },
-            { icon: '🧬', title: 'Psychology Analysis', desc: 'Reads comments and detects fear, greed, revenge trading patterns automatically.', color: '#bf5af2' },
-            { icon: '📈', title: 'Advanced Analytics', desc: 'Win rate by setup, P&L by pair, discipline calculator, RR distribution.', color: '#ff453a' },
-            { icon: '🌙', title: 'Dark mode & i18n', desc: 'Light and dark theme. Interface available in English and Russian.', color: '#636366' },
+            { icon: '📊', title: 'Trade Journal',        desc: 'All fields a real trader needs: setup, RR, direction, result, screenshot, self-grade.',              color: '#0a84ff' },
+            { icon: '🧠', title: 'AI Coach',             desc: 'Analyzes your full journal: best setup, worst setup, main mistake, concrete next steps.',             color: '#30d158' },
+            { icon: '🎯', title: 'Trade Score',          desc: 'AI estimates the probability of success before you enter, based on your own history.',               color: '#ff9f0a' },
+            { icon: '🧬', title: 'Psychology Analysis',  desc: 'Reads comments and detects fear, greed, revenge trading patterns automatically.',                     color: '#bf5af2' },
+            { icon: '💬', title: 'AI Chat',              desc: 'Ask questions about your journal — AI answers with insights based on your actual trade data.',        color: '#30d158' },
+            { icon: '📈', title: 'Advanced Analytics',   desc: 'Win rate by setup, P&L by pair, discipline calculator, RR distribution.',                           color: '#ff453a' },
+            { icon: '🕐', title: 'Analysis History',     desc: 'All AI analyses are saved. Come back anytime and load any previous coach or psychology session.',    color: '#0a84ff' },
+            { icon: '🌙', title: 'Dark mode & i18n',     desc: 'Light and dark theme. Interface available in English and Ukrainian.',                                color: '#636366' },
+            { icon: '🔒', title: 'Free / Pro plans',     desc: 'Start for free with up to 20 trades. Upgrade to Pro for unlimited trades and all AI features.',     color: '#ff9f0a' },
           ].map(f => (
             <div key={f.title} style={{
               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
@@ -189,7 +192,7 @@ export default function Landing() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
           {[
             { num: '01', title: 'Log your trades', desc: 'Fill in all fields: setup, RR, direction, result, screenshot, comment and self-grade.', color: '#30d158' },
-            { num: '02', title: 'AI analyzes', desc: 'Run AI Coach — it breaks down your full journal, finds weak spots and psychological patterns.', color: '#0a84ff' },
+            { num: '02', title: 'AI analyzes', desc: 'Run AI Coach, get Trade Score, chat with AI — it knows your journal and gives specific advice.', color: '#0a84ff' },
             { num: '03', title: 'Grow as a trader', desc: 'Follow concrete AI steps. Watch your win rate and discipline improve month over month.', color: '#ff9f0a' },
           ].map((s, i) => (
             <div key={s.num} style={{
@@ -220,7 +223,7 @@ export default function Landing() {
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Free</div>
             <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 4 }}>$0</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', marginBottom: 32 }}>forever</div>
-            {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode'].map(f => (
+            {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n'].map(f => (
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
                 <span style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
@@ -234,7 +237,16 @@ export default function Landing() {
             <div style={{ fontSize: 14, color: '#30d158', marginBottom: 8, fontWeight: 600 }}>Pro ⚡</div>
             <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 4 }}>$19</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', marginBottom: 32 }}>per month</div>
-            {['Unlimited trades', 'Advanced analytics', 'AI Coach', 'AI trade analysis', 'AI Trade Score', 'AI Psychology', 'Priority support'].map(f => (
+            {[
+              'Unlimited trades',
+              'Advanced analytics',
+              'AI Coach',
+              'AI Trade Score',
+              'AI Psychology Analysis',
+              'AI Chat',
+              'Analysis history saved',
+              'Priority support',
+            ].map(f => (
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(48,209,88,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#30d158' }}>✓</div>
                 <span style={{ fontSize: 15, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
