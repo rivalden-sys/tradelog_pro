@@ -91,6 +91,10 @@ export default function TradesPage() {
     if (usdRaw === null) return
     const pctRaw = prompt(t('trades_quick_pnl_pct_prompt'), String(trade.actual_profit_pct ?? trade.profit_pct ?? 0))
     if (pctRaw === null) return
+    const gradeRaw = prompt(t('trades_quick_grade_prompt'), trade.self_grade || 'A')
+    if (gradeRaw === null) return
+    const grade = gradeRaw.trim().toUpperCase()
+    const selfGrade = ['A', 'B', 'C', 'D'].includes(grade) ? grade : 'A'
 
     const res = await fetch(`/api/trades/${trade.id}`, {
       method: 'PUT',
@@ -102,6 +106,7 @@ export default function TradesPage() {
         result,
         profit_usd: parseFloat(usdRaw),
         profit_pct: parseFloat(pctRaw),
+        self_grade: selfGrade,
       }),
     })
     const json = await res.json()

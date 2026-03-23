@@ -106,6 +106,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     actual_result: '',
     actual_profit_usd: '',
     actual_profit_pct: '',
+    self_grade: '',
     post_comment: '',
   })
 
@@ -120,6 +121,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         actual_result: json.data.actual_result || json.data.result || '',
         actual_profit_usd: json.data.actual_profit_usd != null ? String(json.data.actual_profit_usd) : '',
         actual_profit_pct: json.data.actual_profit_pct != null ? String(json.data.actual_profit_pct) : '',
+        self_grade: json.data.self_grade || '',
         post_comment: json.data.post_comment || json.data.comment || '',
       })
 
@@ -197,6 +199,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     if (factForm.actual_result) payload.result = factForm.actual_result
     if (factForm.actual_profit_usd !== '') payload.profit_usd = parseFloat(factForm.actual_profit_usd)
     if (factForm.actual_profit_pct !== '') payload.profit_pct = parseFloat(factForm.actual_profit_pct)
+    if (factForm.self_grade) payload.self_grade = factForm.self_grade
 
     const res = await fetch(`/api/trades/${trade.id}`, {
       method: 'PUT',
@@ -314,6 +317,24 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <input value={factForm.actual_profit_usd} onChange={e => setFactForm(prev => ({ ...prev, actual_profit_usd: e.target.value }))} placeholder="Fact P&L $" type="number" style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text }} />
                   <input value={factForm.actual_profit_pct} onChange={e => setFactForm(prev => ({ ...prev, actual_profit_pct: e.target.value }))} placeholder="Fact P&L %" type="number" style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text }} />
+                </div>
+                <div style={{ fontSize: 12, color: c.text3 }}>{t('trade_detail_grade')}</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {['A', 'B', 'C', 'D'].map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setFactForm(prev => ({ ...prev, self_grade: g }))}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: 10,
+                        border: `1px solid ${c.border}`,
+                        background: factForm.self_grade === g ? c.text : c.surface2,
+                        color: factForm.self_grade === g ? c.surface : c.text,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >{g}</button>
+                  ))}
                 </div>
                 <textarea
                   value={factForm.post_comment}
