@@ -12,21 +12,25 @@ const supabase = createClient(
 )
 
 export default function TradePage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = params?.id as string
+
   const [trade, setTrade] = useState<any>(null)
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (!id) return
+
     const fetchTrade = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('trades')
         .select('*')
         .eq('id', id)
         .single()
 
-      if (data) {
+      if (!error && data) {
         setTrade(data)
         setComment(data.post_comment || '')
       }
@@ -38,6 +42,8 @@ export default function TradePage() {
   }, [id])
 
   const handleSave = async () => {
+    if (!id) return
+
     setSaving(true)
 
     await supabase
@@ -48,7 +54,8 @@ export default function TradePage() {
     setSaving(false)
   }
 
-  if (loading) return null
+  if (loading) return <div className="p-6">Loading...</div>
+  if (!trade) return <div className="p-6">Trade not found</div>
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -58,32 +65,32 @@ export default function TradePage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Pair</p>
-            <p className="font-medium">{trade.pair}</p>
+            <p className="font-medium">{trade.pair || '-'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Direction</p>
-            <p className="font-medium">{trade.direction}</p>
+            <p className="font-medium">{trade.direction || '-'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Result</p>
-            <p className="font-medium">{trade.result}</p>
+            <p className="font-medium">{trade.result || '-'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">RR</p>
-            <p className="font-medium">{trade.rr}</p>
+            <p className="font-medium">{trade.rr ?? '-'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">P&L $</p>
-            <p className="font-medium">{trade.pnl_usd}</p>
+            <p className="font-medium">{trade.pnl_usd ?? '-'}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">P&L %</p>
-            <p className="font-medium">{trade.pnl_percent}</p>
+            <p className="font-medium">{trade.pnl_percent ?? '-'}</p>
           </div>
         </div>
       </div>
