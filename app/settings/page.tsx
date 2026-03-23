@@ -55,8 +55,10 @@ export default function SettingsPage() {
       if (!user) { router.push('/login'); return }
       setEmail(user.email || '')
       setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
-      const { data: profile } = await supabase.from('users').select('initial_balance').eq('id', user.id).single()
-      setInitialBalance(profile?.initial_balance != null ? String(profile.initial_balance) : '')
+      const { data: profile, error } = await supabase.from('users').select('initial_balance').eq('id', user.id).single()
+      if (!error) {
+        setInitialBalance(profile?.initial_balance != null ? String(profile.initial_balance) : '')
+      }
       setLoading(false)
     }
     load()
@@ -68,10 +70,13 @@ export default function SettingsPage() {
     await supabase.auth.updateUser({ data: { username } })
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      await supabase
-        .from('users')
-        .update({ initial_balance: initialBalance ? parseFloat(initialBalance) : 0 })
-        .eq('id', user.id)
+      try {
+        await supabase
+          .from('users')
+          .update({ initial_balance: initialBalance ? parseFloat(initialBalance) : 0 })
+          .eq('id', user.id)
+          .throwOnError()
+      } catch {}
     }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)

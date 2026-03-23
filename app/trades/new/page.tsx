@@ -72,7 +72,8 @@ export default function NewTradePage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase.from('users').select('initial_balance').eq('id', user.id).single()
+      const { data, error } = await supabase.from('users').select('initial_balance').eq('id', user.id).single()
+      if (error) return
       if (data?.initial_balance && Number(data.initial_balance) > 0) {
         setForm(prev => ({ ...prev, initial_balance: String(data.initial_balance) }))
       }
@@ -149,7 +150,9 @@ export default function NewTradePage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from('users').update({ initial_balance: balance }).eq('id', user.id)
+        try {
+          await supabase.from('users').update({ initial_balance: balance }).eq('id', user.id).throwOnError()
+        } catch {}
       }
       router.push('/trades')
     } else {
@@ -278,8 +281,8 @@ export default function NewTradePage() {
           </div>
 
           {calculations && (
-            <div style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 12, padding: '12px 14px' }}>
-              <div style={{ fontSize: 12, color: c.text3, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Авто-розрахунок плану</div>
+            <div style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 12, padding: '12px 14px', color: '#2f2f33' }}>
+              <div style={{ fontSize: 12, color: '#4a4a52', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Авто-розрахунок плану</div>
               <div className="form-grid-3">
                 <div><strong>Ризик:</strong> {calculations.riskUsd.toFixed(2)} USDT</div>
                 <div><strong>RR:</strong> {calculations.rr.toFixed(2)}</div>
