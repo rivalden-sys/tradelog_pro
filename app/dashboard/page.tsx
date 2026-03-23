@@ -154,14 +154,16 @@ export default function DashboardPage() {
     { label: tr('dashboard_all'),   value: 'all'   as Period },
   ]
 
-  const resultLabel = (r: string) => {
+  const resultLabel = (r?: string | null) => {
+    if (!r) return 'План'
     if (r === 'Тейк') return tr('result_take')
     if (r === 'Стоп') return tr('result_stop')
     if (r === 'БУ')   return tr('result_bu')
     return r
   }
 
-  const resultColor = (r: string) => {
+  const resultColor = (r?: string | null) => {
+    if (!r) return GRAY
     if (r === 'Тейк') return GREEN
     if (r === 'Стоп') return RED
     return GRAY
@@ -359,8 +361,8 @@ export default function DashboardPage() {
                         <span style={{ fontSize: 11, fontWeight: 700, color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
                       </td>
                       <td style={{ padding: '10px 10px' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: resultColor(trade.result) + '18', color: resultColor(trade.result) }}>
-                          {resultLabel(trade.result)}
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: resultColor(trade.actual_result || trade.result) + '18', color: resultColor(trade.actual_result || trade.result) }}>
+                          {resultLabel(trade.actual_result || trade.result)}
                         </span>
                       </td>
                       <td style={{ padding: '10px 10px', fontWeight: 700, color: (trade.profit_usd || 0) >= 0 ? GREEN : RED, fontSize: 12 }}>

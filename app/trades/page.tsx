@@ -10,7 +10,8 @@ import { Trade } from '@/types'
 
 const FREE_LIMIT = 20
 
-function resultColor(r: string) {
+function resultColor(r?: string | null) {
+  if (!r) return '#8e8e93'
   if (r === 'Тейк') return '#30d158'
   if (r === 'Стоп') return '#ff453a'
   return '#8e8e93'
@@ -33,11 +34,9 @@ export default function TradesPage() {
   const [filterPair, setFilterPair]     = useState('')
   const [plan, setPlan]                 = useState<string>('free')
   const [totalCount, setTotalCount]     = useState(0)
+  const [planFactReady, setPlanFactReady] = useState<boolean | null>(null)
 
-  useEffect(() => { loadPlan() }, [])
-  useEffect(() => { fetchTrades() }, [filterResult, filterPair])
-
-  const loadPlan = async () => {
+  async function loadPlan() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -47,7 +46,7 @@ export default function TradesPage() {
     setTotalCount(count ?? 0)
   }
 
-  const fetchTrades = async () => {
+  async function fetchTrades() {
     setLoading(true)
     const params = new URLSearchParams()
     if (filterResult) params.set('result', filterResult)
@@ -58,6 +57,15 @@ export default function TradesPage() {
     setLoading(false)
   }
 
+  async function loadHealth() {
+    const res = await fetch('/api/trades/health')
+    const json = await res.json()
+    if (json.success) setPlanFactReady(!!json.data?.plan_fact_ready)
+  }
+
+  useEffect(() => { loadPlan(); loadHealth() }, [])
+  useEffect(() => { fetchTrades() }, [filterResult, filterPair])
+
   const deleteTrade = async (id: string) => {
     if (!confirm(t('settings_confirm'))) return
     await fetch(`/api/trades/${id}`, { method: 'DELETE' })
@@ -65,7 +73,52 @@ export default function TradesPage() {
     loadPlan()
   }
 
-  const resultLabel = (r: string) => {
+  const normalizeResult = (value: string): 'Тейк' | 'Стоп' | 'БУ' | null => {
+    const v = value.trim().toLowerCase()
+    if (['тейк', 'take', 'tp'].includes(v)) return 'Тейк'
+    if (['стоп', 'stop', 'sl'].includes(v)) return 'Стоп'
+    if (['бу', 'be', 'breakeven', 'break-even'].includes(v)) return 'БУ'
+    return null
+  }
+
+  const quickComplete = async (trade: Trade) => {
+    const resultRaw = prompt(t('trades_quick_result_prompt'), trade.actual_result || trade.result || 'Тейк')
+    if (!resultRaw) return
+    const result = normalizeResult(resultRaw)
+    if (!result) return alert(t('trades_quick_invalid_result'))
+
+    const usdRaw = prompt(t('trades_quick_pnl_usd_prompt'), String(trade.actual_profit_usd ?? trade.profit_usd ?? 0))
+    if (usdRaw === null) return
+    const pctRaw = prompt(t('trades_quick_pnl_pct_prompt'), String(trade.actual_profit_pct ?? trade.profit_pct ?? 0))
+    if (pctRaw === null) return
+    const gradeRaw = prompt(t('trades_quick_grade_prompt'), trade.self_grade || 'A')
+    if (gradeRaw === null) return
+    const grade = gradeRaw.trim().toUpperCase()
+    const selfGrade = ['A', 'B', 'C', 'D'].includes(grade) ? grade : 'A'
+
+    const res = await fetch(`/api/trades/${trade.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actual_result: result,
+        actual_profit_usd: parseFloat(usdRaw),
+        actual_profit_pct: parseFloat(pctRaw),
+        result,
+        profit_usd: parseFloat(usdRaw),
+        profit_pct: parseFloat(pctRaw),
+        self_grade: selfGrade,
+      }),
+    })
+    const json = await res.json()
+    if (!json.success) {
+      alert(t('trades_quick_save_error'))
+      return
+    }
+    fetchTrades()
+  }
+
+  const resultLabel = (r?: string | null) => {
+    if (!r) return 'План'
     if (r === 'Тейк') return t('result_take')
     if (r === 'Стоп') return t('result_stop')
     if (r === 'БУ')   return t('result_bu')
@@ -94,6 +147,21 @@ export default function TradesPage() {
             }}
           >{isAtLimit ? 'Upgrade ⚡' : t('trades_add')}</button>
         </div>
+
+        {planFactReady !== null && (
+          <div style={{
+            marginBottom: 12,
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: `1px solid ${planFactReady ? '#30d15844' : '#ff9f0a44'}`,
+            background: planFactReady ? '#30d15812' : '#ff9f0a12',
+            color: planFactReady ? '#30d158' : '#ff9f0a',
+            fontSize: 12,
+            fontWeight: 600,
+          }}>
+            {planFactReady ? t('trades_health_ok') : t('trades_health_missing')}
+          </div>
+        )}
 
         {/* Free limit banner — at limit */}
         {isAtLimit && (
@@ -180,7 +248,7 @@ export default function TradesPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${c.border}` }}>
-                      {[t('th_date'), t('th_pair'), t('th_setup'), t('th_rr'), t('th_direction'), t('th_result'), t('th_pnl'), 'P&L %', t('th_grade'), ''].map((h, i) => (
+                      {[t('th_date'), t('th_pair'), t('th_setup'), t('th_rr'), t('th_direction'), t('th_result'), t('th_pnl'), 'P&L %', t('th_grade'), '', ''].map((h, i) => (
                         <th key={i} style={{ textAlign: 'left', padding: '10px 14px', color: c.text3, fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
@@ -190,7 +258,7 @@ export default function TradesPage() {
                       <tr key={trade.id}
                         style={{
                           borderBottom: `1px solid ${c.border}`,
-                          background: trade.result === 'Тейк' ? '#30d15808' : trade.result === 'Стоп' ? '#ff453a08' : 'transparent',
+                          background: trade.actual_result === 'Тейк' ? '#30d15808' : trade.actual_result === 'Стоп' ? '#ff453a08' : 'transparent',
                           cursor: 'pointer',
                         }}
                         onClick={() => router.push(`/trades/${trade.id}`)}
@@ -198,18 +266,18 @@ export default function TradesPage() {
                         <td style={{ padding: '11px 14px', color: c.text2 }}>{trade.date}</td>
                         <td style={{ padding: '11px 14px', fontWeight: 600, color: c.text }}>{trade.pair}</td>
                         <td style={{ padding: '11px 14px', color: c.text3, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trade.setup}</td>
-                        <td style={{ padding: '11px 14px', color: c.text }}>{trade.rr}</td>
+                        <td style={{ padding: '11px 14px', color: c.text }}>{trade.planned_rr ?? trade.rr ?? '-'}</td>
                         <td style={{ padding: '11px 14px' }}>
                           <span style={{ background: (trade.direction === 'Long' ? '#30d158' : '#ff453a') + '22', color: trade.direction === 'Long' ? '#30d158' : '#ff453a', padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{trade.direction}</span>
                         </td>
                         <td style={{ padding: '11px 14px' }}>
-                          <span style={{ background: resultColor(trade.result) + '22', color: resultColor(trade.result), padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{resultLabel(trade.result)}</span>
+                          <span style={{ background: resultColor(trade.actual_result || trade.result) + '22', color: resultColor(trade.actual_result || trade.result), padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{resultLabel(trade.actual_result || trade.result)}</span>
                         </td>
-                        <td style={{ padding: '11px 14px', fontWeight: 600, color: trade.profit_usd >= 0 ? '#30d158' : '#ff453a' }}>
-                          {trade.profit_usd >= 0 ? '+' : ''}{trade.profit_usd}$
+                        <td style={{ padding: '11px 14px', fontWeight: 600, color: (trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '#30d158' : '#ff453a' }}>
+                          {trade.actual_profit_usd == null && trade.profit_usd == null ? '—' : `${(trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_usd ?? trade.profit_usd}$`}
                         </td>
-                        <td style={{ padding: '11px 14px', color: trade.profit_pct >= 0 ? '#30d158' : '#ff453a' }}>
-                          {trade.profit_pct >= 0 ? '+' : ''}{trade.profit_pct}%
+                        <td style={{ padding: '11px 14px', color: (trade.actual_profit_pct ?? trade.profit_pct ?? 0) >= 0 ? '#30d158' : '#ff453a' }}>
+                          {trade.actual_profit_pct == null && trade.profit_pct == null ? '—' : `${(trade.actual_profit_pct ?? trade.profit_pct ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_pct ?? trade.profit_pct}%`}
                         </td>
                         <td style={{ padding: '11px 14px' }}>
                           {trade.self_grade && (
@@ -218,6 +286,11 @@ export default function TradesPage() {
                         </td>
                         <td style={{ padding: '11px 14px' }} onClick={e => e.stopPropagation()}>
                           <button onClick={() => deleteTrade(trade.id)} style={{ background: '#ff453a18', color: '#ff453a', border: '1px solid #ff453a44', borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>{t('trades_delete')}</button>
+                        </td>
+                        <td style={{ padding: '11px 14px' }} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => quickComplete(trade)} style={{ background: '#0a84ff18', color: '#0a84ff', border: '1px solid #0a84ff44', borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>
+                            {t('trades_quick_complete')}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -240,15 +313,15 @@ export default function TradesPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontWeight: 700, color: c.text, fontSize: 15 }}>{trade.pair}</span>
                         <span style={{ background: (trade.direction === 'Long' ? '#30d158' : '#ff453a') + '22', color: trade.direction === 'Long' ? '#30d158' : '#ff453a', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{trade.direction}</span>
-                        <span style={{ background: resultColor(trade.result) + '22', color: resultColor(trade.result), padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{resultLabel(trade.result)}</span>
+                        <span style={{ background: resultColor(trade.actual_result || trade.result) + '22', color: resultColor(trade.actual_result || trade.result), padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{resultLabel(trade.actual_result || trade.result)}</span>
                       </div>
-                      <span style={{ fontWeight: 700, color: trade.profit_usd >= 0 ? '#30d158' : '#ff453a', fontSize: 15 }}>
-                        {trade.profit_usd >= 0 ? '+' : ''}{trade.profit_usd}$
+                      <span style={{ fontWeight: 700, color: (trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '#30d158' : '#ff453a', fontSize: 15 }}>
+                        {trade.actual_profit_usd == null && trade.profit_usd == null ? '—' : `${(trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_usd ?? trade.profit_usd}$`}
                       </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ fontSize: 12, color: c.text3 }}>
-                        {trade.date} · RR {trade.rr} · {trade.setup.split('+')[0].trim()}
+                        {trade.date} · RR {trade.planned_rr ?? trade.rr ?? '-'} · {trade.setup.split('+')[0].trim()}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {trade.self_grade && (
@@ -258,6 +331,10 @@ export default function TradesPage() {
                           onClick={e => { e.stopPropagation(); deleteTrade(trade.id) }}
                           style={{ background: '#ff453a18', color: '#ff453a', border: 'none', borderRadius: 8, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
                         >✕</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); quickComplete(trade) }}
+                          style={{ background: '#0a84ff18', color: '#0a84ff', border: 'none', borderRadius: 8, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
+                        >{t('trades_quick_complete')}</button>
                       </div>
                     </div>
                   </div>
