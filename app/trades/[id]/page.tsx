@@ -86,7 +86,7 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { theme: c } = useTheme()
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const router = useRouter()
 
   const [trade,        setTrade]        = useState<Trade | null>(null)
@@ -213,14 +213,14 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   if (loading) return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>Loading...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_loading')}</div>
     </div>
   )
 
   if (!trade) return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>Trade not found</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_not_found')}</div>
     </div>
   )
 
@@ -249,7 +249,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             background: 'transparent', border: `1px solid ${c.border}`,
             borderRadius: 10, padding: '8px 14px', color: c.text3,
             fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-          }}>← Back</button>
+          }}>{t('trade_detail_back')}</button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
               {trade.pair} <span style={{ color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
@@ -268,19 +268,19 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>Trade Details</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>{t('trade_detail_title')}</div>
               <div className="trade-fields-grid">
                 {[
-                  { label: 'Date',      value: trade.date },
-                  { label: 'Pair',      value: trade.pair },
-                  { label: 'Setup',     value: trade.setup },
-                  { label: 'Direction', value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
-                  { label: 'Result',    value: trade.actual_result || trade.result || 'План', color: resultColor(trade.actual_result || trade.result || '') },
-                  { label: 'Plan RR',   value: String(trade.planned_rr ?? trade.rr ?? '-') },
-                  { label: 'Plan P&L $', value: trade.planned_profit_usd != null ? `+${trade.planned_profit_usd}$` : '-' },
-                  { label: 'Plan P&L %', value: trade.planned_profit_pct != null ? `+${trade.planned_profit_pct}%` : '-' },
-                  { label: 'Fact P&L $',     value: trade.actual_profit_usd != null ? `${trade.actual_profit_usd >= 0 ? '+' : ''}${trade.actual_profit_usd}$` : '-', color: (trade.actual_profit_usd ?? 0) >= 0 ? GREEN : RED },
-                  { label: 'Fact P&L %',     value: trade.actual_profit_pct != null ? `${trade.actual_profit_pct >= 0 ? '+' : ''}${trade.actual_profit_pct}%` : '-', color: (trade.actual_profit_pct ?? 0) >= 0 ? GREEN : RED },
+                  { label: t('trade_detail_date'),      value: trade.date },
+                  { label: t('trade_detail_pair'),      value: trade.pair },
+                  { label: t('trade_detail_setup'),     value: trade.setup },
+                  { label: t('trade_detail_direction'), value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
+                  { label: t('trade_detail_result'),    value: trade.actual_result || trade.result || 'Plan', color: resultColor(trade.actual_result || trade.result || '') },
+                  { label: t('trade_detail_plan_rr'),   value: String(trade.planned_rr ?? trade.rr ?? '-') },
+                  { label: t('trade_detail_plan_pnl_usd'), value: trade.planned_profit_usd != null ? `+${trade.planned_profit_usd}$` : '-' },
+                  { label: t('trade_detail_plan_pnl_pct'), value: trade.planned_profit_pct != null ? `+${trade.planned_profit_pct}%` : '-' },
+                  { label: t('trade_detail_fact_pnl_usd'),     value: trade.actual_profit_usd != null ? `${trade.actual_profit_usd >= 0 ? '+' : ''}${trade.actual_profit_usd}$` : '-', color: (trade.actual_profit_usd ?? 0) >= 0 ? GREEN : RED },
+                  { label: t('trade_detail_fact_pnl_pct'),     value: trade.actual_profit_pct != null ? `${trade.actual_profit_pct >= 0 ? '+' : ''}${trade.actual_profit_pct}%` : '-', color: (trade.actual_profit_pct ?? 0) >= 0 ? GREEN : RED },
                 ].map(f => (
                   <div key={f.label} style={{ background: c.surface2, borderRadius: 12, padding: '12px 14px' }}>
                     <div style={{ fontSize: 11, color: c.text3, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{f.label}</div>
@@ -291,8 +291,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>Пост-трейд факт</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>{t('trade_detail_fact_section')}</div>
               <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 12, color: c.text3 }}>{t('trade_detail_fact_result')}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {['Тейк', 'Стоп', 'БУ'].map(r => (
                     <button
@@ -317,7 +318,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 <textarea
                   value={factForm.post_comment}
                   onChange={e => setFactForm(prev => ({ ...prev, post_comment: e.target.value }))}
-                  placeholder="Добавьте выводы после реализации сделки..."
+                  placeholder={t('trade_detail_fact_comment_ph')}
                   rows={4}
                   style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text, resize: 'vertical' }}
                 />
@@ -326,7 +327,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   disabled={factSaving}
                   style={{ alignSelf: 'flex-start', border: 'none', borderRadius: 10, padding: '10px 16px', background: BLUE, color: '#fff', cursor: 'pointer', fontWeight: 700, opacity: factSaving ? 0.7 : 1 }}
                 >
-                  {factSaving ? 'Saving...' : 'Save fact'}
+                  {factSaving ? t('trade_detail_fact_saving') : t('trade_detail_fact_save')}
                 </button>
               </div>
             </div>
@@ -348,8 +349,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🎯 Trade Score</div>
-                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('trade_detail_score')}</div>
+                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>{t('trade_detail_ai_hint')}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {scoreHistory.length > 1 && (
