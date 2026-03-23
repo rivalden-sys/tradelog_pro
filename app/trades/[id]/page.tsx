@@ -27,7 +27,7 @@ export default function TradePage() {
       const { data, error } = await supabase
         .from('trades')
         .select('*')
-        .eq('id', id)
+        .eq('id', Number(id))
         .single()
 
       if (!error && data) {
@@ -49,7 +49,7 @@ export default function TradePage() {
     await supabase
       .from('trades')
       .update({ post_comment: comment })
-      .eq('id', id)
+      .eq('id', Number(id))
 
     setSaving(false)
   }
