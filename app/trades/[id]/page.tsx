@@ -86,7 +86,7 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { theme: c } = useTheme()
-  const { t, locale } = useLocale()
+  const { locale } = useLocale()
   const router = useRouter()
 
   const [trade,        setTrade]        = useState<Trade | null>(null)
@@ -101,6 +101,13 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [scoreProGate, setScoreProGate] = useState(false)
   const [aiHistory,    setAiHistory]    = useState<any[]>([])
   const [scoreHistory, setScoreHistory] = useState<any[]>([])
+  const [factSaving, setFactSaving] = useState(false)
+  const [factForm, setFactForm] = useState({
+    actual_result: '',
+    actual_profit_usd: '',
+    actual_profit_pct: '',
+    post_comment: '',
+  })
 
   useEffect(() => {
     const load = async () => {
@@ -109,6 +116,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       const json = await res.json()
       if (!json.success) { setLoading(false); return }
       setTrade(json.data)
+      setFactForm({
+        actual_result: json.data.actual_result || json.data.result || '',
+        actual_profit_usd: json.data.actual_profit_usd != null ? String(json.data.actual_profit_usd) : '',
+        actual_profit_pct: json.data.actual_profit_pct != null ? String(json.data.actual_profit_pct) : '',
+        post_comment: json.data.post_comment || json.data.comment || '',
+      })
 
       const supabase = createClient()
       const { data: sessions } = await supabase
@@ -171,6 +184,32 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     setScoreLoading(false)
   }
 
+  const saveFact = async () => {
+    if (!trade) return
+    setFactSaving(true)
+    const payload: Record<string, any> = {
+      post_comment: factForm.post_comment,
+      comment: factForm.post_comment,
+    }
+    if (factForm.actual_result) payload.actual_result = factForm.actual_result
+    if (factForm.actual_profit_usd !== '') payload.actual_profit_usd = parseFloat(factForm.actual_profit_usd)
+    if (factForm.actual_profit_pct !== '') payload.actual_profit_pct = parseFloat(factForm.actual_profit_pct)
+    if (factForm.actual_result) payload.result = factForm.actual_result
+    if (factForm.actual_profit_usd !== '') payload.profit_usd = parseFloat(factForm.actual_profit_usd)
+    if (factForm.actual_profit_pct !== '') payload.profit_pct = parseFloat(factForm.actual_profit_pct)
+
+    const res = await fetch(`/api/trades/${trade.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (json.success) {
+      setTrade(json.data)
+    }
+    setFactSaving(false)
+  }
+
   if (loading) return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
@@ -218,7 +257,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={{ fontSize: 13, color: c.text3, marginTop: 2 }}>{trade.date} · {trade.setup}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Badge label={trade.result} color={resultColor(trade.result)} />
+            <Badge label={trade.actual_result || trade.result || 'План'} color={resultColor(trade.actual_result || trade.result || '')} />
             {trade.self_grade && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
           </div>
         </div>
@@ -236,10 +275,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   { label: 'Pair',      value: trade.pair },
                   { label: 'Setup',     value: trade.setup },
                   { label: 'Direction', value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
-                  { label: 'Result',    value: trade.result,    color: resultColor(trade.result) },
-                  { label: 'RR',        value: String(trade.rr) },
-                  { label: 'P&L $',     value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
-                  { label: 'P&L %',     value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
+                  { label: 'Result',    value: trade.actual_result || trade.result || 'План', color: resultColor(trade.actual_result || trade.result || '') },
+                  { label: 'Plan RR',   value: String(trade.planned_rr ?? trade.rr ?? '-') },
+                  { label: 'Plan P&L $', value: trade.planned_profit_usd != null ? `+${trade.planned_profit_usd}$` : '-' },
+                  { label: 'Plan P&L %', value: trade.planned_profit_pct != null ? `+${trade.planned_profit_pct}%` : '-' },
+                  { label: 'Fact P&L $',     value: trade.actual_profit_usd != null ? `${trade.actual_profit_usd >= 0 ? '+' : ''}${trade.actual_profit_usd}$` : '-', color: (trade.actual_profit_usd ?? 0) >= 0 ? GREEN : RED },
+                  { label: 'Fact P&L %',     value: trade.actual_profit_pct != null ? `${trade.actual_profit_pct >= 0 ? '+' : ''}${trade.actual_profit_pct}%` : '-', color: (trade.actual_profit_pct ?? 0) >= 0 ? GREEN : RED },
                 ].map(f => (
                   <div key={f.label} style={{ background: c.surface2, borderRadius: 12, padding: '12px 14px' }}>
                     <div style={{ fontSize: 11, color: c.text3, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{f.label}</div>
@@ -249,14 +290,46 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {trade.comment && (
-              <div style={cardStyle}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>Comment</div>
-                <div style={{ fontSize: 14, color: c.text2, lineHeight: 1.7, background: c.surface2, borderRadius: 12, padding: '14px 16px' }}>
-                  {trade.comment}
+            <div style={cardStyle}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>Пост-трейд факт</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {['Тейк', 'Стоп', 'БУ'].map(r => (
+                    <button
+                      key={r}
+                      onClick={() => setFactForm(prev => ({ ...prev, actual_result: r }))}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: 10,
+                        border: `1px solid ${c.border}`,
+                        background: factForm.actual_result === r ? c.text : c.surface2,
+                        color: factForm.actual_result === r ? c.surface : c.text,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >{r}</button>
+                  ))}
                 </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <input value={factForm.actual_profit_usd} onChange={e => setFactForm(prev => ({ ...prev, actual_profit_usd: e.target.value }))} placeholder="Fact P&L $" type="number" style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text }} />
+                  <input value={factForm.actual_profit_pct} onChange={e => setFactForm(prev => ({ ...prev, actual_profit_pct: e.target.value }))} placeholder="Fact P&L %" type="number" style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text }} />
+                </div>
+                <textarea
+                  value={factForm.post_comment}
+                  onChange={e => setFactForm(prev => ({ ...prev, post_comment: e.target.value }))}
+                  placeholder="Добавьте выводы после реализации сделки..."
+                  rows={4}
+                  style={{ background: c.surface2, border: `1px solid ${c.border}`, borderRadius: 10, padding: '10px 12px', color: c.text, resize: 'vertical' }}
+                />
+                <button
+                  onClick={saveFact}
+                  disabled={factSaving}
+                  style={{ alignSelf: 'flex-start', border: 'none', borderRadius: 10, padding: '10px 16px', background: BLUE, color: '#fff', cursor: 'pointer', fontWeight: 700, opacity: factSaving ? 0.7 : 1 }}
+                >
+                  {factSaving ? 'Saving...' : 'Save fact'}
+                </button>
               </div>
-            )}
+            </div>
 
             {trade.tradingview_url && (
               <div style={cardStyle}>

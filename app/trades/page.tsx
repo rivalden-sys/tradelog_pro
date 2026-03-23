@@ -10,7 +10,8 @@ import { Trade } from '@/types'
 
 const FREE_LIMIT = 20
 
-function resultColor(r: string) {
+function resultColor(r?: string | null) {
+  if (!r) return '#8e8e93'
   if (r === 'Тейк') return '#30d158'
   if (r === 'Стоп') return '#ff453a'
   return '#8e8e93'
@@ -34,10 +35,7 @@ export default function TradesPage() {
   const [plan, setPlan]                 = useState<string>('free')
   const [totalCount, setTotalCount]     = useState(0)
 
-  useEffect(() => { loadPlan() }, [])
-  useEffect(() => { fetchTrades() }, [filterResult, filterPair])
-
-  const loadPlan = async () => {
+  async function loadPlan() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -47,7 +45,7 @@ export default function TradesPage() {
     setTotalCount(count ?? 0)
   }
 
-  const fetchTrades = async () => {
+  async function fetchTrades() {
     setLoading(true)
     const params = new URLSearchParams()
     if (filterResult) params.set('result', filterResult)
@@ -58,6 +56,9 @@ export default function TradesPage() {
     setLoading(false)
   }
 
+  useEffect(() => { loadPlan() }, [])
+  useEffect(() => { fetchTrades() }, [filterResult, filterPair])
+
   const deleteTrade = async (id: string) => {
     if (!confirm(t('settings_confirm'))) return
     await fetch(`/api/trades/${id}`, { method: 'DELETE' })
@@ -65,7 +66,8 @@ export default function TradesPage() {
     loadPlan()
   }
 
-  const resultLabel = (r: string) => {
+  const resultLabel = (r?: string | null) => {
+    if (!r) return 'План'
     if (r === 'Тейк') return t('result_take')
     if (r === 'Стоп') return t('result_stop')
     if (r === 'БУ')   return t('result_bu')
@@ -190,7 +192,7 @@ export default function TradesPage() {
                       <tr key={trade.id}
                         style={{
                           borderBottom: `1px solid ${c.border}`,
-                          background: trade.result === 'Тейк' ? '#30d15808' : trade.result === 'Стоп' ? '#ff453a08' : 'transparent',
+                          background: trade.actual_result === 'Тейк' ? '#30d15808' : trade.actual_result === 'Стоп' ? '#ff453a08' : 'transparent',
                           cursor: 'pointer',
                         }}
                         onClick={() => router.push(`/trades/${trade.id}`)}
@@ -198,18 +200,18 @@ export default function TradesPage() {
                         <td style={{ padding: '11px 14px', color: c.text2 }}>{trade.date}</td>
                         <td style={{ padding: '11px 14px', fontWeight: 600, color: c.text }}>{trade.pair}</td>
                         <td style={{ padding: '11px 14px', color: c.text3, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trade.setup}</td>
-                        <td style={{ padding: '11px 14px', color: c.text }}>{trade.rr}</td>
+                        <td style={{ padding: '11px 14px', color: c.text }}>{trade.planned_rr ?? trade.rr ?? '-'}</td>
                         <td style={{ padding: '11px 14px' }}>
                           <span style={{ background: (trade.direction === 'Long' ? '#30d158' : '#ff453a') + '22', color: trade.direction === 'Long' ? '#30d158' : '#ff453a', padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{trade.direction}</span>
                         </td>
                         <td style={{ padding: '11px 14px' }}>
-                          <span style={{ background: resultColor(trade.result) + '22', color: resultColor(trade.result), padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{resultLabel(trade.result)}</span>
+                          <span style={{ background: resultColor(trade.actual_result || trade.result) + '22', color: resultColor(trade.actual_result || trade.result), padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{resultLabel(trade.actual_result || trade.result)}</span>
                         </td>
-                        <td style={{ padding: '11px 14px', fontWeight: 600, color: trade.profit_usd >= 0 ? '#30d158' : '#ff453a' }}>
-                          {trade.profit_usd >= 0 ? '+' : ''}{trade.profit_usd}$
+                        <td style={{ padding: '11px 14px', fontWeight: 600, color: (trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '#30d158' : '#ff453a' }}>
+                          {trade.actual_profit_usd == null && trade.profit_usd == null ? '—' : `${(trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_usd ?? trade.profit_usd}$`}
                         </td>
-                        <td style={{ padding: '11px 14px', color: trade.profit_pct >= 0 ? '#30d158' : '#ff453a' }}>
-                          {trade.profit_pct >= 0 ? '+' : ''}{trade.profit_pct}%
+                        <td style={{ padding: '11px 14px', color: (trade.actual_profit_pct ?? trade.profit_pct ?? 0) >= 0 ? '#30d158' : '#ff453a' }}>
+                          {trade.actual_profit_pct == null && trade.profit_pct == null ? '—' : `${(trade.actual_profit_pct ?? trade.profit_pct ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_pct ?? trade.profit_pct}%`}
                         </td>
                         <td style={{ padding: '11px 14px' }}>
                           {trade.self_grade && (
@@ -240,15 +242,15 @@ export default function TradesPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontWeight: 700, color: c.text, fontSize: 15 }}>{trade.pair}</span>
                         <span style={{ background: (trade.direction === 'Long' ? '#30d158' : '#ff453a') + '22', color: trade.direction === 'Long' ? '#30d158' : '#ff453a', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{trade.direction}</span>
-                        <span style={{ background: resultColor(trade.result) + '22', color: resultColor(trade.result), padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{resultLabel(trade.result)}</span>
+                        <span style={{ background: resultColor(trade.actual_result || trade.result) + '22', color: resultColor(trade.actual_result || trade.result), padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{resultLabel(trade.actual_result || trade.result)}</span>
                       </div>
-                      <span style={{ fontWeight: 700, color: trade.profit_usd >= 0 ? '#30d158' : '#ff453a', fontSize: 15 }}>
-                        {trade.profit_usd >= 0 ? '+' : ''}{trade.profit_usd}$
+                      <span style={{ fontWeight: 700, color: (trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '#30d158' : '#ff453a', fontSize: 15 }}>
+                        {trade.actual_profit_usd == null && trade.profit_usd == null ? '—' : `${(trade.actual_profit_usd ?? trade.profit_usd ?? 0) >= 0 ? '+' : ''}${trade.actual_profit_usd ?? trade.profit_usd}$`}
                       </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ fontSize: 12, color: c.text3 }}>
-                        {trade.date} · RR {trade.rr} · {trade.setup.split('+')[0].trim()}
+                        {trade.date} · RR {trade.planned_rr ?? trade.rr ?? '-'} · {trade.setup.split('+')[0].trim()}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {trade.self_grade && (

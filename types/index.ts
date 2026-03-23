@@ -20,11 +20,24 @@ export interface Trade {
   date:             string          // ISO date: "2026-03-01"
   pair:             string
   setup:            string
-  rr:               number
+  rr:               number | null
   direction:        Direction
-  result:           Result
-  profit_usd:       number
-  profit_pct:       number
+  result:           Result | null
+  profit_usd:       number | null
+  profit_pct:       number | null
+  initial_balance:  number | null
+  risk_type:        'percent' | 'usdt' | null
+  risk_value:       number | null
+  entry_price:      number | null
+  stop_price:       number | null
+  take_price:       number | null
+  planned_rr:       number | null
+  planned_profit_usd:number | null
+  planned_profit_pct:number | null
+  actual_result:    Result | null
+  actual_profit_usd:number | null
+  actual_profit_pct:number | null
+  post_comment:     string | null
   tradingview_url:  string | null
   screenshot_url:   string | null
   comment:          string | null
@@ -74,11 +87,24 @@ export interface TradeFormData {
   date:            string
   pair:            string
   setup:           string
-  rr:              number
+  rr?:             number
   direction:       Direction
-  result:          Result
-  profit_usd:      number
-  profit_pct:      number
+  result?:         Result
+  profit_usd?:     number
+  profit_pct?:     number
+  initial_balance?: number
+  risk_type?:      'percent' | 'usdt'
+  risk_value?:     number
+  entry_price?:    number
+  stop_price?:     number
+  take_price?:     number
+  planned_rr?:       number
+  planned_profit_usd?: number
+  planned_profit_pct?: number
+  actual_result?:     Result
+  actual_profit_usd?: number
+  actual_profit_pct?: number
+  post_comment?:      string
   tradingview_url: string
   comment:         string
   self_grade:      SelfGrade

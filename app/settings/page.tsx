@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [maxRiskPct,    setMaxRiskPct]    = useState('1')
   const [minRR,         setMinRR]         = useState('1.5')
   const [dailyLoss,     setDailyLoss]     = useState('3')
+  const [initialBalance, setInitialBalance] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +55,8 @@ export default function SettingsPage() {
       if (!user) { router.push('/login'); return }
       setEmail(user.email || '')
       setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
+      const { data: profile } = await supabase.from('users').select('initial_balance').eq('id', user.id).single()
+      setInitialBalance(profile?.initial_balance != null ? String(profile.initial_balance) : '')
       setLoading(false)
     }
     load()
@@ -63,6 +66,13 @@ export default function SettingsPage() {
     setSaving(true)
     const supabase = createClient()
     await supabase.auth.updateUser({ data: { username } })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase
+        .from('users')
+        .update({ initial_balance: initialBalance ? parseFloat(initialBalance) : 0 })
+        .eq('id', user.id)
+    }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -117,6 +127,18 @@ export default function SettingsPage() {
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 placeholder={tr('settings_username_ph')}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Initial balance (USDT)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={initialBalance}
+                onChange={e => setInitialBalance(e.target.value)}
+                placeholder="1000"
                 style={inputStyle}
               />
             </div>
