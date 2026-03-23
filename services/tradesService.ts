@@ -21,6 +21,17 @@ function isMissingColumnError(error: unknown) {
   return message.includes('column') && (message.includes('does not exist') || message.includes('schema cache'))
 }
 
+function isLegacyNotNullError(error: unknown) {
+  const message = String((error as any)?.message || error || '').toLowerCase()
+  return message.includes('null value in column')
+    && message.includes('violates not-null constraint')
+    && (message.includes('"result"') || message.includes('"profit_usd"') || message.includes('"profit_pct"') || message.includes('"rr"'))
+}
+
+function shouldUseLegacyFallback(error: unknown) {
+  return isMissingColumnError(error) || isLegacyNotNullError(error)
+}
+
 function normalizeTradeRow<T extends Record<string, any>>(row: T) {
   return {
     ...row,
@@ -90,7 +101,7 @@ export async function getTradeById(id: string, userId: string) {
     .single()
 
   if (!error) return normalizeTradeRow(data)
-  if (!isMissingColumnError(error)) throw new Error(error.message)
+  if (!shouldUseLegacyFallback(error)) throw new Error(error.message)
 
   const legacy = await supabase
     .from('trades')
@@ -141,18 +152,18 @@ export async function createTrade(userId: string, form: TradeFormData) {
     .single()
 
   if (!error) return normalizeTradeRow(data)
-  if (!isMissingColumnError(error)) throw new Error(error.message)
+  if (!shouldUseLegacyFallback(error)) throw new Error(error.message)
 
   const legacyPayload = {
     user_id: payload.user_id,
     date: payload.date,
     pair: payload.pair,
     setup: payload.setup,
-    rr: payload.rr,
+    rr: payload.rr ?? 1,
     direction: payload.direction,
-    result: payload.result,
-    profit_usd: payload.profit_usd,
-    profit_pct: payload.profit_pct,
+    result: payload.result ?? 'БУ',
+    profit_usd: payload.profit_usd ?? 0,
+    profit_pct: payload.profit_pct ?? 0,
     tradingview_url: payload.tradingview_url,
     comment: payload.post_comment || payload.comment,
     self_grade: payload.self_grade,
@@ -206,17 +217,17 @@ export async function updateTrade(id: string, userId: string, form: Partial<Trad
     .single()
 
   if (!error) return normalizeTradeRow(data)
-  if (!isMissingColumnError(error)) throw new Error(error.message)
+  if (!shouldUseLegacyFallback(error)) throw new Error(error.message)
 
   const legacyPayload = {
     date: payload.date,
     pair: payload.pair,
     setup: payload.setup,
-    rr: payload.rr,
+    rr: payload.rr ?? 1,
     direction: payload.direction,
-    result: payload.actual_result ?? payload.result,
-    profit_usd: payload.actual_profit_usd ?? payload.profit_usd,
-    profit_pct: payload.actual_profit_pct ?? payload.profit_pct,
+    result: payload.actual_result ?? payload.result ?? 'БУ',
+    profit_usd: payload.actual_profit_usd ?? payload.profit_usd ?? 0,
+    profit_pct: payload.actual_profit_pct ?? payload.profit_pct ?? 0,
     tradingview_url: payload.tradingview_url,
     comment: payload.post_comment || payload.comment,
     self_grade: payload.self_grade,
