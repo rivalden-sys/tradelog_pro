@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
       pair:      searchParams.get('pair')      || undefined,
       setup:     searchParams.get('setup')     || undefined,
       direction: searchParams.get('direction') || undefined,
+      status:    searchParams.get('status')    || undefined,
     }
-
+    
     const trades = await getTrades(user.id, filters)
     return NextResponse.json({ success: true, data: trades })
   } catch (error) {
