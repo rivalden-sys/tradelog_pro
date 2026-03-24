@@ -514,20 +514,28 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🎯 Trade Score</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {scoreHistory.length > 1 && (
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {scoreHistory.slice(1, 4).map((s, i) => (
-                        <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setScoreData(JSON.parse(s.response)) } catch {} }} />
-                      ))}
-                    </div>
-                  )}
-                  {!scoreProGate && (
-                    <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
-                      {scoreLoading ? 'Analyzing...' : scoreData ? 'Re-run' : 'Get Score'}
-                    </button>
-                  )}
-                </div>
+               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Бейдж статусу */}
+            {isPlanned
+              ? <Badge label="🕐 Планова" color={ORANGE} />
+              : <Badge label={trade.result} color={resultColor(trade.result)} />
+            }
+            {trade.self_grade && !isPlanned && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
+            {/* Кнопка редагувати */}
+            <button onClick={() => router.push(`/trades/${tradeId}/edit`)} style={{
+              background: 'transparent', border: `1px solid ${c.border}`,
+              borderRadius: 10, padding: '8px 14px', color: c.text3,
+              fontSize: 13, cursor: 'pointer', fontFamily: FONT,
+            }}>
+              ✏️ Редагувати
+            </button>
+            {/* Кнопка закрити угоду */}
+            {isPlanned && (
+              <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
+                ✓ Закрити угоду
+              </button>
+            )}
+          </div>
               </div>
 
               {scoreProGate && <ProGate feature="Trade Score" />}
