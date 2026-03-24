@@ -173,7 +173,11 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data } = await supabase
-        .from('trades').select('*').eq('user_id', user.id).order('date', { ascending: false })
+        .from('trades')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'closed') // ← тільки закриті угоди
+        .order('date', { ascending: false })
       setTrades(data || [])
       setLoading(false)
     }
@@ -232,7 +236,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stat cards — адаптивна сітка */}
+        {/* Stat cards */}
         <div className="stat-grid" style={{ marginBottom: 20 }}>
           {statCards.map(sc => (
             <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
@@ -383,44 +387,17 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Responsive CSS */}
       <style>{`
-        .dashboard-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        .stat-grid {
-          display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 12px;
-        }
-        .chart-grid-2 {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 16px;
-        }
-        @media (max-width: 1024px) {
-          .stat-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+        .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+        .chart-grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+        @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
-          .dashboard-container {
-            padding: 16px 12px !important;
-          }
-          .stat-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-          }
-          .chart-grid-2 {
-            grid-template-columns: 1fr;
-          }
+          .dashboard-container { padding: 16px 12px !important; }
+          .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .chart-grid-2 { grid-template-columns: 1fr; }
         }
-        @media (max-width: 480px) {
-          .stat-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
+        @media (max-width: 480px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
     </div>
   )
