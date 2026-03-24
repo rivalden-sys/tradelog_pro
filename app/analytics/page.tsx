@@ -49,6 +49,7 @@ export default function AnalyticsPage() {
         .from('trades')
         .select('*')
         .eq('user_id', user.id)
+        .eq('status', 'closed') // ← тільки закриті угоди
         .order('date', { ascending: true })
       setTrades((data as Trade[]) || [])
       setLoading(false)
@@ -188,7 +189,7 @@ export default function AnalyticsPage() {
         {/* Charts row 2 */}
         <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
 
-          {/* Stats by Pair — таблиця з overflow */}
+          {/* Stats by Pair */}
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_by_pairs')}</div>
             {byPair.length === 0 ? (
@@ -256,29 +257,13 @@ export default function AnalyticsPage() {
       </div>
 
       <style>{`
-        .analytics-stat-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-        }
-        .analytics-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
+        .analytics-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .analytics-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         @media (max-width: 768px) {
-          .analytics-stat-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .analytics-grid-2 {
-            grid-template-columns: 1fr;
-          }
+          .analytics-stat-grid { grid-template-columns: repeat(2, 1fr); }
+          .analytics-grid-2 { grid-template-columns: 1fr; }
         }
-        @media (max-width: 400px) {
-          .analytics-stat-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
+        @media (max-width: 400px) { .analytics-stat-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
     </div>
   )
