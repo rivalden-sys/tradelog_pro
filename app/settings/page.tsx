@@ -23,9 +23,10 @@ function th(dark: boolean) {
   }
 }
 
-const GREEN = '#30d158'
-const RED   = '#ff453a'
-const BLUE  = '#0a84ff'
+const GREEN  = '#30d158'
+const RED    = '#ff453a'
+const BLUE   = '#0a84ff'
+const ORANGE = '#ff9f0a'
 
 function card(t: ReturnType<typeof th>): React.CSSProperties {
   return { background: t.surface, borderRadius: 18, padding: '22px 24px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
@@ -47,6 +48,11 @@ export default function SettingsPage() {
   const [minRR,         setMinRR]         = useState('1.5')
   const [dailyLoss,     setDailyLoss]     = useState('3')
 
+  // Баланс депозиту
+  const [balance,      setBalance]      = useState('')
+  const [balanceSaved, setBalanceSaved] = useState(false)
+  const [balanceSaving,setBalanceSaving]= useState(false)
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -54,6 +60,15 @@ export default function SettingsPage() {
       if (!user) { router.push('/login'); return }
       setEmail(user.email || '')
       setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
+
+      // Завантажити баланс з users таблиці
+      const { data: profile } = await supabase
+        .from('users')
+        .select('balance')
+        .eq('id', user.id)
+        .single()
+      if (profile?.balance) setBalance(String(profile.balance))
+
       setLoading(false)
     }
     load()
@@ -65,6 +80,19 @@ export default function SettingsPage() {
     await supabase.auth.updateUser({ data: { username } })
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const saveBalance = async () => {
+    const val = parseFloat(balance)
+    if (isNaN(val) || val < 0) return
+    setBalanceSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('users').update({ balance: val }).eq('id', user.id)
+    }
+    setBalanceSaving(false); setBalanceSaved(true)
+    setTimeout(() => setBalanceSaved(false), 2000)
   }
 
   const handleLogout = async () => {
@@ -100,6 +128,7 @@ export default function SettingsPage() {
           <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('settings_subtitle')}</div>
         </div>
 
+        {/* Профіль */}
         <div style={card(t)}>
           <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 20 }}>{tr('settings_profile')}</div>
           <div style={{ display: 'grid', gap: 16 }}>
@@ -121,6 +150,59 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* 💰 Депозит */}
+        <div style={{ ...card(t), border: `1px solid ${ORANGE}33` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: t.text }}>💰 Депозит</div>
+            <span style={{ background: `${ORANGE}22`, color: ORANGE, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
+          </div>
+          <div style={{ fontSize: 13, color: t.sub, marginBottom: 20 }}>
+            Вкажіть поточний баланс депозиту. Використовується для розрахунку ризику при плануванні угод.
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
+            <div>
+              <label style={labelStyle}>Баланс депозиту (USDT)</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  placeholder="10000"
+                  value={balance}
+                  onChange={e => setBalance(e.target.value)}
+                  style={{ ...inputStyle, paddingRight: 60 }}
+                />
+                <span style={{
+                  position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                  fontSize: 13, fontWeight: 600, color: t.sub,
+                }}>USDT</span>
+              </div>
+            </div>
+            <button onClick={saveBalance} disabled={balanceSaving} style={{
+              background: balanceSaved ? GREEN : ORANGE,
+              color: balanceSaved ? '#fff' : '#000',
+              border: 'none', borderRadius: 12, padding: '10px 20px',
+              fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              fontFamily: FONT, whiteSpace: 'nowrap',
+              boxShadow: `0 0 20px ${ORANGE}44`,
+              transition: 'background 0.3s',
+            }}>
+              {balanceSaved ? '✓ Збережено' : balanceSaving ? '...' : 'Зберегти'}
+            </button>
+          </div>
+          {balance && !isNaN(parseFloat(balance)) && (
+            <div style={{ marginTop: 14, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {[1, 2, 3].map(pct => (
+                <div key={pct} style={{ background: t.surface2, borderRadius: 10, padding: '8px 14px', fontSize: 12 }}>
+                  <span style={{ color: t.sub }}>{pct}% ризику = </span>
+                  <span style={{ fontWeight: 700, color: ORANGE }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Ризик-менеджмент */}
         <div style={card(t)}>
           <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 6 }}>{tr('settings_risk')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginBottom: 20 }}>{tr('settings_risk_sub')}</div>
@@ -143,6 +225,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Акаунт */}
         <div style={card(t)}>
           <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 6 }}>{tr('settings_account')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{tr('settings_account_sub')}</div>
@@ -163,6 +246,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Danger zone */}
         <div style={{ ...card(t), border: `1px solid ${RED}44` }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: RED, marginBottom: 6 }}>{tr('settings_danger')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{tr('settings_danger_sub')}</div>
