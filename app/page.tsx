@@ -4,6 +4,39 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
+
+function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const scale = size === 'sm' ? 0.8 : size === 'lg' ? 1.3 : 1
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9 * scale }}>
+      <svg width={20 * scale} height={22 * scale} viewBox="0 0 20 22" fill="none">
+        <rect x="0"  y="13" width="4" height="9"  rx="2" fill="#30d158" opacity="0.4"/>
+        <rect x="5"  y="9"  width="4" height="13" rx="2" fill="#30d158" opacity="0.62"/>
+        <rect x="10" y="4"  width="4" height="18" rx="2" fill="#30d158" opacity="0.82"/>
+        <rect x="15" y="0"  width="4" height="22" rx="2" fill="#30d158"/>
+      </svg>
+      <div style={{ lineHeight: 1 }}>
+        <div style={{
+          fontFamily: NUNITO,
+          fontSize: 15 * scale,
+          fontWeight: 800,
+          color: '#ffffff',
+          letterSpacing: '-0.02em',
+          lineHeight: '1.1',
+        }}>TradeLog</div>
+        <div style={{
+          fontFamily: NUNITO,
+          fontSize: 10 * scale,
+          fontWeight: 500,
+          color: '#30d158',
+          letterSpacing: '0.04em',
+          lineHeight: '1.1',
+        }}>Pro Edition</div>
+      </div>
+    </div>
+  )
+}
 
 export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
@@ -24,6 +57,7 @@ export default function Landing() {
 
   return (
     <main style={{ background: '#080808', minHeight: '100vh', color: '#fff', fontFamily: FONT, overflowX: 'hidden' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');`}</style>
 
       {/* NAV */}
       <nav style={{
@@ -35,9 +69,7 @@ export default function Landing() {
         borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none',
         transition: 'all 0.4s ease',
       }}>
-        <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.04em' }}>
-          TradeLog <span style={{ color: '#30d158' }}>Pro</span>
-        </div>
+        <Logo />
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href="/login" style={{
             padding: '8px 16px', borderRadius: 10,
@@ -295,12 +327,9 @@ export default function Landing() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 8,
       }}>
-        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.03em' }}>
-          TradeLog <span style={{ color: '#30d158' }}>Pro</span>
-        </div>
+        <Logo />
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>by dnproduction · 2026</div>
       </footer>
-
     </main>
   )
 }
