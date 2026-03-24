@@ -9,7 +9,6 @@ import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
-
 const GREEN  = '#30d158'
 const RED    = '#ff453a'
 const BLUE   = '#0a84ff'
@@ -79,9 +78,7 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
       padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(128,128,128,0.2)',
       background: 'transparent', color: GRAY, fontSize: 11, fontWeight: 600,
       cursor: 'pointer', fontFamily: FONT,
-    }}>
-      {d}
-    </button>
+    }}>{d}</button>
   )
 }
 
@@ -102,13 +99,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [scoreProGate, setScoreProGate] = useState(false)
   const [aiHistory,    setAiHistory]    = useState<any[]>([])
   const [scoreHistory, setScoreHistory] = useState<any[]>([])
-
-  // Завдання 1 — редагування коментаря
   const [editingComment, setEditingComment] = useState(false)
   const [commentValue,   setCommentValue]   = useState('')
   const [commentSaving,  setCommentSaving]  = useState(false)
-
-  // Завдання 5 — закриття угоди
   const [showCloseForm,  setShowCloseForm]  = useState(false)
   const [closeResult,    setCloseResult]    = useState<'Тейк' | 'Стоп' | 'БУ'>('Тейк')
   const [closeProfitUsd, setCloseProfitUsd] = useState('')
@@ -117,8 +110,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [closeGrade,     setCloseGrade]     = useState<'A'|'B'|'C'|'D'>('A')
   const [closeSaving,    setCloseSaving]    = useState(false)
   const [closeError,     setCloseError]     = useState('')
-
-  const [tradeId, setTradeId] = useState<string>('')
+  const [tradeId,        setTradeId]        = useState<string>('')
 
   useEffect(() => {
     const load = async () => {
@@ -129,16 +121,11 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       if (!json.success) { setLoading(false); return }
       setTrade(json.data)
       setCommentValue(json.data.comment || '')
-
       const supabase = createClient()
       const { data: sessions } = await supabase
-        .from('ai_sessions')
-        .select('*')
-        .eq('trade_id', id)
+        .from('ai_sessions').select('*').eq('trade_id', id)
         .in('type', ['trade_review', 'trade_score'])
-        .order('created_at', { ascending: false })
-        .limit(10)
-
+        .order('created_at', { ascending: false }).limit(10)
       if (sessions) {
         const reviews = sessions.filter(s => s.type === 'trade_review')
         const scores  = sessions.filter(s => s.type === 'trade_score')
@@ -147,20 +134,17 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         if (reviews.length > 0) { try { setAiData(JSON.parse(reviews[0].response)) } catch {} }
         if (scores.length > 0)  { try { setScoreData(JSON.parse(scores[0].response)) } catch {} }
       }
-
       setLoading(false)
     }
     load()
   }, [params])
 
-  // Зберегти коментар
   const saveComment = async () => {
     if (!tradeId) return
     setCommentSaving(true)
     try {
       const res = await fetch(`/api/trades/${tradeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comment: commentValue }),
       })
       const json = await res.json()
@@ -172,18 +156,14 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     setCommentSaving(false)
   }
 
-  // Закрити угоду
   const closeTrade = async () => {
     if (!tradeId) return
-    setCloseSaving(true)
-    setCloseError('')
+    setCloseSaving(true); setCloseError('')
     try {
       const res = await fetch(`/api/trades/${tradeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: 'closed',
-          result: closeResult,
+          status: 'closed', result: closeResult,
           profit_usd: parseFloat(closeProfitUsd) || 0,
           profit_pct: parseFloat(closeProfitPct) || 0,
           comment: closeComment || trade?.comment,
@@ -193,18 +173,13 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       const json = await res.json()
       if (json.success) {
         setTrade(prev => prev ? {
-          ...prev,
-          status: 'closed',
-          result: closeResult,
+          ...prev, status: 'closed', result: closeResult,
           profit_usd: parseFloat(closeProfitUsd) || 0,
           profit_pct: parseFloat(closeProfitPct) || 0,
-          comment: closeComment || prev.comment,
-          self_grade: closeGrade,
+          comment: closeComment || prev.comment, self_grade: closeGrade,
         } : prev)
         setShowCloseForm(false)
-      } else {
-        setCloseError(json.error || 'Error saving')
-      }
+      } else { setCloseError(json.error || 'Error saving') }
     } catch { setCloseError('Network error') }
     setCloseSaving(false)
   }
@@ -295,27 +270,34 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       <NavBar />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
 
-        {/* Header */}
+        {/* ✅ HEADER — кнопки тільки тут */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: `1px solid ${c.border}`,
             borderRadius: 10, padding: '8px 14px', color: c.text3,
             fontSize: 13, cursor: 'pointer', fontFamily: FONT,
           }}>← Back</button>
+
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
               {trade.pair} <span style={{ color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
             </div>
             <div style={{ fontSize: 13, color: c.text3, marginTop: 2 }}>{trade.date} · {trade.setup}</div>
           </div>
+
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Бейдж статусу */}
             {isPlanned
               ? <Badge label="🕐 Планова" color={ORANGE} />
               : <Badge label={trade.result} color={resultColor(trade.result)} />
             }
-            {trade.self_grade && !isPlanned && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
-            {/* Кнопка закрити угоду */}
+            {trade.self_grade && !isPlanned && (
+              <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />
+            )}
+            <button onClick={() => router.push(`/trades/${tradeId}/edit`)} style={{
+              background: 'transparent', border: `1px solid ${c.border}`,
+              borderRadius: 10, padding: '8px 14px', color: c.text3,
+              fontSize: 13, cursor: 'pointer', fontFamily: FONT,
+            }}>✏️ Редагувати</button>
             {isPlanned && (
               <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
                 ✓ Закрити угоду
@@ -324,79 +306,47 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* Форма закриття угоди */}
+        {/* Форма закриття */}
         {showCloseForm && (
           <div style={{ ...cardStyle, marginBottom: 20, border: `1px solid ${GREEN}44` }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 20 }}>
               ✓ Закрити угоду — фактичний результат
             </div>
-
-            {/* Результат */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Результат</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['Тейк', 'Стоп', 'БУ'] as const).map(r => (
-                  <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
-                    {r}
-                  </button>
+                  <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>{r}</button>
                 ))}
               </div>
             </div>
-
-            {/* P&L */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>P&L ($)</div>
-                <input
-                  type="number"
-                  placeholder="150.00"
-                  value={closeProfitUsd}
-                  onChange={e => setCloseProfitUsd(e.target.value)}
-                  style={inputStyle}
-                />
+                <input type="number" placeholder="150.00" value={closeProfitUsd} onChange={e => setCloseProfitUsd(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>P&L (%)</div>
-                <input
-                  type="number"
-                  placeholder="1.5"
-                  value={closeProfitPct}
-                  onChange={e => setCloseProfitPct(e.target.value)}
-                  style={inputStyle}
-                />
+                <input type="number" placeholder="1.5" value={closeProfitPct} onChange={e => setCloseProfitPct(e.target.value)} style={inputStyle} />
               </div>
             </div>
-
-            {/* Самооцінка */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Самооцінка</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['A', 'B', 'C', 'D'] as const).map(g => (
-                  <button key={g} onClick={() => setCloseGrade(g)} style={toggleBtn(closeGrade === g, gradeColor(g))}>
-                    {g}
-                  </button>
+                  <button key={g} onClick={() => setCloseGrade(g)} style={toggleBtn(closeGrade === g, gradeColor(g))}>{g}</button>
                 ))}
               </div>
             </div>
-
-            {/* Коментар */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Коментар / Висновки</div>
-              <textarea
-                placeholder="Що пішло добре? Що можна покращити?"
-                value={closeComment}
-                onChange={e => setCloseComment(e.target.value)}
-                rows={3}
-                style={{ ...inputStyle, resize: 'vertical' }}
-              />
+              <textarea placeholder="Що пішло добре? Що можна покращити?" value={closeComment}
+                onChange={e => setCloseComment(e.target.value)} rows={3}
+                style={{ ...inputStyle, resize: 'vertical' }} />
             </div>
-
             {closeError && (
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12 }}>
-                {closeError}
-              </div>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12 }}>{closeError}</div>
             )}
-
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
                 {closeSaving ? 'Збереження...' : '✓ Зберегти результат'}
@@ -405,9 +355,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
                 background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: FONT,
-              }}>
-                Скасувати
-              </button>
+              }}>Скасувати</button>
             </div>
           </div>
         )}
@@ -426,13 +374,17 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   { label: 'Setup',     value: trade.setup },
                   { label: 'Direction', value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
                   ...(!isPlanned ? [
-                    { label: 'Result',  value: trade.result,    color: resultColor(trade.result) },
+                    { label: 'Result',  value: trade.result, color: resultColor(trade.result) },
                     { label: 'RR',      value: String(trade.rr) },
                     { label: 'P&L $',   value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
                     { label: 'P&L %',   value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
                   ] : [
-                    { label: 'RR',      value: String(trade.rr) },
-                    { label: 'Статус',  value: 'Планова', color: ORANGE },
+                    { label: 'RR',         value: String(trade.rr) },
+                    { label: 'Статус',     value: 'Планова', color: ORANGE },
+                    ...((trade as any).entry_price ? [{ label: 'Вхід',  value: String((trade as any).entry_price) }] : []),
+                    ...((trade as any).stop_price  ? [{ label: 'Стоп',  value: String((trade as any).stop_price),  color: RED   }] : []),
+                    ...((trade as any).take_price  ? [{ label: 'Тейк',  value: String((trade as any).take_price),  color: GREEN }] : []),
+                    ...((trade as any).risk_pct    ? [{ label: 'Ризик', value: `${(trade as any).risk_pct}%` }] : []),
                   ]),
                 ].map(f => (
                   <div key={f.label} style={{ background: c.surface2, borderRadius: 12, padding: '12px 14px' }}>
@@ -443,48 +395,32 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {/* Секція коментаря */}
+            {/* Comment */}
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>Comment</div>
                 {!editingComment && (
-                  <button
-                    onClick={() => setEditingComment(true)}
-                    style={{
-                      background: 'transparent', border: `1px solid ${c.border}`,
-                      borderRadius: 8, padding: '5px 12px', color: c.text3,
-                      fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-                    }}
-                  >
-                    ✏️ Редагувати
-                  </button>
+                  <button onClick={() => setEditingComment(true)} style={{
+                    background: 'transparent', border: `1px solid ${c.border}`,
+                    borderRadius: 8, padding: '5px 12px', color: c.text3,
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                  }}>✏️ Редагувати</button>
                 )}
               </div>
-
               {editingComment ? (
                 <div>
-                  <textarea
-                    value={commentValue}
-                    onChange={e => setCommentValue(e.target.value)}
-                    rows={4}
-                    placeholder="Додайте коментар або висновки..."
-                    style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }}
-                    autoFocus
-                  />
+                  <textarea value={commentValue} onChange={e => setCommentValue(e.target.value)}
+                    rows={4} placeholder="Додайте коментар або висновки..."
+                    style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }} autoFocus />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={saveComment} disabled={commentSaving} style={btnStyle(BLUE, '#fff', commentSaving)}>
                       {commentSaving ? 'Збереження...' : '✓ Зберегти'}
                     </button>
-                    <button
-                      onClick={() => { setEditingComment(false); setCommentValue(trade.comment || '') }}
-                      style={{
-                        padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
-                        background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
-                        cursor: 'pointer', fontFamily: FONT,
-                      }}
-                    >
-                      Скасувати
-                    </button>
+                    <button onClick={() => { setEditingComment(false); setCommentValue(trade.comment || '') }} style={{
+                      padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
+                      background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: FONT,
+                    }}>Скасувати</button>
                   </div>
                 </div>
               ) : (
@@ -514,37 +450,27 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🎯 Trade Score</div>
                   <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
                 </div>
-               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Бейдж статусу */}
-            {isPlanned
-              ? <Badge label="🕐 Планова" color={ORANGE} />
-              : <Badge label={trade.result} color={resultColor(trade.result)} />
-            }
-            {trade.self_grade && !isPlanned && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
-            {/* Кнопка редагувати */}
-            <button onClick={() => router.push(`/trades/${tradeId}/edit`)} style={{
-              background: 'transparent', border: `1px solid ${c.border}`,
-              borderRadius: 10, padding: '8px 14px', color: c.text3,
-              fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-            }}>
-              ✏️ Редагувати
-            </button>
-            {/* Кнопка закрити угоду */}
-            {isPlanned && (
-              <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
-                ✓ Закрити угоду
-              </button>
-            )}
-          </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {scoreHistory.length > 1 && (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      {scoreHistory.slice(1, 4).map((s, i) => (
+                        <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setScoreData(JSON.parse(s.response)) } catch {} }} />
+                      ))}
+                    </div>
+                  )}
+                  {!scoreProGate && (
+                    <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
+                      {scoreLoading ? 'Analyzing...' : scoreData ? 'Re-run' : 'Get Score'}
+                    </button>
+                  )}
+                </div>
               </div>
-
               {scoreProGate && <ProGate feature="Trade Score" />}
               {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
               {!scoreData && !scoreLoading && !scoreError && !scoreProGate && (
                 <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Click "Get Score" to see AI probability</div>
               )}
               {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Analyzing your history...</div>}
-
               {scoreData && (
                 <div>
                   <ScoreBar score={scoreData.score} />
@@ -592,14 +518,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   )}
                 </div>
               </div>
-
               {aiProGate && <ProGate feature="AI Analysis" />}
               {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
               {!aiData && !aiLoading && !aiError && !aiProGate && (
                 <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Click "Analyze" to get AI feedback on this trade</div>
               )}
               {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>AI is reviewing your trade...</div>}
-
               {aiData && (
                 <div>
                   {[
@@ -629,23 +553,11 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <style>{`
-        .trade-detail-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-        }
-        .trade-fields-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
+        .trade-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .trade-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 768px) {
-          .trade-detail-grid {
-            grid-template-columns: 1fr;
-          }
-          .trade-fields-grid {
-            grid-template-columns: 1fr 1fr;
-          }
+          .trade-detail-grid { grid-template-columns: 1fr; }
+          .trade-fields-grid { grid-template-columns: 1fr 1fr; }
         }
       `}</style>
     </div>
