@@ -28,7 +28,7 @@ const RED   = '#ff453a'
 const BLUE  = '#0a84ff'
 
 function card(t: ReturnType<typeof th>): React.CSSProperties {
-  return { background: t.surface, borderRadius: 18, padding: '20px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
+  return { background: t.surface, borderRadius: 18, padding: '22px 24px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
 }
 
 export default function SettingsPage() {
@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', background: t.surface2, border: `1px solid ${t.border}`,
-    borderRadius: 10, padding: '11px 14px', fontSize: 14, color: t.text,
+    borderRadius: 10, padding: '10px 14px', fontSize: 14, color: t.text,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
   }
 
@@ -86,43 +86,34 @@ export default function SettingsPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: t.sub }}>
-        {tr('settings_loading')}
-      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: t.sub }}>{tr('settings_loading')}</div>
     </div>
   )
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
       <NavBar />
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px', display: 'grid', gap: 16 }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px', display: 'grid', gap: 20 }}>
 
-        {/* Header */}
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('settings_title')}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('settings_title')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{tr('settings_subtitle')}</div>
         </div>
 
-        {/* Profile */}
         <div style={card(t)}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('settings_profile')}</div>
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 20 }}>{tr('settings_profile')}</div>
+          <div style={{ display: 'grid', gap: 16 }}>
             <div>
               <label style={labelStyle}>{tr('settings_email')}</label>
               <input value={email} disabled style={{ ...inputStyle, opacity: 0.5, cursor: 'not-allowed' }} />
             </div>
             <div>
               <label style={labelStyle}>{tr('settings_username')}</label>
-              <input
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder={tr('settings_username_ph')}
-                style={inputStyle}
-              />
+              <input value={username} onChange={e => setUsername(e.target.value)} placeholder={tr('settings_username_ph')} style={inputStyle} />
             </div>
             <button onClick={saveProfile} disabled={saving} style={{
               background: saved ? GREEN : t.text, color: saved ? '#fff' : t.bg,
-              border: 'none', borderRadius: 12, padding: '13px', fontSize: 14,
+              border: 'none', borderRadius: 12, padding: '12px', fontSize: 14,
               fontWeight: 700, cursor: 'pointer', transition: 'background 0.3s', fontFamily: FONT,
             }}>
               {saved ? tr('settings_saved') : saving ? tr('settings_saving') : tr('settings_save')}
@@ -130,103 +121,66 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Risk Management */}
         <div style={card(t)}>
           <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 6 }}>{tr('settings_risk')}</div>
-          <div style={{ fontSize: 13, color: t.sub, marginBottom: 18 }}>{tr('settings_risk_sub')}</div>
-          <div className="settings-risk-grid">
+          <div style={{ fontSize: 13, color: t.sub, marginBottom: 20 }}>{tr('settings_risk_sub')}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div>
               <label style={labelStyle}>{tr('settings_max_risk')}</label>
-              <input type="number" step="0.1" min="0.1" max="10" value={maxRiskPct}
-                onChange={e => setMaxRiskPct(e.target.value)} style={inputStyle} />
+              <input type="number" step="0.1" min="0.1" max="10" value={maxRiskPct} onChange={e => setMaxRiskPct(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>{tr('settings_min_rr')}</label>
-              <input type="number" step="0.1" min="0.5" max="10" value={minRR}
-                onChange={e => setMinRR(e.target.value)} style={inputStyle} />
+              <input type="number" step="0.1" min="0.5" max="10" value={minRR} onChange={e => setMinRR(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>{tr('settings_daily_loss')}</label>
-              <input type="number" step="0.5" min="1" max="20" value={dailyLoss}
-                onChange={e => setDailyLoss(e.target.value)} style={inputStyle} />
+              <input type="number" step="0.5" min="1" max="20" value={dailyLoss} onChange={e => setDailyLoss(e.target.value)} style={inputStyle} />
             </div>
           </div>
-          <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: `${BLUE}12`, fontSize: 13, color: t.sub }}>
+          <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: `${BLUE}12`, fontSize: 13, color: t.sub }}>
             {tr('settings_risk_hint')}
           </div>
         </div>
 
-        {/* Account Info */}
         <div style={card(t)}>
           <div style={{ fontSize: 16, fontWeight: 700, color: t.text, marginBottom: 6 }}>{tr('settings_account')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{tr('settings_account_sub')}</div>
-          <div>
+          <div style={{ display: 'grid', gap: 0 }}>
             {[
               { label: tr('settings_email'),  value: email },
               { label: tr('settings_status'), value: tr('settings_active') },
             ].map(row => (
-              <div key={row.label} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '12px 0', borderBottom: `1px solid ${t.border}`,
-                flexWrap: 'wrap', gap: 4,
-              }}>
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: `1px solid ${t.border}` }}>
                 <span style={{ fontSize: 14, color: t.sub }}>{row.label}</span>
                 <span style={{ fontSize: 14, color: t.text, fontWeight: 500 }}>{row.value}</span>
               </div>
             ))}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '12px 0', flexWrap: 'wrap', gap: 4,
-            }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
               <span style={{ fontSize: 14, color: t.sub }}>{tr('settings_subscription')}</span>
-              <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>
-                {tr('settings_manage')}
-              </a>
+              <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
             </div>
           </div>
         </div>
 
-        {/* Danger Zone */}
         <div style={{ ...card(t), border: `1px solid ${RED}44` }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: RED, marginBottom: 6 }}>{tr('settings_danger')}</div>
           <div style={{ fontSize: 13, color: t.sub, marginBottom: 16 }}>{tr('settings_danger_sub')}</div>
           {!deleteConfirm ? (
             <button onClick={() => setDeleteConfirm(true)} style={{
               background: `${RED}18`, color: RED, border: `1px solid ${RED}44`,
-              borderRadius: 12, padding: '11px 20px', fontSize: 14,
-              fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+              borderRadius: 12, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
             }}>{tr('settings_logout')}</button>
           ) : (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: t.sub }}>{tr('settings_confirm')}</span>
-              <button onClick={handleLogout} style={{
-                background: RED, color: '#fff', border: 'none',
-                borderRadius: 10, padding: '9px 16px', fontSize: 13,
-                fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-              }}>{tr('settings_yes')}</button>
-              <button onClick={() => setDeleteConfirm(false)} style={{
-                background: t.surface2, color: t.text, border: `1px solid ${t.border}`,
-                borderRadius: 10, padding: '9px 16px', fontSize: 13,
-                fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-              }}>{tr('settings_cancel')}</button>
+              <button onClick={handleLogout} style={{ background: RED, color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>{tr('settings_yes')}</button>
+              <button onClick={() => setDeleteConfirm(false)} style={{ background: t.surface2, color: t.text, border: `1px solid ${t.border}`, borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>{tr('settings_cancel')}</button>
             </div>
           )}
         </div>
 
       </div>
-
-      <style>{`
-        .settings-risk-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-        }
-        @media (max-width: 600px) {
-          .settings-risk-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </div>
   )
 }
