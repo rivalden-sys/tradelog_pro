@@ -5,7 +5,25 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
+
+function Logo() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+      <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+        <rect x="0"  y="13" width="4" height="9"  rx="2" fill="#30d158" opacity="0.4"/>
+        <rect x="5"  y="9"  width="4" height="13" rx="2" fill="#30d158" opacity="0.62"/>
+        <rect x="10" y="4"  width="4" height="18" rx="2" fill="#30d158" opacity="0.82"/>
+        <rect x="15" y="0"  width="4" height="22" rx="2" fill="#30d158"/>
+      </svg>
+      <div style={{ lineHeight: 1 }}>
+        <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: '1.1' }}>TradeLog</div>
+        <div style={{ fontFamily: NUNITO, fontSize: 10, fontWeight: 500, color: '#30d158', letterSpacing: '0.04em', lineHeight: '1.1' }}>Pro Edition</div>
+      </div>
+    </div>
+  )
+}
 
 export default function LoginPage() {
   const [email,    setEmail]    = useState('')
@@ -36,6 +54,7 @@ export default function LoginPage() {
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#080808', fontFamily: FONT, position: 'relative', overflow: 'hidden',
     }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');`}</style>
 
       {/* Background glow */}
       <div style={{
@@ -52,8 +71,8 @@ export default function LoginPage() {
       }} />
 
       {/* Logo top left */}
-      <div style={{ position: 'absolute', top: 24, left: 48, fontSize: 17, fontWeight: 800, letterSpacing: '-0.04em', color: '#fff' }}>
-        TradeLog <span style={{ color: '#30d158' }}>Pro</span>
+      <div style={{ position: 'absolute', top: 24, left: 48 }}>
+        <Logo />
       </div>
 
       {/* Card */}
@@ -126,6 +145,12 @@ export default function LoginPage() {
               boxSizing: 'border-box',
             }}
           />
+          {/* Forgot password */}
+          <div style={{ textAlign: 'right', marginTop: 8 }}>
+            <Link href="/forgot-password" style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {/* Sign in button */}
@@ -179,7 +204,6 @@ export default function LoginPage() {
             Create account
           </Link>
         </p>
-
       </div>
     </main>
   )
