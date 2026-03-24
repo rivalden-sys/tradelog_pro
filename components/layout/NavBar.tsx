@@ -8,6 +8,7 @@ import { useTheme } from '@/components/layout/ThemeProvider';
 import { useLocale } from '@/hooks/useLocale';
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif";
+const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif";
 
 export default function NavBar() {
   const pathname = usePathname();
@@ -24,7 +25,6 @@ export default function NavBar() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Закривати меню при переході
   useEffect(() => { setMenuOpen(false) }, [pathname]);
 
   const supabase = createBrowserClient(
@@ -53,8 +53,41 @@ export default function NavBar() {
   const subColor = '#6e6e73';
   const btnBg = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
 
+  const Logo = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
+      {/* Зелені полоски — без квадратика */}
+      <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+        <rect x="0"  y="13" width="4" height="9"  rx="2" fill="#30d158" opacity="0.4"/>
+        <rect x="5"  y="9"  width="4" height="13" rx="2" fill="#30d158" opacity="0.62"/>
+        <rect x="10" y="4"  width="4" height="18" rx="2" fill="#30d158" opacity="0.82"/>
+        <rect x="15" y="0"  width="4" height="22" rx="2" fill="#30d158"/>
+      </svg>
+      <div style={{ lineHeight: 1 }}>
+        <div style={{
+          fontFamily: NUNITO,
+          fontSize: 15,
+          fontWeight: 800,
+          color: textColor,
+          letterSpacing: '-0.02em',
+          lineHeight: '1.1',
+        }}>TradeLog</div>
+        <div style={{
+          fontFamily: NUNITO,
+          fontSize: 10,
+          fontWeight: 500,
+          color: '#30d158',
+          letterSpacing: '0.04em',
+          lineHeight: '1.1',
+        }}>Pro Edition</div>
+      </div>
+    </div>
+  )
+
   return (
     <>
+      {/* Підключаємо Nunito через Google Fonts */}
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');`}</style>
+
       <nav style={{
         fontFamily: FONT,
         background: navBg,
@@ -71,11 +104,9 @@ export default function NavBar() {
         zIndex: 100,
       }}>
         {/* Logo */}
-        <span style={{ fontSize: 15, fontWeight: 700, color: textColor, letterSpacing: '-0.02em', flexShrink: 0 }}>
-          TradeLog <span style={{ color: '#30d158' }}>Pro</span>
-        </span>
+        <Logo />
 
-        {/* Desktop links —ховаємо через JS */}
+        {/* Desktop links */}
         {!isMobile && (
           <div style={{ display: 'flex', gap: 2 }}>
             {links.map(({ href, label }) => (
