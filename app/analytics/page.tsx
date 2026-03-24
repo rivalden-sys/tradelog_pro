@@ -100,13 +100,15 @@ export default function AnalyticsPage() {
     .map(([month, pnl]) => ({ month: month.slice(5), pnl: Math.round(pnl * 100) / 100 }))
     .sort((a, b) => a.month.localeCompare(b.month))
 
-  const disciplineTrades = trades.filter(tr2 => tr2.self_grade === 'C' || tr2.self_grade === 'D')
-  const disciplineScore  = trades.length ? Math.round(((trades.length - disciplineTrades.length) / trades.length) * 100) : 0
+  // Дисципліна — тільки угоди з оцінкою (планові не мають self_grade)
+  const gradedTrades     = trades.filter(tr2 => tr2.self_grade)
+  const disciplineTrades = gradedTrades.filter(tr2 => tr2.self_grade === 'C' || tr2.self_grade === 'D')
+  const disciplineScore  = gradedTrades.length ? Math.round(((gradedTrades.length - disciplineTrades.length) / gradedTrades.length) * 100) : -1
 
   const longs   = trades.filter(tr2 => tr2.direction === 'Long')
   const shorts  = trades.filter(tr2 => tr2.direction === 'Short')
-  const longWR  = longs.length  ? Math.round((longs.filter(tr2  => tr2.result === 'Тейк').length / longs.length)  * 100) : 0
-  const shortWR = shorts.length ? Math.round((shorts.filter(tr2 => tr2.result === 'Тейк').length / shorts.length) * 100) : 0
+  const longWR  = longs.length  ? Math.round((longs.filter(tr2  => tr2.result === 'Тейк').length / longs.length)  * 100) : -1
+  const shortWR = shorts.length ? Math.round((shorts.filter(tr2 => tr2.result === 'Тейк').length / shorts.length) * 100) : -1
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT }}>
@@ -129,9 +131,9 @@ export default function AnalyticsPage() {
         {/* Stat cards */}
         <div className="analytics-stat-grid" style={{ marginBottom: 20 }}>
           {[
-            { label: tr('analytics_discipline'), value: `${disciplineScore}%`, color: disciplineScore >= 70 ? GREEN : RED },
-            { label: tr('analytics_long_wr'),    value: `${longWR}%`,          color: longWR  >= 50 ? GREEN : RED },
-            { label: tr('analytics_short_wr'),   value: `${shortWR}%`,         color: shortWR >= 50 ? GREEN : RED },
+            { label: tr('analytics_discipline'), value: disciplineScore === -1 ? '—' : `${disciplineScore}%`, color: disciplineScore === -1 ? t.sub : disciplineScore >= 70 ? GREEN : RED },
+            { label: tr('analytics_long_wr'),    value: longWR  === -1 ? '—' : `${longWR}%`,                  color: longWR  === -1 ? t.sub : longWR  >= 50 ? GREEN : RED },
+            { label: tr('analytics_short_wr'),   value: shortWR === -1 ? '—' : `${shortWR}%`,                 color: shortWR === -1 ? t.sub : shortWR >= 50 ? GREEN : RED },
             { label: tr('analytics_ls_ratio'),   value: `${longs.length} / ${shorts.length}`, color: t.text },
           ].map(sc => (
             <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
