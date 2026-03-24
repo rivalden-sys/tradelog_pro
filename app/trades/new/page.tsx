@@ -7,7 +7,7 @@ import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 
-const PAIRS          = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT', 'DOGE/USDT', 'AVAX/USDT', 'DOT/USDT']
+// PAIRS більше не хардкод — завантажуються динамічно
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const GRADES         = ['A', 'B', 'C', 'D']
 
@@ -58,12 +58,11 @@ export default function NewTradePage() {
   const [mode, setMode]         = useState<'planned' | 'closed'>('planned')
   const [riskMode, setRiskMode] = useState<'pct' | 'usdt'>('pct')
 
-  // Задача 1 — баланс
   const [balance, setBalance]   = useState<number>(0)
-  // Задача 3 — динамічні сетапи
   const [setups, setSetups]     = useState<string[]>(SETUPS_DEFAULT)
+  // Динамічні пари — тільки з угод юзера
+  const [pairs, setPairs]       = useState<string[]>([])
 
-  // Завантажити баланс і сетапи при mount
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -78,7 +77,17 @@ export default function NewTradePage() {
         .single()
       if (profile?.balance) setBalance(profile.balance)
 
-      // Динамічні сетапи
+      // Динамічні пари — ТІЛЬКИ з угод юзера, без хардкоду
+      const { data: pairsData } = await supabase
+        .from('trades')
+        .select('pair')
+        .eq('user_id', user.id)
+      if (pairsData && pairsData.length > 0) {
+        const unique = [...new Set(pairsData.map((t: any) => t.pair).filter(Boolean))] as string[]
+        setPairs(unique)
+      }
+
+      // Динамічні сетапи (мерж з дефолтом)
       const { data: setupsData } = await supabase
         .from('trades')
         .select('setup')
@@ -86,16 +95,14 @@ export default function NewTradePage() {
       if (setupsData && setupsData.length > 0) {
         const unique = [...new Set(setupsData.map((t: any) => t.setup).filter(Boolean))] as string[]
         if (unique.length > 0) {
-          // Об'єднуємо: спочатку угоди юзера, потім fallback (без дублів)
-          const merged = [...new Set([...unique, ...SETUPS_DEFAULT])]
-          setSetups(merged)
+          setSetups([...new Set([...unique, ...SETUPS_DEFAULT])])
         }
       }
     }
     load()
   }, [])
 
-  // Підказка ризику в USDT (для режиму %)
+  // Підказка ризику в USDT
   const riskHint = (() => {
     if (riskMode !== 'pct' || balance <= 0) return null
     const pct = parseFloat(form.risk_pct)
@@ -103,7 +110,6 @@ export default function NewTradePage() {
       const usdt = (balance * pct / 100).toFixed(2)
       return `${pct}% від ${balance.toLocaleString()} USDT = ${usdt} USDT`
     }
-    // Дефолтна підказка
     return `1% від ${balance.toLocaleString()} USDT = ${(balance / 100).toFixed(2)} USDT`
   })()
 
@@ -121,20 +127,13 @@ export default function NewTradePage() {
         if (riskPts > 0) {
           next.rr = (rewardPts / riskPts).toFixed(2)
         }
-
         if (riskMode === 'pct' && next.risk_pct) {
           const riskPctVal = parseFloat(next.risk_pct)
-          if (!isNaN(riskPctVal)) {
-            const rewardPct = riskPctVal * (rewardPts / riskPts)
-            next.profit_pct = rewardPct.toFixed(2)
-          }
+          if (!isNaN(riskPctVal)) next.profit_pct = (riskPctVal * rewardPts / riskPts).toFixed(2)
         }
         if (riskMode === 'usdt' && next.risk_usdt) {
           const riskUsdtVal = parseFloat(next.risk_usdt)
-          if (!isNaN(riskUsdtVal)) {
-            const rewardUsdt = riskUsdtVal * (rewardPts / riskPts)
-            next.profit_usd = rewardUsdt.toFixed(2)
-          }
+          if (!isNaN(riskUsdtVal)) next.profit_usd = (riskUsdtVal * rewardPts / riskPts).toFixed(2)
         }
       }
 
@@ -261,7 +260,6 @@ export default function NewTradePage() {
       <NavBar />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: 'none', color: c.text3,
@@ -312,12 +310,15 @@ export default function NewTradePage() {
                 value={form.pair} onChange={e => set('pair', e.target.value.toUpperCase())}
                 style={inputStyle(!!errors.pair)} autoComplete="off"
               />
-              <datalist id="pairs-list">{PAIRS.map(p => <option key={p} value={p} />)}</datalist>
+              {/* Тільки пари юзера */}
+              <datalist id="pairs-list">
+                {pairs.map(p => <option key={p} value={p} />)}
+              </datalist>
               {errors.pair && <div style={errorStyle}>{errors.pair}</div>}
             </div>
           </div>
 
-          {/* Setup — Задача 3: динамічний список */}
+          {/* Setup */}
           <div>
             <label style={labelStyle}>{t('new_trade_setup')} *</label>
             <input
@@ -337,7 +338,7 @@ export default function NewTradePage() {
             {segmented('direction', ['Long', 'Short'], [GREEN, RED], [t('new_trade_long'), t('new_trade_short')])}
           </div>
 
-          {/* ===== БЛОК ПЛАНУВАННЯ ===== */}
+          {/* Блок планування */}
           <div style={{
             background: c.surface2, borderRadius: 14, padding: '16px',
             border: `1px solid ${mode === 'planned' ? ORANGE + '33' : c.border}`,
@@ -370,7 +371,7 @@ export default function NewTradePage() {
               </div>
             </div>
 
-            {/* Ризик — Задача 1: підказка балансу */}
+            {/* Ризик */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <label style={{ ...labelStyle, marginBottom: 0 }}>Ризик</label>
@@ -386,24 +387,17 @@ export default function NewTradePage() {
                   ))}
                 </div>
               </div>
-
               <div className="form-grid-2">
                 {riskMode === 'pct' ? (
                   <div>
                     <input type="number" step="0.1" placeholder="1.0"
                       value={form.risk_pct} onChange={e => set('risk_pct', e.target.value)}
                       style={inputStyle()} />
-                    {/* Задача 1 — підказка USDT з балансу */}
-                    {riskHint && (
-                      <div style={{
-                        fontSize: 11, marginTop: 5,
-                        color: balance > 0 ? BLUE : c.text3,
-                        fontWeight: balance > 0 ? 600 : 400,
-                      }}>
+                    {riskHint ? (
+                      <div style={{ fontSize: 11, marginTop: 5, color: BLUE, fontWeight: 600 }}>
                         💰 {riskHint}
                       </div>
-                    )}
-                    {!riskHint && (
+                    ) : (
                       <div style={{ fontSize: 11, color: c.text3, marginTop: 4 }}>% від депозиту</div>
                     )}
                   </div>
@@ -418,32 +412,20 @@ export default function NewTradePage() {
               </div>
             </div>
 
-            {/* Автоматичний розрахунок */}
             {calcReady && (
               <div style={{
                 display: 'flex', gap: 12, flexWrap: 'wrap',
                 background: GREEN + '12', borderRadius: 10,
                 padding: '10px 14px', border: `1px solid ${GREEN}33`,
               }}>
-                <div style={{ fontSize: 12, color: c.text3 }}>
-                  Авто-розрахунок:
-                </div>
-                {form.rr && (
-                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>
-                    RR = {form.rr}
-                  </div>
-                )}
+                <div style={{ fontSize: 12, color: c.text3 }}>Авто-розрахунок:</div>
+                {form.rr && <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>RR = {form.rr}</div>}
                 {form.profit_pct && riskMode === 'pct' && (
-                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>
-                    P&L ≈ +{form.profit_pct}%
-                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>P&L ≈ +{form.profit_pct}%</div>
                 )}
                 {form.profit_usd && riskMode === 'usdt' && (
-                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>
-                    P&L ≈ +{form.profit_usd}$
-                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>P&L ≈ +{form.profit_usd}$</div>
                 )}
-                {/* Задача 1 — USDT ризику в авто-розрахунку */}
                 {riskMode === 'pct' && form.risk_pct && balance > 0 && (
                   <div style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>
                     Ризик: {(balance * parseFloat(form.risk_pct) / 100).toFixed(2)} USDT
@@ -453,10 +435,9 @@ export default function NewTradePage() {
             )}
           </div>
 
-          {/* ===== БЛОК ФАКТУ (тільки для закритих) ===== */}
+          {/* Блок факту */}
           {mode === 'closed' && (
             <>
-              {/* Result */}
               <div>
                 <label style={labelStyle}>{t('new_trade_result')}</label>
                 {segmented('result', ['Тейк', 'Стоп', 'БУ'],
@@ -464,8 +445,6 @@ export default function NewTradePage() {
                   [t('new_trade_take'), t('new_trade_stop'), t('new_trade_bu')]
                 )}
               </div>
-
-              {/* RR + P&L */}
               <div className="form-grid-3">
                 <div>
                   <label style={labelStyle}>{t('new_trade_rr')} *</label>
@@ -486,8 +465,6 @@ export default function NewTradePage() {
                   {errors.profit_pct && <div style={errorStyle}>{errors.profit_pct}</div>}
                 </div>
               </div>
-
-              {/* Grade */}
               <div>
                 <label style={labelStyle}>{t('new_trade_grade')}</label>
                 {segmented('self_grade', GRADES, [GREEN, BLUE, ORANGE, RED])}
@@ -533,16 +510,8 @@ export default function NewTradePage() {
       </div>
 
       <style>{`
-        .form-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        .form-grid-3 {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 16px;
-        }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
         @media (max-width: 600px) {
           .form-grid-2 { grid-template-columns: 1fr; }
           .form-grid-3 { grid-template-columns: 1fr 1fr; }
