@@ -35,19 +35,45 @@ export default function ResetPasswordPage() {
   const router   = useRouter()
   const supabase = createClient()
 
-  // Supabase редіректить з токеном в URL hash — слухаємо подію
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true)
+    // Обробляємо hash токен від Supabase
+    const handleHashToken = async () => {
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token')) {
+        // Парсимо токени з hash
+        const params = new URLSearchParams(hash.substring(1))
+        const accessToken  = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token:  accessToken,
+            refresh_token: refreshToken,
+          })
+          if (!error) {
+            setReady(true)
+            // Прибираємо hash з URL
+            window.history.replaceState(null, '', window.location.pathname)
+            return
+          }
+        }
       }
-    })
-    return () => subscription.unsubscribe()
+
+      // Fallback — слухаємо подію PASSWORD_RECOVERY
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          setReady(true)
+        }
+      })
+      return () => subscription.unsubscribe()
+    }
+
+    handleHashToken()
   }, [])
 
   const handleSave = async () => {
     if (!password.trim()) { setError('Введіть новий пароль'); return }
-    if (password.length < 6) { setError('Пароль має бути мінімум 6 символів'); return }
+    if (password.length < 6) { setError('Мінімум 6 символів'); return }
     if (password !== password2) { setError('Паролі не співпадають'); return }
 
     setLoading(true)
@@ -68,7 +94,6 @@ export default function ResetPasswordPage() {
     }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');`}</style>
 
-      {/* Background glow */}
       <div style={{
         position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 500, height: 500, borderRadius: '50%',
@@ -76,12 +101,10 @@ export default function ResetPasswordPage() {
         pointerEvents: 'none',
       }} />
 
-      {/* Logo */}
       <div style={{ position: 'absolute', top: 24, left: 48 }}>
         <Logo />
       </div>
 
-      {/* Card */}
       <div style={{
         width: 420, position: 'relative', zIndex: 1,
         background: 'rgba(255,255,255,0.03)',
@@ -91,7 +114,6 @@ export default function ResetPasswordPage() {
       }}>
 
         {done ? (
-          /* Success */
           <div style={{ textAlign: 'center' }}>
             <div style={{
               width: 64, height: 64, borderRadius: 20,
@@ -106,8 +128,8 @@ export default function ResetPasswordPage() {
               Redirecting to sign in...
             </p>
           </div>
+
         ) : !ready ? (
-          /* Waiting for token */
           <div style={{ textAlign: 'center' }}>
             <div style={{
               width: 52, height: 52, borderRadius: 16,
@@ -118,12 +140,19 @@ export default function ResetPasswordPage() {
             <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>
               Verifying link...
             </h1>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-              Please wait a moment
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Please wait a moment</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
+              If nothing happens,{' '}
+              <span
+                onClick={() => router.push('/forgot-password')}
+                style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}
+              >
+                request a new link
+              </span>
             </p>
           </div>
+
         ) : (
-          /* Form */
           <>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
               <div style={{
@@ -135,9 +164,7 @@ export default function ResetPasswordPage() {
               <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>
                 New password
               </h1>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-                Choose a strong password
-              </p>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Choose a strong password</p>
             </div>
 
             {error && (
