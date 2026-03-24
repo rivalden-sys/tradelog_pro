@@ -15,6 +15,12 @@ const UpdateSchema = z.object({
   tradingview_url: z.string().optional(),
   comment:         z.string().optional(),
   self_grade:      z.enum(['A', 'B', 'C', 'D']).optional(),
+  status:          z.enum(['planned', 'closed']).optional(),
+  entry_price:     z.number().optional(),
+  stop_price:      z.number().optional(),
+  take_price:      z.number().optional(),
+  risk_usdt:       z.number().optional(),
+  risk_pct:        z.number().optional(),
 })
 
 type Params = Promise<{ id: string }>
