@@ -1,17 +1,20 @@
 // ─── DESIGN TOKENS — TradeLog Pro ────────────────────────────────────────────
 // Apple-style: black / white / gray. No blue or other accent colors in UI.
+
 export const colors = {
   green:  '#30d158',   // Тейк / Long / позитив
   red:    '#ff453a',   // Стоп / Short / негатив
   gray:   '#8e8e93',   // БУ / нейтральный
   orange: '#ff9f0a',   // предупреждение
   blue:   '#0a84ff',   // grade B / ссылки
+
   // Grades
   gradeA: '#30d158',
   gradeB: '#0a84ff',
   gradeC: '#ff9f0a',
   gradeD: '#ff453a',
 }
+
 export const lightTheme = {
   bg:       '#f2f2f7',
   surface:  '#ffffff',
@@ -24,6 +27,7 @@ export const lightTheme = {
   shadow:   '0 2px 16px rgba(0,0,0,0.07)',
   shadow2:  '0 4px 24px rgba(0,0,0,0.10)',
 }
+
 export const darkTheme = {
   bg:       '#0a0a0b',
   surface:  '#1c1c1e',
@@ -36,11 +40,14 @@ export const darkTheme = {
   shadow:   '0 2px 16px rgba(0,0,0,0.40)',
   shadow2:  '0 4px 24px rgba(0,0,0,0.50)',
 }
+
 export type Theme = typeof lightTheme
+
 export const typography = {
   fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif",
   fontMono:   "'SF Mono', 'Fira Code', Consolas, monospace",
 }
+
 export const radius = {
   sm:   '8px',
   md:   '12px',
@@ -48,6 +55,7 @@ export const radius = {
   xl:   '24px',
   full: '9999px',
 }
+
 export const spacing = {
   xs:  '4px',
   sm:  '8px',
@@ -56,11 +64,15 @@ export const spacing = {
   xl:  '32px',
   xxl: '48px',
 }
+
+// Helper: result → color
 export function resultColor(result: string): string {
   if (result === 'Тейк') return colors.green
   if (result === 'Стоп') return colors.red
   return colors.gray
 }
+
+// Helper: grade → color
 export function gradeColor(grade: string): string {
   const map: Record<string, string> = {
     A: colors.gradeA,
@@ -70,11 +82,15 @@ export function gradeColor(grade: string): string {
   }
   return map[grade] ?? colors.gray
 }
+
+// Helper: score → color
 export function scoreColor(score: number): string {
   if (score >= 70) return colors.green
   if (score >= 40) return colors.orange
   return colors.red
 }
+
+// Helper: pnl → color
 export function pnlColor(pnl: number): string {
   if (pnl > 0) return colors.green
   if (pnl < 0) return colors.red
