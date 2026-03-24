@@ -36,9 +36,10 @@ export default function TradesPage() {
   const [loading, setLoading]           = useState(true)
   const [filterResult, setFilterResult] = useState('')
   const [filterPair, setFilterPair]     = useState('')
-  const [filterStatus, setFilterStatus] = useState('')   // '' | 'planned' | 'closed'
+  const [filterStatus, setFilterStatus] = useState('')
   const [plan, setPlan]                 = useState<string>('free')
   const [totalCount, setTotalCount]     = useState(0)
+  const [pairs, setPairs]               = useState<string[]>([])
 
   useEffect(() => { loadPlan() }, [])
   useEffect(() => { fetchTrades() }, [filterResult, filterPair, filterStatus])
@@ -51,6 +52,8 @@ export default function TradesPage() {
     setPlan(data?.plan ?? 'free')
     const { count } = await supabase.from('trades').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
     setTotalCount(count ?? 0)
+    const { data: pairsData } = await supabase.from('trades').select('pair').eq('user_id', user.id)
+    if (pairsData) setPairs([...new Set(pairsData.map(t => t.pair))])
   }
 
   const fetchTrades = async () => {
@@ -148,7 +151,6 @@ export default function TradesPage() {
         {/* Filters */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
 
-          {/* Фільтр по результату */}
           {[
             { val: '',     label: t('trades_all')  },
             { val: 'Тейк', label: t('trades_take') },
@@ -160,38 +162,35 @@ export default function TradesPage() {
             >{f.label}</button>
           ))}
 
-          {/* Роздільник */}
           <div style={{ width: 1, height: 24, background: c.border, margin: '0 4px' }} />
 
-          {/* Фільтр по статусу */}
-          <button onClick={() => setFilterStatus('')}
-            style={filterBtn(filterStatus === '', GRAY)}>
+          <button onClick={() => setFilterStatus('')} style={filterBtn(filterStatus === '', GRAY)}>
             Всі угоди
           </button>
-          <button onClick={() => setFilterStatus('planned')}
-            style={filterBtn(filterStatus === 'planned', ORANGE)}>
+          <button onClick={() => setFilterStatus('planned')} style={filterBtn(filterStatus === 'planned', ORANGE)}>
             🕐 Планові
           </button>
-          <button onClick={() => setFilterStatus('closed')}
-            style={filterBtn(filterStatus === 'closed', GREEN)}>
+          <button onClick={() => setFilterStatus('closed')} style={filterBtn(filterStatus === 'closed', GREEN)}>
             ✅ Закриті
           </button>
 
-          {/* Фільтр по парі */}
-          <select
-            value={filterPair}
-            onChange={e => setFilterPair(e.target.value)}
-            style={{
-              background: c.surface2, border: `1px solid ${c.border}`,
-              color: c.text, borderRadius: 10, padding: '7px 14px', fontSize: 13,
-              marginLeft: 'auto',
-            }}
-          >
-            <option value="">{t('trades_all')}</option>
-            {['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT'].map(p => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
+          {/* Динамічні пари з журналу */}
+          {pairs.length > 0 && (
+            <select
+              value={filterPair}
+              onChange={e => setFilterPair(e.target.value)}
+              style={{
+                background: c.surface2, border: `1px solid ${c.border}`,
+                color: c.text, borderRadius: 10, padding: '7px 14px', fontSize: 13,
+                marginLeft: 'auto',
+              }}
+            >
+              <option value="">Всі пари</option>
+              {pairs.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Table */}
@@ -238,7 +237,6 @@ export default function TradesPage() {
                           <td style={{ padding: '11px 14px', color: c.text2 }}>{trade.date}</td>
                           <td style={{ padding: '11px 14px', fontWeight: 600, color: c.text }}>{trade.pair}</td>
                           <td style={{ padding: '11px 14px', color: c.text3, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trade.setup}</td>
-                          {/* Бейдж статусу */}
                           <td style={{ padding: '11px 14px' }}>
                             {isPlanned
                               ? <span style={{ background: `${ORANGE}22`, color: ORANGE, padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>🕐 Планова</span>
