@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
+import { createClient } from '@/lib/supabase/client'
 
-const PAIRS  = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT', 'DOGE/USDT', 'AVAX/USDT', 'DOT/USDT']
-const SETUPS = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
+const PAIRS          = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'POL/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT', 'DOGE/USDT', 'AVAX/USDT', 'DOT/USDT']
+const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 
 const GREEN  = '#30d158'
 const RED    = '#ff453a'
@@ -21,10 +22,14 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   const { t } = useLocale()
   const router = useRouter()
 
-  const [tradeId, setTradeId] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving,  setSaving]  = useState(false)
-  const [error,   setError]   = useState('')
+  const [tradeId,  setTradeId]  = useState('')
+  const [loading,  setLoading]  = useState(true)
+  const [saving,   setSaving]   = useState(false)
+  const [error,    setError]    = useState('')
+  const [balance,  setBalance]  = useState<number>(0)
+  const [setups,   setSetups]   = useState<string[]>(SETUPS_DEFAULT)
+  const [riskMode, setRiskMode] = useState<'pct' | 'usdt'>('pct')
+
   const [form, setForm] = useState({
     date:            '',
     pair:            '',
@@ -47,12 +52,16 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
 
   useEffect(() => {
     const load = async () => {
+      const supabase = createClient()
       const { id } = await params
       setTradeId(id)
+
+      // Завантажити угоду
       const res  = await fetch(`/api/trades/${id}`)
       const json = await res.json()
       if (!json.success) { setLoading(false); return }
       const d = json.data
+
       setForm({
         date:            d.date            || '',
         pair:            d.pair            || '',
@@ -72,10 +81,42 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
         risk_usdt:       String(d.risk_usdt   ?? ''),
         status:          d.status          || 'closed',
       })
+
+      // Визначити режим ризику з даних угоди
+      if (d.risk_usdt && !d.risk_pct) setRiskMode('usdt')
+
+      // Баланс і сетапи
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users').select('balance').eq('id', user.id).single()
+        if (profile?.balance) setBalance(profile.balance)
+
+        const { data: setupsData } = await supabase
+          .from('trades').select('setup').eq('user_id', user.id)
+        if (setupsData && setupsData.length > 0) {
+          const unique = [...new Set(setupsData.map((t: any) => t.setup).filter(Boolean))] as string[]
+          if (unique.length > 0) {
+            setSetups([...new Set([...unique, ...SETUPS_DEFAULT])])
+          }
+        }
+      }
+
       setLoading(false)
     }
     load()
   }, [params])
+
+  // Підказка ризику в USDT
+  const riskHint = (() => {
+    if (riskMode !== 'pct' || balance <= 0) return null
+    const pct = parseFloat(form.risk_pct)
+    if (!isNaN(pct) && pct > 0) {
+      const usdt = (balance * pct / 100).toFixed(2)
+      return `${pct}% від ${balance.toLocaleString()} USDT = ${usdt} USDT`
+    }
+    return `1% від ${balance.toLocaleString()} USDT = ${(balance / 100).toFixed(2)} USDT`
+  })()
 
   const set = (k: string, v: string) => {
     setForm(f => {
@@ -83,11 +124,40 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
       const entry = parseFloat(k === 'entry_price' ? v : next.entry_price)
       const stop  = parseFloat(k === 'stop_price'  ? v : next.stop_price)
       const take  = parseFloat(k === 'take_price'  ? v : next.take_price)
+
       if (entry > 0 && stop > 0 && take > 0) {
         const riskPts   = Math.abs(entry - stop)
         const rewardPts = Math.abs(take - entry)
-        if (riskPts > 0) next.rr = (rewardPts / riskPts).toFixed(2)
+        if (riskPts > 0) {
+          next.rr = (rewardPts / riskPts).toFixed(2)
+          // Перерахунок P&L
+          if (riskMode === 'pct' && next.risk_pct) {
+            const rp = parseFloat(next.risk_pct)
+            if (!isNaN(rp)) next.profit_pct = (rp * rewardPts / riskPts).toFixed(2)
+          }
+          if (riskMode === 'usdt' && next.risk_usdt) {
+            const ru = parseFloat(next.risk_usdt)
+            if (!isNaN(ru)) next.profit_usd = (ru * rewardPts / riskPts).toFixed(2)
+          }
+        }
       }
+
+      // При зміні ризику
+      if ((k === 'risk_pct' || k === 'risk_usdt') && entry > 0 && stop > 0 && take > 0) {
+        const riskPts   = Math.abs(entry - stop)
+        const rewardPts = Math.abs(take - entry)
+        if (riskPts > 0) {
+          if (k === 'risk_pct') {
+            const rp = parseFloat(v)
+            if (!isNaN(rp)) next.profit_pct = (rp * rewardPts / riskPts).toFixed(2)
+          }
+          if (k === 'risk_usdt') {
+            const ru = parseFloat(v)
+            if (!isNaN(ru)) next.profit_usd = (ru * rewardPts / riskPts).toFixed(2)
+          }
+        }
+      }
+
       return next
     })
   }
@@ -171,6 +241,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   )
 
   const isPlanned = form.status === 'planned'
+  const calcReady = form.entry_price && form.stop_price && form.take_price
 
   return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
@@ -186,12 +257,18 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
           <h1 style={{ fontSize: 22, fontWeight: 700, color: c.text, margin: 0 }}>
             ✏️ Редагування угоди
           </h1>
+          {isPlanned && (
+            <span style={{
+              fontSize: 12, fontWeight: 700, color: ORANGE,
+              background: ORANGE + '22', borderRadius: 8, padding: '4px 10px',
+            }}>🕐 Планова</span>
+          )}
         </div>
 
         <div style={{
           background: c.surface, borderRadius: 18, padding: '20px 16px',
-          border: `1px solid ${c.border}`, boxShadow: c.shadow,
-          display: 'grid', gap: 18,
+          border: `1px solid ${isPlanned ? ORANGE + '44' : c.border}`,
+          boxShadow: c.shadow, display: 'grid', gap: 18,
         }}>
 
           {/* Date + Pair */}
@@ -210,13 +287,15 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
             </div>
           </div>
 
-          {/* Setup */}
+          {/* Setup — динамічний */}
           <div>
             <label style={labelStyle}>Сетап *</label>
             <input type="text" list="setups-list" value={form.setup}
               onChange={e => set('setup', e.target.value)}
               style={inputStyle()} autoComplete="off" />
-            <datalist id="setups-list">{SETUPS.map(s => <option key={s} value={s} />)}</datalist>
+            <datalist id="setups-list">
+              {setups.map(s => <option key={s} value={s} />)}
+            </datalist>
           </div>
 
           {/* Direction */}
@@ -228,12 +307,12 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
           {/* Ціни входу */}
           <div style={{
             background: c.surface2, borderRadius: 14, padding: '16px',
-            border: `1px solid ${c.border}`,
+            border: `1px solid ${isPlanned ? ORANGE + '33' : c.border}`,
           }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: c.text3, marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: isPlanned ? ORANGE : c.text3, marginBottom: 14 }}>
               📍 Точки входу
             </div>
-            <div className="form-grid-3">
+            <div className="form-grid-3" style={{ marginBottom: 14 }}>
               <div>
                 <label style={labelStyle}>Ціна входу</label>
                 <input type="number" step="any" value={form.entry_price}
@@ -250,9 +329,72 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
                   onChange={e => set('take_price', e.target.value)} style={inputStyle()} />
               </div>
             </div>
-            {form.rr && parseFloat(form.rr) > 0 && (
-              <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: GREEN }}>
-                Авто RR = {form.rr}
+
+            {/* Ризик з підказкою балансу */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>Ризик</label>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {(['pct', 'usdt'] as const).map(rm => (
+                    <button key={rm} onClick={() => setRiskMode(rm)} style={{
+                      padding: '3px 10px', borderRadius: 8,
+                      border: `1px solid ${riskMode === rm ? BLUE : c.border}`,
+                      background: riskMode === rm ? BLUE + '22' : 'transparent',
+                      color: riskMode === rm ? BLUE : c.text3,
+                      fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                    }}>{rm === 'pct' ? '% від депо' : 'USDT'}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-grid-2">
+                {riskMode === 'pct' ? (
+                  <div>
+                    <input type="number" step="0.1" placeholder="1.0"
+                      value={form.risk_pct} onChange={e => set('risk_pct', e.target.value)}
+                      style={inputStyle()} />
+                    {riskHint ? (
+                      <div style={{ fontSize: 11, marginTop: 5, color: BLUE, fontWeight: 600 }}>
+                        💰 {riskHint}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11, color: c.text3, marginTop: 4 }}>% від депозиту</div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <input type="number" step="1" placeholder="100"
+                      value={form.risk_usdt} onChange={e => set('risk_usdt', e.target.value)}
+                      style={inputStyle()} />
+                    <div style={{ fontSize: 11, color: c.text3, marginTop: 4 }}>USDT ризику</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Авто-розрахунок */}
+            {calcReady && (
+              <div style={{
+                display: 'flex', gap: 12, flexWrap: 'wrap',
+                background: GREEN + '12', borderRadius: 10,
+                padding: '10px 14px', border: `1px solid ${GREEN}33`,
+                marginTop: 14,
+              }}>
+                <div style={{ fontSize: 12, color: c.text3 }}>Авто-розрахунок:</div>
+                {form.rr && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>RR = {form.rr}</div>
+                )}
+                {form.profit_pct && riskMode === 'pct' && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>P&L ≈ +{form.profit_pct}%</div>
+                )}
+                {form.profit_usd && riskMode === 'usdt' && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>P&L ≈ +{form.profit_usd}$</div>
+                )}
+                {riskMode === 'pct' && form.risk_pct && balance > 0 && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>
+                    Ризик: {(balance * parseFloat(form.risk_pct) / 100).toFixed(2)} USDT
+                  </div>
+                )}
               </div>
             )}
           </div>
