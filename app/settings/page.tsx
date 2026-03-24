@@ -48,10 +48,16 @@ export default function SettingsPage() {
   const [minRR,         setMinRR]         = useState('1.5')
   const [dailyLoss,     setDailyLoss]     = useState('3')
 
-  // Баланс депозиту
-  const [balance,      setBalance]      = useState('')
-  const [balanceSaved, setBalanceSaved] = useState(false)
-  const [balanceSaving,setBalanceSaving]= useState(false)
+  const [balance,       setBalance]       = useState('')
+  const [balanceSaved,  setBalanceSaved]  = useState(false)
+  const [balanceSaving, setBalanceSaving] = useState(false)
+
+  // Change password
+  const [newPassword,  setNewPassword]  = useState('')
+  const [newPassword2, setNewPassword2] = useState('')
+  const [pwSaving,     setPwSaving]     = useState(false)
+  const [pwSaved,      setPwSaved]      = useState(false)
+  const [pwError,      setPwError]      = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -61,12 +67,8 @@ export default function SettingsPage() {
       setEmail(user.email || '')
       setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
 
-      // Завантажити баланс з users таблиці
       const { data: profile } = await supabase
-        .from('users')
-        .select('balance')
-        .eq('id', user.id)
-        .single()
+        .from('users').select('balance').eq('id', user.id).single()
       if (profile?.balance) setBalance(String(profile.balance))
 
       setLoading(false)
@@ -93,6 +95,22 @@ export default function SettingsPage() {
     }
     setBalanceSaving(false); setBalanceSaved(true)
     setTimeout(() => setBalanceSaved(false), 2000)
+  }
+
+  const savePassword = async () => {
+    setPwError('')
+    if (!newPassword.trim())       { setPwError('Введіть новий пароль'); return }
+    if (newPassword.length < 6)    { setPwError('Мінімум 6 символів'); return }
+    if (newPassword !== newPassword2) { setPwError('Паролі не співпадають'); return }
+
+    setPwSaving(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) { setPwError(error.message); setPwSaving(false); return }
+
+    setPwSaving(false); setPwSaved(true)
+    setNewPassword(''); setNewPassword2('')
+    setTimeout(() => setPwSaved(false), 3000)
   }
 
   const handleLogout = async () => {
@@ -164,12 +182,8 @@ export default function SettingsPage() {
               <label style={labelStyle}>Баланс депозиту (USDT)</label>
               <div style={{ position: 'relative' }}>
                 <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  placeholder="10000"
-                  value={balance}
-                  onChange={e => setBalance(e.target.value)}
+                  type="number" step="1" min="0" placeholder="10000"
+                  value={balance} onChange={e => setBalance(e.target.value)}
                   style={{ ...inputStyle, paddingRight: 60 }}
                 />
                 <span style={{
@@ -200,6 +214,76 @@ export default function SettingsPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* 🔑 Зміна пароля */}
+        <div style={{ ...card(t), border: `1px solid ${BLUE}33` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: t.text }}>🔑 Змінити пароль</div>
+          </div>
+          <div style={{ fontSize: 13, color: t.sub, marginBottom: 20 }}>
+            Введіть новий пароль для вашого акаунту.
+          </div>
+
+          {pwSaved && (
+            <div style={{
+              background: `${GREEN}18`, border: `1px solid ${GREEN}44`,
+              borderRadius: 12, padding: '12px 16px', marginBottom: 16,
+              fontSize: 13, color: GREEN, fontWeight: 600,
+            }}>
+              ✓ Пароль успішно змінено!
+            </div>
+          )}
+
+          {pwError && (
+            <div style={{
+              background: `${RED}12`, border: `1px solid ${RED}33`,
+              borderRadius: 12, padding: '12px 16px', marginBottom: 16,
+              fontSize: 13, color: RED,
+            }}>
+              {pwError}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Новий пароль</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={e => { setNewPassword(e.target.value); setPwError('') }}
+                placeholder="••••••••"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Підтвердіть пароль</label>
+              <input
+                type="password"
+                value={newPassword2}
+                onChange={e => { setNewPassword2(e.target.value); setPwError('') }}
+                placeholder="••••••••"
+                onKeyDown={e => e.key === 'Enter' && savePassword()}
+                style={{
+                  ...inputStyle,
+                  border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? RED + '66' : t.border}`,
+                }}
+              />
+              {newPassword2 && newPassword !== newPassword2 && (
+                <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>Паролі не співпадають</div>
+              )}
+            </div>
+            <button onClick={savePassword} disabled={pwSaving} style={{
+              background: pwSaved ? GREEN : BLUE,
+              color: '#fff', border: 'none', borderRadius: 12, padding: '12px',
+              fontSize: 14, fontWeight: 700, cursor: pwSaving ? 'not-allowed' : 'pointer',
+              opacity: pwSaving ? 0.7 : 1,
+              fontFamily: FONT, transition: 'background 0.3s',
+              boxShadow: `0 0 20px ${BLUE}33`,
+            }}>
+              {pwSaved ? '✓ Збережено' : pwSaving ? 'Збереження...' : 'Змінити пароль'}
+            </button>
+          </div>
         </div>
 
         {/* Ризик-менеджмент */}
