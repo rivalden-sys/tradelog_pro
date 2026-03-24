@@ -94,7 +94,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
 
   const save = async () => {
     if (!form.pair.trim() || !form.setup.trim()) {
-      setError('Заповніть обов'язкові поля')
+      setError('Заповніть обовязкові поля')
       return
     }
     setSaving(true)
