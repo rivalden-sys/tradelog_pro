@@ -1,4 +1,5 @@
 'use client'
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { lightTheme, darkTheme, type Theme } from '@/lib/design'
 
@@ -13,45 +14,32 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(false)
 
-  // Застосовуємо bgStyle до <html>
-  const applyTheme = (isDark: boolean) => {
-    const theme = isDark ? darkTheme : lightTheme
-    const html = document.documentElement
-
-    if (isDark) {
-      html.classList.add('dark')
-    } else {
-      html.classList.remove('dark')
-    }
-
-    // Застосовуємо фон через style attribute
-    html.style.cssText = theme.bgStyle
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .join(' ')
-
-    // Мінімальна висота щоб фон покривав всю сторінку
-    html.style.minHeight = '100vh'
-  }
-
   useEffect(() => {
     const saved = localStorage.getItem('tlp-dark')
-    const isDark = saved === 'true'
-    setDark(isDark)
-    applyTheme(isDark)
+    if (saved === 'true') {
+      setDark(true)
+      document.documentElement.classList.add('dark')
+    }
   }, [])
 
   const toggle = () => {
     setDark(prev => {
       const next = !prev
       localStorage.setItem('tlp-dark', String(next))
-      applyTheme(next)
+      if (next) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
       return next
     })
   }
 
   const theme = dark ? darkTheme : lightTheme
+
+  useEffect(() => {
+    document.documentElement.style.background = theme.bg
+  }, [theme.bg])
 
   return (
     <ThemeContext.Provider value={{ dark, toggle, theme }}>
