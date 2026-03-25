@@ -70,7 +70,6 @@ function calcStats(trades: Trade[]) {
   const avg_rr    = total ? trades.reduce((s, t) => s + (t.rr || 0), 0) / total : 0
   const avg_pnl   = total ? total_pnl / total : 0
 
-  // Max Drawdown
   let peak = 0, maxDD = 0, cum = 0
   ;[...trades].sort((a, b) => a.date.localeCompare(b.date)).forEach(t => {
     cum += t.profit_usd || 0
@@ -79,7 +78,6 @@ function calcStats(trades: Trade[]) {
     if (dd > maxDD) maxDD = dd
   })
 
-  // Long / Short WR
   const longs  = trades.filter(t => t.direction === 'Long')
   const shorts = trades.filter(t => t.direction === 'Short')
   const long_wr  = longs.length  ? Math.round((longs.filter(t => t.result === 'Тейк').length  / longs.length)  * 100) : null
@@ -144,8 +142,6 @@ function calcBySetup(trades: Trade[]) {
 
 function calcByWeekday(trades: Trade[]) {
   const DAYS_UK = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-  const DAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  // Впорядкований масив Пн→Нд
   const ORDER = [1, 2, 3, 4, 5, 6, 0]
   const map: Record<number, { pnl: number; count: number }> = {}
   ORDER.forEach(d => { map[d] = { pnl: 0, count: 0 } })
@@ -156,7 +152,6 @@ function calcByWeekday(trades: Trade[]) {
   })
   return ORDER.map(d => ({
     day: DAYS_UK[d],
-    dayEn: DAYS_EN[d],
     pnl: Math.round(map[d].pnl * 100) / 100,
     count: map[d].count,
   }))
@@ -231,14 +226,14 @@ export default function DashboardPage() {
   const recent     = filtered.slice(0, 10)
 
   const statCards = [
-    { label: tr('dashboard_trades'),   value: stats.total,                                                           color: BLUE   },
-    { label: tr('dashboard_winrate'),  value: `${stats.win_rate}%`,                                                  color: stats.win_rate >= 50 ? GREEN : RED },
-    { label: tr('dashboard_totalpnl'), value: `${stats.total_pnl >= 0 ? '+' : ''}${stats.total_pnl.toFixed(2)}$`,   color: stats.total_pnl >= 0 ? GREEN : RED },
-    { label: tr('dashboard_avgrr'),    value: stats.avg_rr.toFixed(2),                                               color: ORANGE },
-    { label: 'Avg P&L',                value: `${stats.avg_pnl >= 0 ? '+' : ''}${stats.avg_pnl.toFixed(2)}$`,       color: stats.avg_pnl >= 0 ? GREEN : RED },
-    { label: 'Max Drawdown',           value: stats.max_drawdown > 0 ? `-${stats.max_drawdown.toFixed(2)}$` : '—',  color: stats.max_drawdown > 0 ? RED : t.sub },
-    { label: tr('dashboard_bestsetup'),value: stats.best_setup,                                                      color: t.text },
-    { label: tr('dashboard_maxstreak'),value: `${stats.win_streak}W / ${stats.loss_streak}L`,                       color: t.sub  },
+    { label: tr('dashboard_trades'),    value: stats.total,                                                          color: BLUE   },
+    { label: tr('dashboard_winrate'),   value: `${stats.win_rate}%`,                                                 color: stats.win_rate >= 50 ? GREEN : RED },
+    { label: tr('dashboard_totalpnl'),  value: `${stats.total_pnl >= 0 ? '+' : ''}${stats.total_pnl.toFixed(2)}$`,  color: stats.total_pnl >= 0 ? GREEN : RED },
+    { label: tr('dashboard_avgrr'),     value: stats.avg_rr.toFixed(2),                                              color: ORANGE },
+    { label: tr('dashboard_avg_pnl'),   value: `${stats.avg_pnl >= 0 ? '+' : ''}${stats.avg_pnl.toFixed(2)}$`,      color: stats.avg_pnl >= 0 ? GREEN : RED },
+    { label: tr('dashboard_maxdd'),     value: stats.max_drawdown > 0 ? `-${stats.max_drawdown.toFixed(2)}$` : '—', color: stats.max_drawdown > 0 ? RED : t.sub },
+    { label: tr('dashboard_bestsetup'), value: stats.best_setup,                                                     color: t.text },
+    { label: tr('dashboard_maxstreak'), value: `${stats.win_streak}W / ${stats.loss_streak}L`,                      color: t.sub  },
   ]
 
   if (loading) return (
@@ -276,7 +271,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stat cards — 8 карток */}
+        {/* Stat cards */}
         <div className="stat-grid" style={{ marginBottom: 20 }}>
           {statCards.map(sc => (
             <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
@@ -289,9 +284,8 @@ export default function DashboardPage() {
         {/* Long vs Short WR */}
         {(stats.long_wr !== null || stats.short_wr !== null) && (
           <div style={{ ...card(t), marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>Long vs Short</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em' }}>{tr('dashboard_long_short')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {/* Long */}
               <div style={{ background: t.surface2, borderRadius: 14, padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>↑ Long</span>
@@ -303,10 +297,9 @@ export default function DashboardPage() {
                   <div style={{ height: '100%', width: `${stats.long_wr ?? 0}%`, background: GREEN, borderRadius: 3, transition: 'width 0.6s ease' }} />
                 </div>
                 <div style={{ fontSize: 11, color: t.sub, marginTop: 6 }}>
-                  {filtered.filter(t => t.direction === 'Long').length} угод
+                  {filtered.filter(x => x.direction === 'Long').length} {tr('analytics_trades')}
                 </div>
               </div>
-              {/* Short */}
               <div style={{ background: t.surface2, borderRadius: 14, padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: RED }}>↓ Short</span>
@@ -318,14 +311,14 @@ export default function DashboardPage() {
                   <div style={{ height: '100%', width: `${stats.short_wr ?? 0}%`, background: RED, borderRadius: 3, transition: 'width 0.6s ease' }} />
                 </div>
                 <div style={{ fontSize: 11, color: t.sub, marginTop: 6 }}>
-                  {filtered.filter(tr => tr.direction === 'Short').length} угод
+                  {filtered.filter(x => x.direction === 'Short').length} {tr('analytics_trades')}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Charts row 1 — Balance + Pie */}
+        {/* Charts row 1 */}
         <div className="chart-grid-2" style={{ marginBottom: 16 }}>
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_balance')}</div>
@@ -342,7 +335,6 @@ export default function DashboardPage() {
               <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_insufficient')}</div>
             )}
           </div>
-
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_results')}</div>
             {pie.length > 0 ? (
@@ -370,7 +362,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Charts row 2 — By Pair + By Setup */}
+        {/* Charts row 2 */}
         <div className="chart-grid-2" style={{ marginBottom: 16 }}>
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_pnl_pairs')}</div>
@@ -389,7 +381,6 @@ export default function DashboardPage() {
               <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.sub, fontSize: 13 }}>{tr('dashboard_no_data')}</div>
             )}
           </div>
-
           <div style={card(t)}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>{tr('dashboard_pnl_setups')}</div>
             {bySetup.length > 0 ? (
@@ -412,7 +403,7 @@ export default function DashboardPage() {
         {/* P&L по днях тижня */}
         <div style={{ ...card(t), marginBottom: 24 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em' }}>
-            P&L по днях тижня
+            {tr('dashboard_weekday_pnl')}
           </div>
           {filtered.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
@@ -436,7 +427,7 @@ export default function DashboardPage() {
                       }} />
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: t.sub }}>{d.day}</div>
-                    {d.count > 0 && <div style={{ fontSize: 10, color: t.sub }}>{d.count} угод</div>}
+                    {d.count > 0 && <div style={{ fontSize: 10, color: t.sub }}>{d.count} {tr('analytics_trades')}</div>}
                   </div>
                 )
               })}
