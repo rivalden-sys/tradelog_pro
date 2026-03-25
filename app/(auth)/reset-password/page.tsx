@@ -37,8 +37,22 @@ function ResetPasswordForm() {
   const supabase     = createClient()
 
   useEffect(() => {
+    // Підписуємось ПЕРШИМ — до будь-якої іншої логіки
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setReady(true)
+      }
+    })
+
     const init = async () => {
-      // 1) Новий Supabase PKCE flow — ?code=xxx в query params
+      // Перевіряємо чи вже є активна сесія
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setReady(true)
+        return
+      }
+
+      // PKCE flow — ?code= в query params
       const code = searchParams.get('code')
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
@@ -48,32 +62,19 @@ function ResetPasswordForm() {
         }
       }
 
-      // 2) Старий flow — #access_token в hash
-      const hash = window.location.hash
-      if (hash && hash.includes('access_token')) {
-        const params       = new URLSearchParams(hash.substring(1))
-        const accessToken  = params.get('access_token')
-        const refreshToken = params.get('refresh_token')
-        if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token:  accessToken,
-            refresh_token: refreshToken,
-          })
-          if (!error) {
-            setReady(true)
-            window.history.replaceState(null, '', window.location.pathname)
-            return
-          }
-        }
-      }
-
-      // 3) Fallback — PASSWORD_RECOVERY event
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY') setReady(true)
-      })
-      return () => subscription.unsubscribe()
+      // Hash flow — Supabase JS сам читає hash автоматично при ініціалізації клієнта.
+      // onAuthStateChange вище спіймає PASSWORD_RECOVERY якщо токен валідний.
+      // Якщо через 5 секунд нічого — показуємо помилку
+      setTimeout(() => {
+        setReady(prev => {
+          if (!prev) setError('Link expired or invalid. Please request a new one.')
+          return prev
+        })
+      }, 5000)
     }
+
     init()
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSave = async () => {
@@ -105,11 +106,10 @@ function ResetPasswordForm() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 24px', fontSize: 30,
           }}>✅</div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 12 }}>
-            Password updated!
-          </h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 12 }}>Password updated!</h1>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Redirecting to sign in...</p>
         </div>
+
       ) : !ready ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -118,17 +118,25 @@ function ResetPasswordForm() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px', fontSize: 24,
           }}>⏳</div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>
-            Verifying link...
-          </h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>Verifying link...</h1>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Please wait a moment</p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
-            If nothing happens,{' '}
-            <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
-              request a new link
-            </span>
-          </p>
+          {error && (
+            <div style={{
+              background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.25)',
+              padding: '10px 14px', borderRadius: 10, marginTop: 16,
+              fontSize: 13, color: '#ff453a',
+            }}>{error}</div>
+          )}
+          {!error && (
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
+              If nothing happens,{' '}
+              <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
+                request a new link
+              </span>
+            </p>
+          )}
         </div>
+
       ) : (
         <>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -151,9 +159,7 @@ function ResetPasswordForm() {
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              New password
-            </label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>New password</label>
             <input
               type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
               style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
@@ -161,9 +167,7 @@ function ResetPasswordForm() {
           </div>
 
           <div style={{ marginBottom: 24 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Confirm password
-            </label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Confirm password</label>
             <input
               type="password" value={password2} onChange={e => setPassword2(e.target.value)} placeholder="••••••••"
               onKeyDown={e => e.key === 'Enter' && handleSave()}
@@ -193,24 +197,17 @@ export default function ResetPasswordPage() {
       background: '#080808', fontFamily: FONT, position: 'relative', overflow: 'hidden',
     }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');`}</style>
-
       <div style={{
         position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 500, height: 500, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(48,209,88,0.08) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
-
       <div style={{ position: 'absolute', top: 24, left: 48 }}>
         <Logo />
       </div>
-
       <Suspense fallback={
-        <div style={{
-          width: 420, background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 24, padding: '40px 36px', textAlign: 'center',
-        }}>
+        <div style={{ width: 420, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '40px 36px', textAlign: 'center' }}>
           <div style={{ fontSize: 24, marginBottom: 16 }}>⏳</div>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading...</p>
         </div>
