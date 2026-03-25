@@ -34,6 +34,10 @@ export const translations = {
     dashboard_no_data:      'Немає даних',
     dashboard_insufficient: 'Недостатньо даних',
     dashboard_loading:      'Завантаження...',
+    dashboard_avg_pnl:      'Сер. P&L',
+    dashboard_maxdd:        'Макс. просадка',
+    dashboard_long_short:   'Long / Short Win Rate',
+    dashboard_weekday_pnl:  'P&L по днях тижня',
     th_date:                'Дата',
     th_pair:                'Пара',
     th_setup:               'Сетап',
@@ -200,7 +204,7 @@ export const translations = {
 
     // Analytics
     analytics_title:      'Аналітика',
-    analytics_trades:     'угод всього',
+    analytics_trades:     'угод',
     analytics_discipline: 'Дисципліна',
     analytics_long_wr:    'Long Win Rate',
     analytics_short_wr:   'Short Win Rate',
@@ -324,6 +328,10 @@ export const translations = {
     dashboard_no_data:      'No data',
     dashboard_insufficient: 'Not enough data',
     dashboard_loading:      'Loading...',
+    dashboard_avg_pnl:      'Avg P&L',
+    dashboard_maxdd:        'Max Drawdown',
+    dashboard_long_short:   'Long / Short Win Rate',
+    dashboard_weekday_pnl:  'P&L by Weekday',
     th_date:                'Date',
     th_pair:                'Pair',
     th_setup:               'Setup',
@@ -490,7 +498,7 @@ export const translations = {
 
     // Analytics
     analytics_title:      'Analytics',
-    analytics_trades:     'trades total',
+    analytics_trades:     'trades',
     analytics_discipline: 'Discipline',
     analytics_long_wr:    'Long Win Rate',
     analytics_short_wr:   'Short Win Rate',
