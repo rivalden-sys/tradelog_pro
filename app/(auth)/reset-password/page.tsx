@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
@@ -32,16 +32,26 @@ export default function ResetPasswordPage() {
   const [error,     setError]     = useState('')
   const [ready,     setReady]     = useState(false)
 
-  const router   = useRouter()
-  const supabase = createClient()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const supabase     = createClient()
 
   useEffect(() => {
-    // Обробляємо hash токен від Supabase
-    const handleHashToken = async () => {
+    const init = async () => {
+      // 1) Новий Supabase PKCE flow — ?code=xxx в query params
+      const code = searchParams.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error) {
+          setReady(true)
+          return
+        }
+      }
+
+      // 2) Старий flow — #access_token в hash
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
-        // Парсимо токени з hash
-        const params = new URLSearchParams(hash.substring(1))
+        const params       = new URLSearchParams(hash.substring(1))
         const accessToken  = params.get('access_token')
         const refreshToken = params.get('refresh_token')
 
@@ -52,14 +62,13 @@ export default function ResetPasswordPage() {
           })
           if (!error) {
             setReady(true)
-            // Прибираємо hash з URL
             window.history.replaceState(null, '', window.location.pathname)
             return
           }
         }
       }
 
-      // Fallback — слухаємо подію PASSWORD_RECOVERY
+      // 3) Fallback — PASSWORD_RECOVERY event (якщо Supabase сам обробив токен)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'PASSWORD_RECOVERY') {
           setReady(true)
@@ -68,7 +77,7 @@ export default function ResetPasswordPage() {
       return () => subscription.unsubscribe()
     }
 
-    handleHashToken()
+    init()
   }, [])
 
   const handleSave = async () => {
