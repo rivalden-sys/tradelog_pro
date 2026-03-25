@@ -199,7 +199,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       }
       else if (json.code === 'PRO_REQUIRED') setAiProGate(true)
       else setAiError(json.error || 'AI error')
-    } catch { setAiError('Network error') }
+    } catch { setAiError(t('ai_net_error')) }
     setAiLoading(false)
   }
 
@@ -218,21 +218,21 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       }
       else if (json.code === 'PRO_REQUIRED') setScoreProGate(true)
       else setScoreError(json.error || 'AI error')
-    } catch { setScoreError('Network error') }
+    } catch { setScoreError(t('ai_net_error')) }
     setScoreLoading(false)
   }
 
   if (loading) return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>Loading...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_loading')}</div>
     </div>
   )
 
   if (!trade) return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>Trade not found</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_not_found')}</div>
     </div>
   )
 
@@ -265,18 +265,23 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
   })
 
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12, color: c.text3, fontWeight: 600,
+    marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
+  }
+
   return (
     <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
       <NavBar />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
 
-        {/* ✅ HEADER — кнопки тільки тут */}
+        {/* HEADER */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <button onClick={() => router.back()} style={{
             background: 'transparent', border: `1px solid ${c.border}`,
             borderRadius: 10, padding: '8px 14px', color: c.text3,
             fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-          }}>← Back</button>
+          }}>← {t('trade_detail_back').replace('← ', '')}</button>
 
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
@@ -287,7 +292,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {isPlanned
-              ? <Badge label="🕐 Планова" color={ORANGE} />
+              ? <Badge label={t('trade_planned_badge')} color={ORANGE} />
               : <Badge label={trade.result} color={resultColor(trade.result)} />
             }
             {trade.self_grade && !isPlanned && (
@@ -297,10 +302,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               background: 'transparent', border: `1px solid ${c.border}`,
               borderRadius: 10, padding: '8px 14px', color: c.text3,
               fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-            }}>✏️ Редагувати</button>
+            }}>✏️ {t('trade_detail_edit')}</button>
             {isPlanned && (
               <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
-                ✓ Закрити угоду
+                {t('trade_close_btn')}
               </button>
             )}
           </div>
@@ -310,28 +315,30 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         {showCloseForm && (
           <div style={{ ...cardStyle, marginBottom: 20, border: `1px solid ${GREEN}44` }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 20 }}>
-              ✓ Закрити угоду — фактичний результат
+              {t('trade_close_title')}
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Результат</div>
+              <div style={labelStyle}>{t('trade_close_result')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['Тейк', 'Стоп', 'БУ'] as const).map(r => (
-                  <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>{r}</button>
+                  <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
+                    {r === 'Тейк' ? t('new_trade_take') : r === 'Стоп' ? t('new_trade_stop') : t('new_trade_bu')}
+                  </button>
                 ))}
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>P&L ($)</div>
+                <div style={labelStyle}>{t('new_trade_profit_usd')}</div>
                 <input type="number" placeholder="150.00" value={closeProfitUsd} onChange={e => setCloseProfitUsd(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>P&L (%)</div>
+                <div style={labelStyle}>{t('new_trade_profit_pct')}</div>
                 <input type="number" placeholder="1.5" value={closeProfitPct} onChange={e => setCloseProfitPct(e.target.value)} style={inputStyle} />
               </div>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Самооцінка</div>
+              <div style={labelStyle}>{t('trade_close_grade')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['A', 'B', 'C', 'D'] as const).map(g => (
                   <button key={g} onClick={() => setCloseGrade(g)} style={toggleBtn(closeGrade === g, gradeColor(g))}>{g}</button>
@@ -339,8 +346,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, color: c.text3, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Коментар / Висновки</div>
-              <textarea placeholder="Що пішло добре? Що можна покращити?" value={closeComment}
+              <div style={labelStyle}>{t('trade_close_comment')}</div>
+              <textarea placeholder={t('trade_close_comment_ph')} value={closeComment}
                 onChange={e => setCloseComment(e.target.value)} rows={3}
                 style={{ ...inputStyle, resize: 'vertical' }} />
             </div>
@@ -349,13 +356,13 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             )}
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
-                {closeSaving ? 'Збереження...' : '✓ Зберегти результат'}
+                {closeSaving ? t('trade_close_saving') : t('trade_close_save')}
               </button>
               <button onClick={() => setShowCloseForm(false)} style={{
                 padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
                 background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: FONT,
-              }}>Скасувати</button>
+              }}>{t('trade_close_cancel')}</button>
             </div>
           </div>
         )}
@@ -366,25 +373,25 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           {/* Left column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>Trade Details</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>{t('trade_detail_fields')}</div>
               <div className="trade-fields-grid">
                 {[
-                  { label: 'Date',      value: trade.date },
-                  { label: 'Pair',      value: trade.pair },
-                  { label: 'Setup',     value: trade.setup },
-                  { label: 'Direction', value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
+                  { label: t('trade_detail_date'),      value: trade.date },
+                  { label: t('trade_detail_pair'),      value: trade.pair },
+                  { label: t('trade_detail_setup'),     value: trade.setup },
+                  { label: t('trade_detail_direction'), value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
                   ...(!isPlanned ? [
-                    { label: 'Result',  value: trade.result, color: resultColor(trade.result) },
-                    { label: 'RR',      value: String(trade.rr) },
-                    { label: 'P&L $',   value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
-                    { label: 'P&L %',   value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
+                    { label: t('trade_detail_result'),  value: trade.result, color: resultColor(trade.result) },
+                    { label: t('trade_detail_rr'),      value: String(trade.rr) },
+                    { label: t('trade_detail_pnl_usd'), value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
+                    { label: t('trade_detail_pnl_pct'), value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
                   ] : [
-                    { label: 'RR',         value: String(trade.rr) },
-                    { label: 'Статус',     value: 'Планова', color: ORANGE },
-                    ...((trade as any).entry_price ? [{ label: 'Вхід',  value: String((trade as any).entry_price) }] : []),
-                    ...((trade as any).stop_price  ? [{ label: 'Стоп',  value: String((trade as any).stop_price),  color: RED   }] : []),
-                    ...((trade as any).take_price  ? [{ label: 'Тейк',  value: String((trade as any).take_price),  color: GREEN }] : []),
-                    ...((trade as any).risk_pct    ? [{ label: 'Ризик', value: `${(trade as any).risk_pct}%` }] : []),
+                    { label: t('trade_detail_rr'),         value: String(trade.rr) },
+                    { label: t('trade_detail_status'),     value: t('trade_detail_planned'), color: ORANGE },
+                    ...((trade as any).entry_price ? [{ label: t('trade_detail_entry'),      value: String((trade as any).entry_price) }] : []),
+                    ...((trade as any).stop_price  ? [{ label: t('trade_detail_stop_price'), value: String((trade as any).stop_price), color: RED   }] : []),
+                    ...((trade as any).take_price  ? [{ label: t('trade_detail_take_price'), value: String((trade as any).take_price), color: GREEN }] : []),
+                    ...((trade as any).risk_pct    ? [{ label: t('trade_detail_risk'),        value: `${(trade as any).risk_pct}%` }] : []),
                   ]),
                 ].map(f => (
                   <div key={f.label} style={{ background: c.surface2, borderRadius: 12, padding: '12px 14px' }}>
@@ -398,34 +405,34 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             {/* Comment */}
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>Comment</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('trade_detail_comment')}</div>
                 {!editingComment && (
                   <button onClick={() => setEditingComment(true)} style={{
                     background: 'transparent', border: `1px solid ${c.border}`,
                     borderRadius: 8, padding: '5px 12px', color: c.text3,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-                  }}>✏️ Редагувати</button>
+                  }}>{t('trade_detail_comment_edit')}</button>
                 )}
               </div>
               {editingComment ? (
                 <div>
                   <textarea value={commentValue} onChange={e => setCommentValue(e.target.value)}
-                    rows={4} placeholder="Додайте коментар або висновки..."
+                    rows={4} placeholder={t('trade_detail_comment_ph')}
                     style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }} autoFocus />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={saveComment} disabled={commentSaving} style={btnStyle(BLUE, '#fff', commentSaving)}>
-                      {commentSaving ? 'Збереження...' : '✓ Зберегти'}
+                      {commentSaving ? t('trade_detail_saving') : t('trade_detail_save')}
                     </button>
                     <button onClick={() => { setEditingComment(false); setCommentValue(trade.comment || '') }} style={{
                       padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
                       background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
                       cursor: 'pointer', fontFamily: FONT,
-                    }}>Скасувати</button>
+                    }}>{t('trade_close_cancel')}</button>
                   </div>
                 </div>
               ) : (
                 <div style={{ fontSize: 14, color: trade.comment ? c.text2 : c.text3, lineHeight: 1.7, background: c.surface2, borderRadius: 12, padding: '14px 16px', fontStyle: trade.comment ? 'normal' : 'italic' }}>
-                  {trade.comment || 'Немає коментаря. Натисніть "Редагувати" щоб додати.'}
+                  {trade.comment || t('trade_detail_no_comment')}
                 </div>
               )}
             </div>
@@ -434,7 +441,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               <div style={cardStyle}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>TradingView</div>
                 <a href={trade.tradingview_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BLUE, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
-                  Open chart →
+                  {t('trade_detail_tv_link')}
                 </a>
               </div>
             )}
@@ -447,8 +454,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🎯 Trade Score</div>
-                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>AI probability based on your history</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('trade_score_title')}</div>
+                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>{t('trade_score_sub')}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {scoreHistory.length > 1 && (
@@ -460,7 +467,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   )}
                   {!scoreProGate && (
                     <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
-                      {scoreLoading ? 'Analyzing...' : scoreData ? 'Re-run' : 'Get Score'}
+                      {scoreLoading ? t('trade_score_analyzing') : scoreData ? t('trade_score_rerun') : t('trade_score_get')}
                     </button>
                   )}
                 </div>
@@ -468,19 +475,19 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               {scoreProGate && <ProGate feature="Trade Score" />}
               {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
               {!scoreData && !scoreLoading && !scoreError && !scoreProGate && (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Click "Get Score" to see AI probability</div>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('trade_score_empty')}</div>
               )}
-              {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Analyzing your history...</div>}
+              {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('trade_score_analyzing')}</div>}
               {scoreData && (
                 <div>
                   <ScoreBar score={scoreData.score} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '16px 0' }}>
                     <div style={{ background: c.surface2, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Similar trades</div>
+                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_similar')}</div>
                       <div style={{ fontSize: 18, fontWeight: 800, color: c.text, marginTop: 4 }}>{scoreData.similar_trades}</div>
                     </div>
                     <div style={{ background: c.surface2, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Historical WR</div>
+                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_wr')}</div>
                       <div style={{ fontSize: 18, fontWeight: 800, color: scoreData.win_rate >= 50 ? GREEN : RED, marginTop: 4 }}>{scoreData.win_rate}%</div>
                     </div>
                   </div>
@@ -490,7 +497,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                     background: scoreData.recommendation === 'enter' ? `${GREEN}18` : scoreData.recommendation === 'skip' ? `${RED}18` : `${ORANGE}18`,
                     color: scoreData.recommendation === 'enter' ? GREEN : scoreData.recommendation === 'skip' ? RED : ORANGE,
                   }}>
-                    {scoreData.recommendation === 'enter' ? '✓ Enter the trade' : scoreData.recommendation === 'skip' ? '✗ Skip this trade' : '⚠ Reduce risk'}
+                    {scoreData.recommendation === 'enter' ? t('trade_score_enter') : scoreData.recommendation === 'skip' ? t('trade_score_skip') : t('trade_score_reduce')}
                   </div>
                 </div>
               )}
@@ -500,8 +507,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>🧠 AI Analysis</div>
-                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>Detailed review of this trade</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('ai_analysis_title')}</div>
+                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>{t('ai_analysis_sub')}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {aiHistory.length > 1 && (
@@ -513,7 +520,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   )}
                   {!aiProGate && (
                     <button onClick={runAIReview} disabled={aiLoading} style={btnStyle(BLUE, '#fff', aiLoading)}>
-                      {aiLoading ? 'Analyzing...' : aiData ? 'Re-analyze' : 'Analyze'}
+                      {aiLoading ? t('ai_running') : aiData ? t('ai_reanalyze') : t('ai_analyze')}
                     </button>
                   )}
                 </div>
@@ -521,17 +528,17 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               {aiProGate && <ProGate feature="AI Analysis" />}
               {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
               {!aiData && !aiLoading && !aiError && !aiProGate && (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>Click "Analyze" to get AI feedback on this trade</div>
+                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('ai_empty_trade')}</div>
               )}
-              {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>AI is reviewing your trade...</div>}
+              {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('ai_loading_trade')}</div>}
               {aiData && (
                 <div>
                   {[
-                    { label: 'Entry Quality',     value: aiData.entry_quality,     color: GREEN  },
-                    { label: 'Errors',            value: aiData.errors,            color: RED    },
-                    { label: 'System Compliance', value: aiData.system_compliance, color: BLUE   },
-                    { label: 'Verdict',           value: aiData.verdict,           color: ORANGE },
-                    { label: 'Recommendation',    value: aiData.recommendation,    color: PURPLE },
+                    { label: t('ai_entry_quality'),     value: aiData.entry_quality,     color: GREEN  },
+                    { label: t('ai_errors'),            value: aiData.errors,            color: RED    },
+                    { label: t('ai_system_compliance'), value: aiData.system_compliance, color: BLUE   },
+                    { label: t('ai_verdict'),           value: aiData.verdict,           color: ORANGE },
+                    { label: t('ai_recommendation'),    value: aiData.recommendation,    color: PURPLE },
                   ].map((s, i) => (
                     <div key={s.label}>
                       {i > 0 && <div style={{ height: 1, background: c.border, margin: '10px 0' }} />}
@@ -541,7 +548,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   ))}
                   {aiData.ai_grade && (
                     <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 12, color: c.text3 }}>AI Grade:</span>
+                      <span style={{ fontSize: 12, color: c.text3 }}>{t('ai_grade')}</span>
                       <Badge label={aiData.ai_grade} color={gradeColor(aiData.ai_grade)} />
                     </div>
                   )}
