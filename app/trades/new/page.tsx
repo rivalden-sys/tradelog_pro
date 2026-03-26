@@ -64,6 +64,15 @@ export default function NewTradePage() {
   const { t }  = useLocale()
   const router = useRouter()
 
+  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
+  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#6e6e73'
+  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  const inputBg     = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const inputBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
+  const inputShadow = dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)'
+
+  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
+
   const [saving,    setSaving]    = useState(false)
   const [errors,    setErrors]    = useState<FormErrors>({})
   const [form,      setForm]      = useState(initialForm)
@@ -73,12 +82,6 @@ export default function NewTradePage() {
   const [balance,   setBalance]   = useState<number>(0)
   const [setups,    setSetups]    = useState<string[]>(SETUPS_DEFAULT)
   const [pairs,     setPairs]     = useState<string[]>([])
-
-  const textColor  = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor   = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
-
-  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
   useEffect(() => {
     const load = async () => {
@@ -177,13 +180,11 @@ export default function NewTradePage() {
   }
 
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
-    width: '100%',
-    background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
-    border: `1px solid ${hasError ? RED : borderColor}`,
+    width: '100%', background: inputBg,
+    border: `1px solid ${hasError ? RED : inputBorder}`,
     borderRadius: 10, padding: '11px 14px', fontSize: 14, color: textColor,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
-    backdropFilter: 'blur(10px)',
-    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+    backdropFilter: 'blur(10px)', boxShadow: inputShadow,
   })
 
   const labelStyle: React.CSSProperties = {
@@ -200,12 +201,10 @@ export default function NewTradePage() {
         return (
           <button key={o} onClick={() => set(key, o)} style={{
             padding: '9px 16px', borderRadius: 10,
-            border: `1px solid ${active ? col : borderColor}`,
-            background: active ? col + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
+            border: `1px solid ${active ? col : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+            background: active ? col + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
             color: active ? col : subColor,
             fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer',
-            backdropFilter: 'blur(10px)',
-            boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.8)',
             transition: 'all 0.15s',
           }}>{labels ? labels[i] : o}</button>
         )
@@ -214,22 +213,25 @@ export default function NewTradePage() {
   )
 
   const glassSection = (accent?: string): React.CSSProperties => ({
-    background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.5)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
+    background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+    backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
     borderRadius: 14, padding: '16px',
-    border: `1px solid ${accent ? accent + '33' : borderColor}`,
-    boxShadow: dark
-      ? 'inset 0 1px 0 rgba(255,255,255,0.08)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+    border: `1px solid ${accent ? accent + '33' : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`,
   })
 
   const calcReady = form.entry_price && form.stop_price && form.take_price
 
+  const modeBtn = (val: 'planned' | 'closed' | 'futures' | 'spot', label: string, color: string, current: string): React.CSSProperties => ({
+    flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none',
+    background: current === val ? color + '22' : 'transparent',
+    color: current === val ? color : subColor,
+    fontSize: 14, fontWeight: current === val ? 700 : 500,
+    cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
+  })
+
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      {/* Фон */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
       {dark ? (
@@ -248,7 +250,6 @@ export default function NewTradePage() {
         <NavBar />
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
 
-          {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <button onClick={() => router.back()} style={{ background: 'transparent', border: 'none', color: subColor, fontSize: 14, cursor: 'pointer', fontFamily: FONT }}>{t('new_trade_back')}</button>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>{t('new_trade_title')}</h1>
@@ -256,47 +257,33 @@ export default function NewTradePage() {
 
           {/* Type selector */}
           <div style={{ ...glassSection(), marginBottom: 12, padding: 4 }}>
-            <div style={{ display: 'flex', gap: 0 }}>
-              {([{ val: 'futures', label: '📈 Futures', color: BLUE }, { val: 'spot', label: '🪙 Spot', color: ORANGE }] as const).map(m => (
-                <button key={m.val} onClick={() => setTradeType(m.val)} style={{
-                  flex: 1, padding: '9px 16px', borderRadius: 10, border: 'none',
-                  background: tradeType === m.val ? m.color + '22' : 'transparent',
-                  color: tradeType === m.val ? m.color : subColor,
-                  fontSize: 14, fontWeight: tradeType === m.val ? 700 : 500,
-                  cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
-                }}>{m.label}</button>
-              ))}
+            <div style={{ display: 'flex' }}>
+              <button onClick={() => setTradeType('futures')} style={modeBtn('futures', '📈 Futures', BLUE,   tradeType)}>📈 Futures</button>
+              <button onClick={() => setTradeType('spot')}    style={modeBtn('spot',    '🪙 Spot',    ORANGE, tradeType)}>🪙 Spot</button>
             </div>
           </div>
 
           {/* Mode selector */}
           <div style={{ ...glassSection(), marginBottom: 20, padding: 4 }}>
-            <div style={{ display: 'flex', gap: 0 }}>
-              {([{ val: 'planned', label: '🕐 Планова угода', color: ORANGE }, { val: 'closed', label: '✅ Закрита угода', color: GREEN }] as const).map(m => (
-                <button key={m.val} onClick={() => setMode(m.val)} style={{
-                  flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none',
-                  background: mode === m.val ? m.color + '22' : 'transparent',
-                  color: mode === m.val ? m.color : subColor,
-                  fontSize: 14, fontWeight: mode === m.val ? 700 : 500,
-                  cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
-                }}>{m.label}</button>
-              ))}
+            <div style={{ display: 'flex' }}>
+              <button onClick={() => setMode('planned')} style={modeBtn('planned', '🕐 Планова угода', ORANGE, mode)}>🕐 Планова угода</button>
+              <button onClick={() => setMode('closed')}  style={modeBtn('closed',  '✅ Закрита угода', GREEN,  mode)}>✅ Закрита угода</button>
             </div>
           </div>
 
-          {/* Main form card */}
+          {/* Main form */}
           <div style={{
-            background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.5)',
+            background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.65)',
             backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
             borderRadius: 20, padding: '24px 20px',
             border: `1px solid ${mode === 'planned' ? ORANGE + '44' : borderColor}`,
             boxShadow: dark
-              ? `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)`
-              : `inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.02)`,
+              ? 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.02)',
             display: 'grid', gap: 18, position: 'relative', overflow: 'hidden',
           }}>
-            {/* Glare */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
+
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
 
             {/* Date + Pair */}
             <div className="form-grid-2">
@@ -353,7 +340,6 @@ export default function NewTradePage() {
                 </div>
               </div>
 
-              {/* Risk */}
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <label style={{ ...labelStyle, marginBottom: 0 }}>Ризик</label>
@@ -361,7 +347,7 @@ export default function NewTradePage() {
                     {(['pct', 'usdt'] as const).map(rm => (
                       <button key={rm} onClick={() => setRiskMode(rm)} style={{
                         padding: '3px 10px', borderRadius: 8,
-                        border: `1px solid ${riskMode === rm ? BLUE : borderColor}`,
+                        border: `1px solid ${riskMode === rm ? BLUE : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
                         background: riskMode === rm ? BLUE + '22' : 'transparent',
                         color: riskMode === rm ? BLUE : subColor,
                         fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
@@ -387,13 +373,8 @@ export default function NewTradePage() {
                 </div>
               </div>
 
-              {/* Auto calc */}
               {calcReady && (
-                <div style={{
-                  display: 'flex', gap: 12, flexWrap: 'wrap',
-                  background: GREEN + '12', borderRadius: 10,
-                  padding: '10px 14px', border: `1px solid ${GREEN}33`,
-                }}>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', background: GREEN + '12', borderRadius: 10, padding: '10px 14px', border: `1px solid ${GREEN}33` }}>
                   <div style={{ fontSize: 12, color: subColor }}>Авто-розрахунок:</div>
                   {form.rr && <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>RR = {form.rr}</div>}
                   {form.profit_pct && riskMode === 'pct' && <div style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>P&L ≈ +{form.profit_pct}%</div>}
@@ -452,13 +433,19 @@ export default function NewTradePage() {
 
             {/* Save button */}
             <button onClick={save} disabled={saving} style={{
-              background: mode === 'planned' ? ORANGE : GREEN,
-              color: mode === 'planned' ? '#000' : '#fff',
+              background: saving
+                ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                : mode === 'planned'
+                  ? dark ? ORANGE : 'linear-gradient(180deg, #e08b00 0%, #b36d00 100%)'
+                  : dark ? GREEN  : 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)',
+              color: saving ? subColor : mode === 'planned' ? '#000' : '#fff',
               border: 'none', borderRadius: 12, padding: '14px',
               fontSize: 15, fontWeight: 700,
               cursor: saving ? 'not-allowed' : 'pointer',
               opacity: saving ? 0.6 : 1, fontFamily: FONT,
-              boxShadow: saving ? 'none' : `0 0 24px ${mode === 'planned' ? ORANGE : GREEN}44`,
+              boxShadow: saving ? 'none' : dark
+                ? `0 0 24px ${mode === 'planned' ? ORANGE : GREEN}44`
+                : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
               transition: 'all 0.2s',
             }}>
               {saving ? t('new_trade_saving') : mode === 'planned' ? '🕐 Зберегти план' : '✅ Зберегти угоду'}
