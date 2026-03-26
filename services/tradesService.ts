@@ -5,15 +5,17 @@ const TRADE_COLUMNS = `
   id, user_id, date, pair, setup, rr, direction, result,
   profit_usd, profit_pct, tradingview_url, screenshot_url,
   comment, self_grade, trade_score, created_at,
-  status, entry_price, stop_price, take_price, risk_usdt, risk_pct
+  status, entry_price, stop_price, take_price, risk_usdt, risk_pct,
+  trade_type
 `
 
 export async function getTrades(userId: string, filters?: {
-  result?: string
-  pair?: string
-  setup?: string
-  direction?: string
-  status?: string
+  result?:     string
+  pair?:       string
+  setup?:      string
+  direction?:  string
+  status?:     string
+  trade_type?: string
 }) {
   const supabase = await createClient()
   let query = supabase
@@ -22,11 +24,12 @@ export async function getTrades(userId: string, filters?: {
     .eq('user_id', userId)
     .order('date', { ascending: false })
 
-  if (filters?.result)    query = query.eq('result', filters.result)
-  if (filters?.pair)      query = query.eq('pair', filters.pair)
-  if (filters?.setup)     query = query.eq('setup', filters.setup)
-  if (filters?.direction) query = query.eq('direction', filters.direction)
-  if (filters?.status)    query = query.eq('status', filters.status)
+  if (filters?.result)     query = query.eq('result', filters.result)
+  if (filters?.pair)       query = query.eq('pair', filters.pair)
+  if (filters?.setup)      query = query.eq('setup', filters.setup)
+  if (filters?.direction)  query = query.eq('direction', filters.direction)
+  if (filters?.status)     query = query.eq('status', filters.status)
+  if (filters?.trade_type) query = query.eq('trade_type', filters.trade_type)
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
@@ -62,7 +65,8 @@ export async function createTrade(userId: string, form: TradeFormData) {
       tradingview_url: form.tradingview_url || null,
       comment:         form.comment || null,
       self_grade:      form.self_grade || null,
-      status:          (form as any).status || 'closed',
+      status:          (form as any).status     || 'closed',
+      trade_type:      (form as any).trade_type || 'futures',
       entry_price:     (form as any).entry_price || null,
       stop_price:      (form as any).stop_price  || null,
       take_price:      (form as any).take_price  || null,
@@ -78,7 +82,6 @@ export async function createTrade(userId: string, form: TradeFormData) {
 export async function updateTrade(id: string, userId: string, form: Partial<TradeFormData>) {
   const supabase = await createClient()
 
-  // Збираємо тільки ті поля які передані (не undefined)
   const updates: Record<string, any> = {}
   if (form.date            !== undefined) updates.date            = form.date
   if (form.pair            !== undefined) updates.pair            = form.pair?.toUpperCase().trim()
@@ -92,6 +95,7 @@ export async function updateTrade(id: string, userId: string, form: Partial<Trad
   if (form.comment         !== undefined) updates.comment         = form.comment || null
   if (form.self_grade      !== undefined) updates.self_grade      = form.self_grade || null
   if ((form as any).status      !== undefined) updates.status      = (form as any).status
+  if ((form as any).trade_type  !== undefined) updates.trade_type  = (form as any).trade_type
   if ((form as any).entry_price !== undefined) updates.entry_price = (form as any).entry_price
   if ((form as any).stop_price  !== undefined) updates.stop_price  = (form as any).stop_price
   if ((form as any).take_price  !== undefined) updates.take_price  = (form as any).take_price
