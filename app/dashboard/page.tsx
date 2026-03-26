@@ -197,22 +197,22 @@ function statCard(dark: boolean): React.CSSProperties {
   if (!dark) return {
     background: '#ffffff',
     borderRadius: 16, padding: '16px 18px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05)',
     border: '1px solid rgba(0,0,0,0.06)',
   }
   return {
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 16, padding: '16px 18px',
     boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.16),
       inset 0 -1px 0 rgba(255,255,255,0.02),
       inset 1px 0 0 rgba(255,255,255,0.06),
-      0 4px 16px rgba(0,0,0,0.3)
+      inset -1px 0 0 rgba(255,255,255,0.02)
     `,
-    border: '1px solid transparent',
-    transition: 'transform 0.2s, box-shadow 0.2s',
+    border: '1px solid rgba(255,255,255,0.07)',
+    position: 'relative', overflow: 'hidden',
+    transition: 'transform 0.2s',
   }
 }
 
