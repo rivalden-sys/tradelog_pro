@@ -36,9 +36,10 @@ export default function ForgotPasswordPage() {
     if (!email.trim()) { setError('Введіть email'); return }
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+    captchaToken: undefined,
+   })
     if (error) { setError(error.message); setLoading(false); return }
     setSent(true)
     setLoading(false)
