@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
@@ -33,43 +33,25 @@ function ResetPasswordForm() {
   const [ready,     setReady]     = useState(false)
   const [debugInfo, setDebugInfo] = useState('')
 
-  const router       = useRouter()
-  const searchParams = useSearchParams()
-  const supabase     = createClient()
+  const router   = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
     const init = async () => {
       console.log('=== RESET DEBUG ===')
       console.log('hash:', window.location.hash)
       console.log('search:', window.location.search)
-      console.log('href:', window.location.href)
 
       setDebugInfo(`hash: ${window.location.hash || 'empty'} | search: ${window.location.search || 'empty'}`)
 
       // 1. Перевіряємо активну сесію
       const { data: { session } } = await supabase.auth.getSession()
-      console.log('existing session:', session?.user?.email ?? 'none')
       if (session) {
         setReady(true)
         return
       }
 
-      // 2. PKCE flow — ?code= в query params
-      const code = searchParams.get('code')
-      console.log('code from searchParams:', code)
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        console.log('exchangeCodeForSession result:', data, error)
-        if (!error) {
-          setReady(true)
-          return
-        } else {
-          setError(`PKCE error: ${error.message}`)
-          return
-        }
-      }
-
-      // 3. Hash flow — verifyOtp
+      // 2. Hash flow — verifyOtp
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
         const params    = new URLSearchParams(hash.substring(1))
@@ -94,7 +76,7 @@ function ResetPasswordForm() {
         }
       }
 
-      // 4. Нічого не спрацювало
+      // 3. Нічого не спрацювало
       console.log('Nothing worked — no token found')
       setError('Link expired or invalid. Please request a new one.')
     }
@@ -154,7 +136,7 @@ function ResetPasswordForm() {
               fontSize: 13, color: '#ff453a',
             }}>{error}</div>
           )}
-          {/* Debug info — прибрати після фіксу */}
+          {/* Debug — прибрати після фіксу */}
           <div style={{
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
             padding: '8px 12px', borderRadius: 8, marginTop: 12,
