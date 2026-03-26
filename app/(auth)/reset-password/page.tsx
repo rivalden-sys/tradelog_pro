@@ -31,40 +31,29 @@ function ResetPasswordForm() {
   const [done,      setDone]      = useState(false)
   const [error,     setError]     = useState('')
   const [ready,     setReady]     = useState(false)
-  const [debugInfo, setDebugInfo] = useState('')
 
   const router   = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     const init = async () => {
-      console.log('=== RESET DEBUG ===')
-      console.log('hash:', window.location.hash)
-      console.log('search:', window.location.search)
-
-      setDebugInfo(`hash: ${window.location.hash || 'empty'} | search: ${window.location.search || 'empty'}`)
-
-      // 1. Перевіряємо активну сесію
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setReady(true)
         return
       }
 
-      // 2. Hash flow — verifyOtp
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
         const params    = new URLSearchParams(hash.substring(1))
         const tokenHash = params.get('access_token')
         const type      = params.get('type')
-        console.log('hash token:', tokenHash?.slice(0, 20) + '...', 'type:', type)
 
         if (tokenHash && type === 'recovery') {
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: 'recovery',
           })
-          console.log('verifyOtp result:', error)
           if (!error) {
             window.history.replaceState(null, '', window.location.pathname)
             setReady(true)
@@ -76,8 +65,6 @@ function ResetPasswordForm() {
         }
       }
 
-      // 3. Нічого не спрацювало
-      console.log('Nothing worked — no token found')
       setError('Link expired or invalid. Please request a new one.')
     }
 
@@ -136,12 +123,6 @@ function ResetPasswordForm() {
               fontSize: 13, color: '#ff453a',
             }}>{error}</div>
           )}
-          {/* Debug — прибрати після фіксу */}
-          <div style={{
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-            padding: '8px 12px', borderRadius: 8, marginTop: 12,
-            fontSize: 11, color: 'rgba(255,255,255,0.3)', wordBreak: 'break-all', textAlign: 'left',
-          }}>{debugInfo}</div>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
             <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
               Request a new link
