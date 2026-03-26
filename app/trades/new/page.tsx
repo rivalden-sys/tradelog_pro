@@ -448,7 +448,7 @@ export default function NewTradePage() {
                 : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
               transition: 'all 0.2s',
             }}>
-              {saving ? t('new_trade_saving') : mode === 'planned' ? '🕐 Зберегти план' : '✅ Зберегти угоду'}
+              {saving ? t('new_trade_saving') : mode === 'planned' ? '🕐 Зберегти план' : '✓ Зберегти угоду'}
             </button>
           </div>
         </div>
