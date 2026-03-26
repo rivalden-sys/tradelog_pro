@@ -69,27 +69,26 @@ function ResetPasswordForm() {
         }
       }
 
-      // 3. Hash flow — вручну парсимо #access_token
+      // 3. Hash flow — verifyOtp
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.substring(1))
-        const accessToken  = params.get('access_token')
-        const refreshToken = params.get('refresh_token') ?? ''
-        const type         = params.get('type')
-        console.log('hash tokens:', { accessToken: accessToken?.slice(0,20)+'...', refreshToken: refreshToken?.slice(0,20)+'...', type })
+        const params    = new URLSearchParams(hash.substring(1))
+        const tokenHash = params.get('access_token')
+        const type      = params.get('type')
+        console.log('hash token:', tokenHash?.slice(0, 20) + '...', 'type:', type)
 
-        if (accessToken && type === 'recovery') {
-          const { data, error } = await supabase.auth.setSession({
-            access_token:  accessToken,
-            refresh_token: refreshToken,
+        if (tokenHash && type === 'recovery') {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
           })
-          console.log('setSession result:', data?.session?.user?.email ?? 'no session', error)
+          console.log('verifyOtp result:', error)
           if (!error) {
             window.history.replaceState(null, '', window.location.pathname)
             setReady(true)
             return
           } else {
-            setError(`setSession error: ${error.message}`)
+            setError(`verifyOtp error: ${error.message}`)
             return
           }
         }
