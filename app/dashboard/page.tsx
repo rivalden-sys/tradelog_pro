@@ -174,7 +174,7 @@ function glassCard(dark: boolean): React.CSSProperties {
     border: '1px solid rgba(0,0,0,0.06)',
   }
   return {
-    background: 'rgba(255,255,255,0.03)',
+    background: 'rgba(255,255,255,0.015)',
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 20, padding: '22px 24px',
@@ -195,7 +195,7 @@ function statCard(dark: boolean): React.CSSProperties {
     border: '1px solid rgba(0,0,0,0.06)',
   }
   return {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(255,255,255,0.02)',
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 16, padding: '16px 18px',
