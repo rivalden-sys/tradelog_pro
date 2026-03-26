@@ -37,44 +37,57 @@ function ResetPasswordForm() {
   const supabase     = createClient()
 
   useEffect(() => {
-    // Підписуємось ПЕРШИМ — до будь-якої іншої логіки
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
-        setReady(true)
-      }
-    })
-
     const init = async () => {
-      // Перевіряємо чи вже є активна сесія
+      // 1. Перевіряємо активну сесію
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setReady(true)
         return
       }
 
-      // PKCE flow — ?code= в query params
+      // 2. PKCE flow — ?code= в query params
       const code = searchParams.get('code')
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
           setReady(true)
           return
+        } else {
+          setError('Link expired or invalid. Please request a new one.')
+          return
         }
       }
 
-      // Hash flow — Supabase JS сам читає hash автоматично при ініціалізації клієнта.
-      // onAuthStateChange вище спіймає PASSWORD_RECOVERY якщо токен валідний.
-      // Якщо через 5 секунд нічого — показуємо помилку
-      setTimeout(() => {
-        setReady(prev => {
-          if (!prev) setError('Link expired or invalid. Please request a new one.')
-          return prev
-        })
-      }, 5000)
+      // 3. Hash flow — вручну парсимо #access_token з URL
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1))
+        const accessToken  = params.get('access_token')
+        const refreshToken = params.get('refresh_token') ?? ''
+        const type         = params.get('type')
+
+        if (accessToken && type === 'recovery') {
+          const { error } = await supabase.auth.setSession({
+            access_token:  accessToken,
+            refresh_token: refreshToken,
+          })
+          if (!error) {
+            // Чистимо hash з URL щоб не мозолив очі
+            window.history.replaceState(null, '', window.location.pathname)
+            setReady(true)
+            return
+          } else {
+            setError('Link expired or invalid. Please request a new one.')
+            return
+          }
+        }
+      }
+
+      // 4. Нічого не спрацювало
+      setError('Link expired or invalid. Please request a new one.')
     }
 
     init()
-    return () => subscription.unsubscribe()
   }, [])
 
   const handleSave = async () => {
@@ -114,12 +127,17 @@ function ResetPasswordForm() {
         <div style={{ textAlign: 'center' }}>
           <div style={{
             width: 52, height: 52, borderRadius: 16,
-            background: 'rgba(255,159,10,0.15)', border: '1px solid rgba(255,159,10,0.25)',
+            background: error ? 'rgba(255,69,58,0.15)' : 'rgba(255,159,10,0.15)',
+            border: `1px solid ${error ? 'rgba(255,69,58,0.25)' : 'rgba(255,159,10,0.25)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px', fontSize: 24,
-          }}>⏳</div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>Verifying link...</h1>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Please wait a moment</p>
+          }}>{error ? '❌' : '⏳'}</div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>
+            {error ? 'Link invalid' : 'Verifying link...'}
+          </h1>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
+            {error ? '' : 'Please wait a moment'}
+          </p>
           {error && (
             <div style={{
               background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.25)',
@@ -127,14 +145,11 @@ function ResetPasswordForm() {
               fontSize: 13, color: '#ff453a',
             }}>{error}</div>
           )}
-          {!error && (
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
-              If nothing happens,{' '}
-              <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
-                request a new link
-              </span>
-            </p>
-          )}
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
+            <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
+              Request a new link
+            </span>
+          </p>
         </div>
 
       ) : (
