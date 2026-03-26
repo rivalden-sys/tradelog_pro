@@ -31,6 +31,7 @@ function ResetPasswordForm() {
   const [done,      setDone]      = useState(false)
   const [error,     setError]     = useState('')
   const [ready,     setReady]     = useState(false)
+  const [debugInfo, setDebugInfo] = useState('')
 
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -38,8 +39,16 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     const init = async () => {
+      console.log('=== RESET DEBUG ===')
+      console.log('hash:', window.location.hash)
+      console.log('search:', window.location.search)
+      console.log('href:', window.location.href)
+
+      setDebugInfo(`hash: ${window.location.hash || 'empty'} | search: ${window.location.search || 'empty'}`)
+
       // 1. Перевіряємо активну сесію
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('existing session:', session?.user?.email ?? 'none')
       if (session) {
         setReady(true)
         return
@@ -47,43 +56,47 @@ function ResetPasswordForm() {
 
       // 2. PKCE flow — ?code= в query params
       const code = searchParams.get('code')
+      console.log('code from searchParams:', code)
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('exchangeCodeForSession result:', data, error)
         if (!error) {
           setReady(true)
           return
         } else {
-          setError('Link expired or invalid. Please request a new one.')
+          setError(`PKCE error: ${error.message}`)
           return
         }
       }
 
-      // 3. Hash flow — вручну парсимо #access_token з URL
+      // 3. Hash flow — вручну парсимо #access_token
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1))
         const accessToken  = params.get('access_token')
         const refreshToken = params.get('refresh_token') ?? ''
         const type         = params.get('type')
+        console.log('hash tokens:', { accessToken: accessToken?.slice(0,20)+'...', refreshToken: refreshToken?.slice(0,20)+'...', type })
 
         if (accessToken && type === 'recovery') {
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.setSession({
             access_token:  accessToken,
             refresh_token: refreshToken,
           })
+          console.log('setSession result:', data?.session?.user?.email ?? 'no session', error)
           if (!error) {
-            // Чистимо hash з URL щоб не мозолив очі
             window.history.replaceState(null, '', window.location.pathname)
             setReady(true)
             return
           } else {
-            setError('Link expired or invalid. Please request a new one.')
+            setError(`setSession error: ${error.message}`)
             return
           }
         }
       }
 
       // 4. Нічого не спрацювало
+      console.log('Nothing worked — no token found')
       setError('Link expired or invalid. Please request a new one.')
     }
 
@@ -135,9 +148,6 @@ function ResetPasswordForm() {
           <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 8 }}>
             {error ? 'Link invalid' : 'Verifying link...'}
           </h1>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-            {error ? '' : 'Please wait a moment'}
-          </p>
           {error && (
             <div style={{
               background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.25)',
@@ -145,6 +155,12 @@ function ResetPasswordForm() {
               fontSize: 13, color: '#ff453a',
             }}>{error}</div>
           )}
+          {/* Debug info — прибрати після фіксу */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            padding: '8px 12px', borderRadius: 8, marginTop: 12,
+            fontSize: 11, color: 'rgba(255,255,255,0.3)', wordBreak: 'break-all', textAlign: 'left',
+          }}>{debugInfo}</div>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
             <span onClick={() => router.push('/forgot-password')} style={{ color: '#30d158', cursor: 'pointer', fontWeight: 600 }}>
               Request a new link
