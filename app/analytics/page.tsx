@@ -1,43 +1,42 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
 import { Trade } from '@/types'
 import NavBar from '@/components/layout/NavBar'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
-const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
-
-function th(dark: boolean) {
-  return {
-    bg:       dark ? '#0a0a0b' : '#f2f2f7',
-    surface:  dark ? '#1c1c1e' : '#ffffff',
-    surface2: dark ? '#2c2c2e' : '#f2f2f7',
-    border:   dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-    text:     dark ? '#f5f5f7' : '#1c1c1e',
-    sub:      '#8e8e93',
-    shadow:   dark
-      ? '0 1px 3px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06)'
-      : '0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.05)',
-  }
-}
-
+const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const GREEN  = '#30d158'
 const RED    = '#ff453a'
 const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 
-function card(t: ReturnType<typeof th>): React.CSSProperties {
-  return { background: t.surface, borderRadius: 18, padding: '20px', boxShadow: t.shadow, border: `1px solid ${t.border}` }
+function useDark() {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'))
+    const obs = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains('dark'))
+    )
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return dark
 }
 
 export default function AnalyticsPage() {
-  const { dark } = useTheme()
-  const t = th(dark)
+  const dark = useDark()
   const { t: tr } = useLocale()
-  const [trades, setTrades] = useState<Trade[]>([])
+
+  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
+  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
+  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+
+  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
+
+  const [trades,  setTrades]  = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,10 +45,8 @@ export default function AnalyticsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'closed') // ← тільки закриті угоди
+        .from('trades').select('*')
+        .eq('user_id', user.id).eq('status', 'closed')
         .order('date', { ascending: true })
       setTrades((data as Trade[]) || [])
       setLoading(false)
@@ -100,7 +97,6 @@ export default function AnalyticsPage() {
     .map(([month, pnl]) => ({ month: month.slice(5), pnl: Math.round(pnl * 100) / 100 }))
     .sort((a, b) => a.month.localeCompare(b.month))
 
-  // Дисципліна — тільки угоди з оцінкою (планові не мають self_grade)
   const gradedTrades     = trades.filter(tr2 => tr2.self_grade)
   const disciplineTrades = gradedTrades.filter(tr2 => tr2.self_grade === 'C' || tr2.self_grade === 'D')
   const disciplineScore  = gradedTrades.length ? Math.round(((gradedTrades.length - disciplineTrades.length) / gradedTrades.length) * 100) : -1
@@ -110,160 +106,226 @@ export default function AnalyticsPage() {
   const longWR  = longs.length  ? Math.round((longs.filter(tr2  => tr2.result === 'Тейк').length / longs.length)  * 100) : -1
   const shortWR = shorts.length ? Math.round((shorts.filter(tr2 => tr2.result === 'Тейк').length / shorts.length) * 100) : -1
 
+  function glassCard(): React.CSSProperties {
+    return {
+      background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.55)',
+      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+      borderRadius: 20, padding: '20px',
+      border: `1px solid ${borderColor}`,
+      boxShadow: dark
+        ? 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.02)',
+      position: 'relative', overflow: 'hidden',
+    }
+  }
+
+  function statCard(): React.CSSProperties {
+    return {
+      background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.6)',
+      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+      borderRadius: 16, padding: '16px 18px',
+      border: `1px solid ${borderColor}`,
+      boxShadow: dark
+        ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.02)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.02)',
+      position: 'relative', overflow: 'hidden',
+    }
+  }
+
+  const glare = (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
+  )
+
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: t.sub }}>{tr('analytics_loading')}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{tr('analytics_loading')}</div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s' }}>
-      <NavBar />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('analytics_title')}</div>
-          <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{trades.length} {tr('analytics_trades')}</div>
-        </div>
+      {/* Фон */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
+      {dark ? (
+        <>
+          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        </>
+      ) : (
+        <>
+          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        </>
+      )}
 
-        {/* Stat cards */}
-        <div className="analytics-stat-grid" style={{ marginBottom: 20 }}>
-          {[
-            { label: tr('analytics_discipline'), value: disciplineScore === -1 ? '—' : `${disciplineScore}%`, color: disciplineScore === -1 ? t.sub : disciplineScore >= 70 ? GREEN : RED },
-            { label: tr('analytics_long_wr'),    value: longWR  === -1 ? '—' : `${longWR}%`,                  color: longWR  === -1 ? t.sub : longWR  >= 50 ? GREEN : RED },
-            { label: tr('analytics_short_wr'),   value: shortWR === -1 ? '—' : `${shortWR}%`,                 color: shortWR === -1 ? t.sub : shortWR >= 50 ? GREEN : RED },
-            { label: tr('analytics_ls_ratio'),   value: `${longs.length} / ${shorts.length}`, color: t.text },
-          ].map(sc => (
-            <div key={sc.label} style={{ ...card(t), padding: '16px 18px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>{sc.label}</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em' }}>{sc.value}</div>
-            </div>
-          ))}
-        </div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <NavBar />
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
 
-        {/* Charts row 1 */}
-        <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
-
-          {/* Win Rate by Setup */}
-          <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_wr_setups')}</div>
-            {bySetup.length === 0 ? (
-              <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {bySetup.map(s => (
-                  <div key={s.setup}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 13, color: t.text, fontWeight: 500 }}>{s.setup}</span>
-                      <span style={{ fontSize: 13, color: s.wr >= 50 ? GREEN : RED, fontWeight: 700 }}>{s.wr}% <span style={{ color: t.sub, fontWeight: 400 }}>({s.total})</span></span>
-                    </div>
-                    <div style={{ height: 6, background: t.surface2, borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${s.wr}%`, background: s.wr >= 50 ? GREEN : RED, borderRadius: 3 }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Header */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: textColor, letterSpacing: '-0.04em' }}>{tr('analytics_title')}</div>
+            <div style={{ fontSize: 13, color: subColor, marginTop: 2 }}>{trades.length} {tr('analytics_trades')}</div>
           </div>
 
-          {/* P&L by Month */}
-          <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_pnl_month')}</div>
-            {byMonth.length === 0 ? (
-              <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={byMonth} barSize={28}>
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: t.sub }} axisLine={false} tickLine={false} width={46} />
-                  <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT }} formatter={(v: any) => [`${v}$`, 'P&L']} />
-                  <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
-                    {byMonth.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
-        {/* Charts row 2 */}
-        <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
-
-          {/* Stats by Pair */}
-          <div style={card(t)}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18 }}>{tr('analytics_by_pairs')}</div>
-            {byPair.length === 0 ? (
-              <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 280 }}>
-                  <thead>
-                    <tr>
-                      {[tr('analytics_th_pair'), tr('analytics_th_trades'), tr('analytics_th_wr'), tr('analytics_th_pnl')].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: t.sub, fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {byPair.map(p => (
-                      <tr key={p.pair} style={{ borderTop: `1px solid ${t.border}` }}>
-                        <td style={{ padding: '10px 8px', fontWeight: 600, color: t.text }}>{p.pair}</td>
-                        <td style={{ padding: '10px 8px', color: t.sub }}>{p.total}</td>
-                        <td style={{ padding: '10px 8px', color: p.wr >= 50 ? GREEN : RED, fontWeight: 600 }}>{p.wr}%</td>
-                        <td style={{ padding: '10px 8px', color: p.pnl >= 0 ? GREEN : RED, fontWeight: 600 }}>{p.pnl >= 0 ? '+' : ''}{p.pnl}$</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Stat cards */}
+          <div className="analytics-stat-grid" style={{ marginBottom: 20 }}>
+            {[
+              { label: tr('analytics_discipline'), value: disciplineScore === -1 ? '—' : `${disciplineScore}%`, color: disciplineScore === -1 ? subColor : disciplineScore >= 70 ? GREEN : RED },
+              { label: tr('analytics_long_wr'),    value: longWR  === -1 ? '—' : `${longWR}%`,                  color: longWR  === -1 ? subColor : longWR  >= 50 ? GREEN : RED },
+              { label: tr('analytics_short_wr'),   value: shortWR === -1 ? '—' : `${shortWR}%`,                 color: shortWR === -1 ? subColor : shortWR >= 50 ? GREEN : RED },
+              { label: tr('analytics_ls_ratio'),   value: `${longs.length} / ${shorts.length}`,                 color: textColor },
+            ].map(sc => (
+              <div key={sc.label} style={statCard()}>
+                {glare}
+                <div style={{ fontSize: 11, fontWeight: 600, color: subColor, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8, position: 'relative' }}>{sc.label}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em', position: 'relative' }}>{sc.value}</div>
               </div>
-            )}
+            ))}
           </div>
 
-          {/* Grades + RR */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={card(t)}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16 }}>{tr('analytics_grades')}</div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {byGrade.map(g => {
-                  const colors: Record<string, string> = { A: GREEN, B: BLUE, C: ORANGE, D: RED }
-                  return (
-                    <div key={g.grade} style={{ flex: 1, textAlign: 'center', padding: '12px 8px', borderRadius: 12, background: (colors[g.grade] || t.sub) + '18' }}>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: colors[g.grade] || t.sub }}>{g.count}</div>
-                      <div style={{ fontSize: 11, color: t.sub, marginTop: 4 }}>Grade {g.grade}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+          {/* Charts row 1 */}
+          <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
 
-            <div style={card(t)}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16 }}>{tr('analytics_rr_dist')}</div>
-              {rrDist.length === 0 ? (
-                <div style={{ color: t.sub, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>{tr('analytics_no_data')}</div>
+            {/* Win Rate by Setup */}
+            <div style={glassCard()}>
+              {glare}
+              <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 18, position: 'relative' }}>{tr('analytics_wr_setups')}</div>
+              {bySetup.length === 0 ? (
+                <div style={{ color: subColor, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={100}>
-                  <BarChart data={rrDist} barSize={20}>
-                    <XAxis dataKey="rr" tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} />
-                    <YAxis hide />
-                    <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT }} formatter={(v: any) => [v, 'Trades']} />
-                    <Bar dataKey="count" fill={BLUE} radius={[4, 4, 0, 0]} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative' }}>
+                  {bySetup.map(s => (
+                    <div key={s.setup}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <span style={{ fontSize: 13, color: textColor, fontWeight: 500 }}>{s.setup}</span>
+                        <span style={{ fontSize: 13, color: s.wr >= 50 ? GREEN : RED, fontWeight: 700 }}>
+                          {s.wr}% <span style={{ color: subColor, fontWeight: 400 }}>({s.total})</span>
+                        </span>
+                      </div>
+                      <div style={{ height: 6, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${s.wr}%`, background: s.wr >= 50 ? `linear-gradient(90deg, ${GREEN}, #4ade80)` : `linear-gradient(90deg, ${RED}, #ff6b61)`, borderRadius: 3, transition: 'width 0.4s ease' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* P&L by Month */}
+            <div style={glassCard()}>
+              {glare}
+              <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 18, position: 'relative' }}>{tr('analytics_pnl_month')}</div>
+              {byMonth.length === 0 ? (
+                <div style={{ color: subColor, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={byMonth} barSize={28}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: subColor }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: subColor }} axisLine={false} tickLine={false} width={46} />
+                    <Tooltip
+                      contentStyle={{ background: dark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.9)', border: `1px solid ${borderColor}`, borderRadius: 10, fontFamily: FONT, backdropFilter: 'blur(20px)' }}
+                      formatter={(v: any) => [`${v}$`, 'P&L']}
+                    />
+                    <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
+                      {byMonth.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
           </div>
-        </div>
 
+          {/* Charts row 2 */}
+          <div className="analytics-grid-2" style={{ marginBottom: 16 }}>
+
+            {/* Stats by Pair */}
+            <div style={glassCard()}>
+              {glare}
+              <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 18, position: 'relative' }}>{tr('analytics_by_pairs')}</div>
+              {byPair.length === 0 ? (
+                <div style={{ color: subColor, fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{tr('analytics_no_data')}</div>
+              ) : (
+                <div style={{ overflowX: 'auto', position: 'relative' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 280 }}>
+                    <thead>
+                      <tr>
+                        {[tr('analytics_th_pair'), tr('analytics_th_trades'), tr('analytics_th_wr'), tr('analytics_th_pnl')].map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: subColor, fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {byPair.map(p => (
+                        <tr key={p.pair} style={{ borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                          <td style={{ padding: '10px 8px', fontWeight: 700, color: textColor }}>{p.pair}</td>
+                          <td style={{ padding: '10px 8px', color: subColor }}>{p.total}</td>
+                          <td style={{ padding: '10px 8px', color: p.wr >= 50 ? GREEN : RED, fontWeight: 700 }}>{p.wr}%</td>
+                          <td style={{ padding: '10px 8px', color: p.pnl >= 0 ? GREEN : RED, fontWeight: 700 }}>{p.pnl >= 0 ? '+' : ''}{p.pnl}$</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Grades + RR */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>{tr('analytics_grades')}</div>
+                <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
+                  {byGrade.map(g => {
+                    const colors: Record<string, string> = { A: GREEN, B: BLUE, C: ORANGE, D: RED }
+                    return (
+                      <div key={g.grade} style={{
+                        flex: 1, textAlign: 'center', padding: '12px 8px', borderRadius: 12,
+                        background: (colors[g.grade] || subColor) + '18',
+                        border: `1px solid ${(colors[g.grade] || subColor)}33`,
+                      }}>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: colors[g.grade] || subColor }}>{g.count}</div>
+                        <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>Grade {g.grade}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>{tr('analytics_rr_dist')}</div>
+                {rrDist.length === 0 ? (
+                  <div style={{ color: subColor, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>{tr('analytics_no_data')}</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={100}>
+                    <BarChart data={rrDist} barSize={20}>
+                      <XAxis dataKey="rr" tick={{ fontSize: 10, fill: subColor }} axisLine={false} tickLine={false} />
+                      <YAxis hide />
+                      <Tooltip
+                        contentStyle={{ background: dark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.9)', border: `1px solid ${borderColor}`, borderRadius: 10, fontFamily: FONT, backdropFilter: 'blur(20px)' }}
+                        formatter={(v: any) => [v, 'Trades']}
+                      />
+                      <Bar dataKey="count" fill={BLUE} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <style>{`
         .analytics-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .analytics-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .analytics-grid-2    { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         @media (max-width: 768px) {
           .analytics-stat-grid { grid-template-columns: repeat(2, 1fr); }
-          .analytics-grid-2 { grid-template-columns: 1fr; }
+          .analytics-grid-2    { grid-template-columns: 1fr; }
         }
         @media (max-width: 400px) { .analytics-stat-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
