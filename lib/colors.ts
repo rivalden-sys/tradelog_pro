@@ -11,7 +11,7 @@ export const DARK = {
   purple: '#bf5af2',
   gray:   '#8e8e93',
 
-  text:    '#f5f5f7',
+  text:    '#f5f5f7', 
   sub:     'rgba(255,255,255,0.35)',
   border:  'rgba(255,255,255,0.07)',
   inputBg: 'rgba(255,255,255,0.05)',
