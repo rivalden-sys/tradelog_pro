@@ -33,9 +33,7 @@ function th(dark: boolean) {
     border:   dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
     text:     dark ? '#f5f5f7' : '#1c1c1e',
     sub:      dark ? 'rgba(255,255,255,0.35)' : '#8e8e93',
-    shadow:   dark
-      ? '0 1px 3px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)'
-      : '0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05)',
+    shadow:   'none',
   }
 }
 
@@ -155,11 +153,11 @@ function CustomTooltip({ active, payload, dark }: any) {
   const val = payload[0].value
   return (
     <div style={{
-      background: dark ? 'rgba(28,28,30,0.95)' : t.surface,
+      background: dark ? 'rgba(28,28,30,0.92)' : t.surface,
       border: `1px solid ${t.border}`,
       borderRadius: 10, padding: '8px 14px',
       fontFamily: FONT, backdropFilter: 'blur(20px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
     }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: val >= 0 ? GREEN : RED }}>{val >= 0 ? '+' : ''}{val}$</div>
       <div style={{ fontSize: 11, color: t.sub }}>{payload[0].payload?.date || payload[0].payload?.pair || payload[0].payload?.setup || payload[0].payload?.day}</div>
@@ -169,26 +167,23 @@ function CustomTooltip({ active, payload, dark }: any) {
 
 const PIE_COLORS = [GREEN, RED, GRAY]
 
-// Glassmorphism card styles
 function glassCard(dark: boolean): React.CSSProperties {
   if (!dark) return {
     background: '#ffffff',
     borderRadius: 20, padding: '22px 24px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05)',
     border: '1px solid rgba(0,0,0,0.06)',
   }
   return {
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+    background: 'rgba(255,255,255,0.03)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 20, padding: '22px 24px',
-    border: '1px solid transparent',
+    border: '1px solid rgba(255,255,255,0.07)',
     boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.14),
       inset 0 -1px 0 rgba(255,255,255,0.03),
       inset 1px 0 0 rgba(255,255,255,0.06),
-      0 8px 32px rgba(0,0,0,0.4),
-      0 1px 0 rgba(255,255,255,0.05)
+      inset -1px 0 0 rgba(255,255,255,0.02)
     `,
   }
 }
@@ -204,13 +199,13 @@ function statCard(dark: boolean): React.CSSProperties {
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 16, padding: '16px 18px',
+    border: '1px solid rgba(255,255,255,0.07)',
     boxShadow: `
       inset 0 1px 0 rgba(255,255,255,0.16),
       inset 0 -1px 0 rgba(255,255,255,0.02),
       inset 1px 0 0 rgba(255,255,255,0.06),
       inset -1px 0 0 rgba(255,255,255,0.02)
     `,
-    border: '1px solid rgba(255,255,255,0.07)',
     position: 'relative', overflow: 'hidden',
     transition: 'transform 0.2s',
   }
@@ -288,22 +283,18 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Noise SVG data URI
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: FONT, transition: 'background 0.3s', position: 'relative' }}>
 
-      {/* Noise texture — тільки dark mode */}
       {dark && (
         <div style={{
           position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-          backgroundImage: noiseSvg,
-          opacity: 0.35,
+          backgroundImage: noiseSvg, opacity: 0.35,
         }} />
       )}
 
-      {/* Ambient glow spots */}
       {dark && (
         <>
           <div style={{
@@ -346,9 +337,9 @@ export default function DashboardPage() {
                     : 'transparent',
                   color: period === p.value ? t.text : t.sub,
                   fontFamily: FONT, fontSize: 13, fontWeight: period === p.value ? 700 : 400,
-                  boxShadow: period === p.value && dark
-                    ? 'inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.3)'
-                    : period === p.value ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  boxShadow: period === p.value
+                    ? dark ? 'inset 0 1px 0 rgba(255,255,255,0.12)' : '0 1px 3px rgba(0,0,0,0.1)'
+                    : 'none',
                   transition: 'all 0.15s',
                 }}>
                   {p.label}
@@ -363,7 +354,6 @@ export default function DashboardPage() {
               <div key={sc.label} style={statCard(dark)}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>{sc.label}</div>
                 <div style={{ fontSize: sc.label === tr('dashboard_bestsetup') ? 11 : 18, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em', lineHeight: 1.2 }}>{sc.value}</div>
-                {/* Glare highlight */}
                 {dark && (
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, height: '45%',
@@ -381,32 +371,20 @@ export default function DashboardPage() {
               {dark && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />}
               <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em', position: 'relative' }}>{tr('dashboard_long_short')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, position: 'relative' }}>
-                <div style={{
-                  background: dark ? 'rgba(48,209,88,0.06)' : 'rgba(48,209,88,0.08)',
-                  border: `1px solid rgba(48,209,88,0.15)`,
-                  borderRadius: 14, padding: '16px 20px',
-                }}>
+                <div style={{ background: dark ? 'rgba(48,209,88,0.06)' : 'rgba(48,209,88,0.08)', border: `1px solid rgba(48,209,88,0.15)`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>↑ Long</span>
-                    <span style={{ fontSize: 20, fontWeight: 900, color: GREEN, letterSpacing: '-0.03em' }}>
-                      {stats.long_wr !== null ? `${stats.long_wr}%` : '—'}
-                    </span>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: GREEN, letterSpacing: '-0.03em' }}>{stats.long_wr !== null ? `${stats.long_wr}%` : '—'}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${stats.long_wr ?? 0}%`, background: `linear-gradient(90deg, ${GREEN}, #4ade80)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
                   </div>
                   <div style={{ fontSize: 11, color: t.sub, marginTop: 6 }}>{filtered.filter(x => x.direction === 'Long').length} {tr('analytics_trades')}</div>
                 </div>
-                <div style={{
-                  background: dark ? 'rgba(255,69,58,0.06)' : 'rgba(255,69,58,0.08)',
-                  border: `1px solid rgba(255,69,58,0.15)`,
-                  borderRadius: 14, padding: '16px 20px',
-                }}>
+                <div style={{ background: dark ? 'rgba(255,69,58,0.06)' : 'rgba(255,69,58,0.08)', border: `1px solid rgba(255,69,58,0.15)`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: RED }}>↓ Short</span>
-                    <span style={{ fontSize: 20, fontWeight: 900, color: RED, letterSpacing: '-0.03em' }}>
-                      {stats.short_wr !== null ? `${stats.short_wr}%` : '—'}
-                    </span>
+                    <span style={{ fontSize: 20, fontWeight: 900, color: RED, letterSpacing: '-0.03em' }}>{stats.short_wr !== null ? `${stats.short_wr}%` : '—'}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${stats.short_wr ?? 0}%`, background: `linear-gradient(90deg, ${RED}, #ff6b61)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
@@ -445,7 +423,7 @@ export default function DashboardPage() {
                       <Pie data={pie} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={62} paddingAngle={3}>
                         {pie.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % 3]} />)}
                       </Pie>
-                      <Tooltip formatter={(v: any, n: any) => [`${v}`, n]} contentStyle={{ background: dark ? 'rgba(28,28,30,0.95)' : '#fff', border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT, backdropFilter: 'blur(20px)' }} />
+                      <Tooltip formatter={(v: any, n: any) => [`${v}`, n]} contentStyle={{ background: dark ? 'rgba(28,28,30,0.92)' : '#fff', border: `1px solid ${t.border}`, borderRadius: 10, fontFamily: FONT, backdropFilter: 'blur(20px)' }} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 4, flexWrap: 'wrap', position: 'relative' }}>
@@ -506,9 +484,7 @@ export default function DashboardPage() {
           {/* P&L по днях тижня */}
           <div style={{ ...glassCard(dark), marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
             {dark && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />}
-            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em', position: 'relative' }}>
-              {tr('dashboard_weekday_pnl')}
-            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 18, letterSpacing: '-0.02em', position: 'relative' }}>{tr('dashboard_weekday_pnl')}</div>
             {filtered.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, position: 'relative' }}>
                 {byWeekday.map(d => {
@@ -526,19 +502,14 @@ export default function DashboardPage() {
                         <div style={{
                           width: '60%', height: barH, borderRadius: 4,
                           background: d.count > 0
-                            ? isPos
-                              ? `linear-gradient(180deg, #4ade80, ${GREEN})`
-                              : `linear-gradient(180deg, #ff6b61, ${RED})`
+                            ? isPos ? `linear-gradient(180deg, #4ade80, ${GREEN})` : `linear-gradient(180deg, #ff6b61, ${RED})`
                             : dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
                           opacity: d.count > 0 ? 1 : 0.3,
                           transition: 'height 0.4s ease',
                           position: 'relative', overflow: 'hidden',
                         }}>
                           {d.count > 0 && (
-                            <div style={{
-                              position: 'absolute', top: 0, left: 0, right: 0, height: '40%',
-                              background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%)',
-                            }} />
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%)' }} />
                           )}
                         </div>
                       </div>
