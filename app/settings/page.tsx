@@ -27,13 +27,16 @@ function useDark() {
 }
 
 export default function SettingsPage() {
-  const dark   = useDark()
+  const dark = useDark()
   const { t: tr } = useLocale()
   const router = useRouter()
 
   const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
+  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#6e6e73'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  const inputBg     = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const inputBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
+  const inputShadow = dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)'
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -109,13 +112,11 @@ export default function SettingsPage() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%',
-    background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
-    border: `1px solid ${borderColor}`,
+    width: '100%', background: inputBg,
+    border: `1px solid ${inputBorder}`,
     borderRadius: 10, padding: '10px 14px', fontSize: 14, color: textColor,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
-    backdropFilter: 'blur(10px)',
-    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+    backdropFilter: 'blur(10px)', boxShadow: inputShadow,
   }
 
   const labelStyle: React.CSSProperties = {
@@ -123,28 +124,49 @@ export default function SettingsPage() {
     fontWeight: 600, letterSpacing: '0.02em',
   }
 
+  // Глянцева кнопка — еталон з edit page
+  const glossyBtn = (color: 'green' | 'blue' | 'orange', state: 'normal' | 'saved' | 'saving'): React.CSSProperties => {
+    const isSaved   = state === 'saved'
+    const isSaving  = state === 'saving'
+    const bgMap = {
+      green:  { dark: GREEN,  light: 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)' },
+      blue:   { dark: BLUE,   light: 'linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%)' },
+      orange: { dark: ORANGE, light: 'linear-gradient(180deg, #e08b00 0%, #b36d00 100%)' },
+    }
+    const savedBg = { dark: GREEN, light: 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)' }
+    return {
+      background: isSaving
+        ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+        : isSaved
+          ? dark ? savedBg.dark : savedBg.light
+          : dark ? bgMap[color].dark : bgMap[color].light,
+      color: isSaving ? subColor : '#fff',
+      border: 'none', borderRadius: 12, padding: '12px',
+      fontSize: 14, fontWeight: 700,
+      cursor: isSaving ? 'not-allowed' : 'pointer',
+      fontFamily: FONT, transition: 'all 0.3s',
+      boxShadow: isSaving ? 'none' : dark
+        ? `0 0 20px ${color === 'green' ? GREEN : color === 'blue' ? BLUE : ORANGE}33`
+        : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+      opacity: isSaving ? 0.7 : 1,
+    }
+  }
+
   function glassCard(accent?: string): React.CSSProperties {
     return {
-      background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.55)',
+      background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.65)',
       backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
       borderRadius: 20, padding: '24px',
       border: `1px solid ${accent ? accent + '44' : borderColor}`,
       boxShadow: dark
         ? 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)'
-        : 'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.02)',
+        : 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.02)',
       position: 'relative', overflow: 'hidden',
     }
   }
 
   const glare = (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
-  )
-
-  const sectionTitle = (title: string, badge?: { label: string; color: string }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, position: 'relative' }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>{title}</div>
-      {badge && <span style={{ background: badge.color + '22', color: badge.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{badge.label}</span>}
-    </div>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
   )
 
   if (loading) return (
@@ -157,7 +179,6 @@ export default function SettingsPage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      {/* Фон */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
       {dark ? (
@@ -176,7 +197,7 @@ export default function SettingsPage() {
         <NavBar />
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px', display: 'grid', gap: 16 }}>
 
-          <div style={{ position: 'relative' }}>
+          <div>
             <div style={{ fontSize: 26, fontWeight: 800, color: textColor, letterSpacing: '-0.04em' }}>{tr('settings_title')}</div>
             <div style={{ fontSize: 13, color: subColor, marginTop: 2 }}>{tr('settings_subtitle')}</div>
           </div>
@@ -184,8 +205,7 @@ export default function SettingsPage() {
           {/* Профіль */}
           <div style={glassCard()}>
             {glare}
-            {sectionTitle(tr('settings_profile'))}
-            <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>{tr('settings_subtitle')}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative' }}>{tr('settings_profile')}</div>
             <div style={{ display: 'grid', gap: 16, position: 'relative' }}>
               <div>
                 <label style={labelStyle}>{tr('settings_email')}</label>
@@ -195,13 +215,7 @@ export default function SettingsPage() {
                 <label style={labelStyle}>{tr('settings_username')}</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} placeholder={tr('settings_username_ph')} style={inputStyle} />
               </div>
-              <button onClick={saveProfile} disabled={saving} style={{
-                background: saved ? GREEN : dark ? 'rgba(255,255,255,0.1)' : textColor,
-                color: saved ? '#fff' : dark ? textColor : '#fff',
-                border: 'none', borderRadius: 12, padding: '12px', fontSize: 14,
-                fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s', fontFamily: FONT,
-                boxShadow: saved ? `0 0 20px ${GREEN}44` : 'none',
-              }}>
+              <button onClick={saveProfile} disabled={saving} style={glossyBtn('green', saved ? 'saved' : saving ? 'saving' : 'normal')}>
                 {saved ? tr('settings_saved') : saving ? tr('settings_saving') : tr('settings_save')}
               </button>
             </div>
@@ -210,7 +224,10 @@ export default function SettingsPage() {
           {/* Депозит */}
           <div style={glassCard(ORANGE)}>
             {glare}
-            {sectionTitle('💰 Депозит', { label: 'USDT', color: ORANGE })}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, position: 'relative' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>💰 Депозит</div>
+              <span style={{ background: dark ? ORANGE + '22' : '#fef3c7', color: dark ? ORANGE : '#92400e', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
+            </div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>
               Вкажіть поточний баланс депозиту. Використовується для розрахунку ризику при плануванні угод.
             </div>
@@ -223,11 +240,9 @@ export default function SettingsPage() {
                 </div>
               </div>
               <button onClick={saveBalance} disabled={balanceSaving} style={{
-                background: balanceSaved ? GREEN : ORANGE,
-                color: balanceSaved ? '#fff' : '#000',
-                border: 'none', borderRadius: 12, padding: '10px 20px',
-                fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
-                whiteSpace: 'nowrap', boxShadow: `0 0 20px ${ORANGE}44`, transition: 'all 0.3s',
+                ...glossyBtn('orange', balanceSaved ? 'saved' : balanceSaving ? 'saving' : 'normal'),
+                padding: '10px 20px', whiteSpace: 'nowrap',
+                color: dark ? '#000' : '#fff',
               }}>
                 {balanceSaved ? '✓ Збережено' : balanceSaving ? '...' : 'Зберегти'}
               </button>
@@ -235,9 +250,12 @@ export default function SettingsPage() {
             {balance && !isNaN(parseFloat(balance)) && (
               <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap', position: 'relative' }}>
                 {[1, 2, 3].map(pct => (
-                  <div key={pct} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '8px 14px', fontSize: 12, border: `1px solid ${borderColor}`, backdropFilter: 'blur(10px)' }}>
+                  <div key={pct} style={{
+                    background: inputBg, borderRadius: 10, padding: '8px 14px', fontSize: 12,
+                    border: `1px solid ${inputBorder}`,
+                  }}>
                     <span style={{ color: subColor }}>{pct}% ризику = </span>
-                    <span style={{ fontWeight: 700, color: ORANGE }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
+                    <span style={{ fontWeight: 700, color: dark ? ORANGE : '#92400e' }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
                   </div>
                 ))}
               </div>
@@ -247,15 +265,15 @@ export default function SettingsPage() {
           {/* Зміна пароля */}
           <div style={glassCard(BLUE)}>
             {glare}
-            {sectionTitle('🔑 Змінити пароль')}
+            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>🔑 Змінити пароль</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>Введіть новий пароль для вашого акаунту.</div>
             {pwSaved && (
-              <div style={{ background: `${GREEN}18`, border: `1px solid ${GREEN}44`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: GREEN, fontWeight: 600, position: 'relative' }}>
+              <div style={{ background: dark ? `${GREEN}18` : '#e8f5ec', border: `1px solid ${dark ? GREEN + '44' : '#1a7a2e33'}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: dark ? GREEN : '#1a7a2e', fontWeight: 600, position: 'relative' }}>
                 ✓ Пароль успішно змінено!
               </div>
             )}
             {pwError && (
-              <div style={{ background: `${RED}12`, border: `1px solid ${RED}33`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: RED, position: 'relative' }}>
+              <div style={{ background: dark ? `${RED}12` : '#fde8e8', border: `1px solid ${dark ? RED + '33' : '#b91c1c33'}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: dark ? RED : '#b91c1c', position: 'relative' }}>
                 {pwError}
               </div>
             )}
@@ -268,17 +286,12 @@ export default function SettingsPage() {
                 <label style={labelStyle}>Підтвердіть пароль</label>
                 <input type="password" value={newPassword2} onChange={e => { setNewPassword2(e.target.value); setPwError('') }} placeholder="••••••••"
                   onKeyDown={e => e.key === 'Enter' && savePassword()}
-                  style={{ ...inputStyle, border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? RED + '66' : borderColor}` }} />
+                  style={{ ...inputStyle, border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? dark ? RED + '66' : '#b91c1c55' : inputBorder}` }} />
                 {newPassword2 && newPassword !== newPassword2 && (
-                  <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>Паролі не співпадають</div>
+                  <div style={{ fontSize: 11, color: dark ? RED : '#b91c1c', marginTop: 4 }}>Паролі не співпадають</div>
                 )}
               </div>
-              <button onClick={savePassword} disabled={pwSaving} style={{
-                background: pwSaved ? GREEN : BLUE, color: '#fff', border: 'none',
-                borderRadius: 12, padding: '12px', fontSize: 14, fontWeight: 700,
-                cursor: pwSaving ? 'not-allowed' : 'pointer', opacity: pwSaving ? 0.7 : 1,
-                fontFamily: FONT, transition: 'all 0.3s', boxShadow: `0 0 20px ${BLUE}33`,
-              }}>
+              <button onClick={savePassword} disabled={pwSaving} style={glossyBtn('blue', pwSaved ? 'saved' : pwSaving ? 'saving' : 'normal')}>
                 {pwSaved ? '✓ Збережено' : pwSaving ? 'Збереження...' : 'Змінити пароль'}
               </button>
             </div>
@@ -287,7 +300,7 @@ export default function SettingsPage() {
           {/* Ризик-менеджмент */}
           <div style={glassCard()}>
             {glare}
-            {sectionTitle(tr('settings_risk'))}
+            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>{tr('settings_risk')}</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>{tr('settings_risk_sub')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, position: 'relative' }}>
               <div>
@@ -303,7 +316,7 @@ export default function SettingsPage() {
                 <input type="number" step="0.5" min="1" max="20" value={dailyLoss} onChange={e => setDailyLoss(e.target.value)} style={inputStyle} />
               </div>
             </div>
-            <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: dark ? `${BLUE}12` : `${BLUE}10`, fontSize: 13, color: subColor, position: 'relative', border: `1px solid ${BLUE}20` }}>
+            <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: dark ? `${BLUE}12` : '#e8f0fe', fontSize: 13, color: subColor, position: 'relative', border: `1px solid ${dark ? BLUE + '20' : '#1e40af22'}` }}>
               {tr('settings_risk_hint')}
             </div>
           </div>
@@ -311,7 +324,7 @@ export default function SettingsPage() {
           {/* Акаунт */}
           <div style={glassCard()}>
             {glare}
-            {sectionTitle(tr('settings_account'))}
+            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>{tr('settings_account')}</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 16, position: 'relative' }}>{tr('settings_account_sub')}</div>
             <div style={{ position: 'relative' }}>
               {[
@@ -325,7 +338,7 @@ export default function SettingsPage() {
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                 <span style={{ fontSize: 14, color: subColor }}>{tr('settings_subscription')}</span>
-                <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
+                <a href="/billing" style={{ fontSize: 14, color: dark ? BLUE : '#1e40af', textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
               </div>
             </div>
           </div>
@@ -333,20 +346,33 @@ export default function SettingsPage() {
           {/* Danger zone */}
           <div style={glassCard(RED)}>
             {glare}
-            {sectionTitle(tr('settings_danger'))}
+            <div style={{ fontSize: 16, fontWeight: 700, color: dark ? RED : '#b91c1c', marginBottom: 6, position: 'relative' }}>{tr('settings_danger')}</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 16, position: 'relative' }}>{tr('settings_danger_sub')}</div>
             {!deleteConfirm ? (
               <button onClick={() => setDeleteConfirm(true)} style={{
-                background: `${RED}15`, color: RED,
-                border: `1px solid ${RED}44`, borderRadius: 12,
-                padding: '10px 20px', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: FONT, position: 'relative',
+                background: dark ? `${RED}15` : '#fde8e8',
+                color: dark ? RED : '#b91c1c',
+                border: `1px solid ${dark ? RED + '44' : '#b91c1c33'}`,
+                borderRadius: 12, padding: '10px 20px',
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontFamily: FONT, position: 'relative',
               }}>{tr('settings_logout')}</button>
             ) : (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
                 <span style={{ fontSize: 13, color: subColor }}>{tr('settings_confirm')}</span>
-                <button onClick={handleLogout} style={{ background: RED, color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>{tr('settings_yes')}</button>
-                <button onClick={() => setDeleteConfirm(false)} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', color: textColor, border: `1px solid ${borderColor}`, borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>{tr('settings_cancel')}</button>
+                <button onClick={handleLogout} style={{
+                  background: dark ? RED : 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
+                  color: '#fff', border: 'none', borderRadius: 10,
+                  padding: '8px 16px', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: FONT,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}>{tr('settings_yes')}</button>
+                <button onClick={() => setDeleteConfirm(false)} style={{
+                  background: inputBg, color: textColor,
+                  border: `1px solid ${inputBorder}`,
+                  borderRadius: 10, padding: '8px 16px',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                }}>{tr('settings_cancel')}</button>
               </div>
             )}
           </div>
