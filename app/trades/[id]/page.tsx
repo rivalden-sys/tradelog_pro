@@ -2,19 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
 
-const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 const GREEN  = '#30d158'
 const RED    = '#ff453a'
 const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 const GRAY   = '#8e8e93'
+
+function useDark() {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'))
+    const obs = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains('dark'))
+    )
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return dark
+}
 
 function resultColor(r: string) {
   if (r === 'Тейк') return GREEN
@@ -46,22 +58,23 @@ function ScoreBar({ score }: { score: number }) {
         <span style={{ fontSize: 20, fontWeight: 900, color, letterSpacing: '-0.03em' }}>{score}%</span>
       </div>
       <div style={{ height: 8, borderRadius: 4, background: 'rgba(128,128,128,0.15)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${score}%`, background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
+        <div style={{ height: '100%', width: `${score}%`, background: `linear-gradient(90deg, ${color}, ${color}99)`, borderRadius: 4, transition: 'width 0.6s ease' }} />
       </div>
     </div>
   )
 }
 
-function ProGate({ feature }: { feature: string }) {
+function ProGate({ feature, dark }: { feature: string; dark: boolean }) {
+  const subColor = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
   return (
     <div style={{
       padding: '28px 20px', textAlign: 'center',
-      background: `linear-gradient(135deg, ${PURPLE}12, ${BLUE}12)`,
+      background: dark ? `linear-gradient(135deg, ${PURPLE}15, ${BLUE}10)` : `linear-gradient(135deg, ${PURPLE}10, ${BLUE}08)`,
       borderRadius: 14, border: `1px solid ${PURPLE}30`,
     }}>
       <div style={{ fontSize: 24, marginBottom: 10 }}>⚡</div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#f5f5f7', marginBottom: 6 }}>Pro Feature</div>
-      <div style={{ fontSize: 13, color: GRAY, marginBottom: 18, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: dark ? '#f5f5f7' : '#1c1c1e', marginBottom: 6 }}>Pro Feature</div>
+      <div style={{ fontSize: 13, color: subColor, marginBottom: 18, lineHeight: 1.6 }}>
         {feature} is available on Pro plan only.
       </div>
       <a href="/billing" style={{ display: 'inline-block', background: PURPLE, color: '#fff', borderRadius: 10, padding: '9px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -83,9 +96,15 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
 }
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { theme: c } = useTheme()
+  const dark   = useDark()
   const { t, locale } = useLocale()
   const router = useRouter()
+
+  const textColor  = dark ? '#f5f5f7' : '#1c1c1e'
+  const subColor   = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
+  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+
+  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
   const [trade,        setTrade]        = useState<Trade | null>(null)
   const [loading,      setLoading]      = useState(true)
@@ -148,10 +167,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         body: JSON.stringify({ comment: commentValue }),
       })
       const json = await res.json()
-      if (json.success) {
-        setTrade(prev => prev ? { ...prev, comment: commentValue } : prev)
-        setEditingComment(false)
-      }
+      if (json.success) { setTrade(prev => prev ? { ...prev, comment: commentValue } : prev); setEditingComment(false) }
     } catch {}
     setCommentSaving(false)
   }
@@ -172,12 +188,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       })
       const json = await res.json()
       if (json.success) {
-        setTrade(prev => prev ? {
-          ...prev, status: 'closed', result: closeResult,
-          profit_usd: parseFloat(closeProfitUsd) || 0,
-          profit_pct: parseFloat(closeProfitPct) || 0,
-          comment: closeComment || prev.comment, self_grade: closeGrade,
-        } : prev)
+        setTrade(prev => prev ? { ...prev, status: 'closed', result: closeResult, profit_usd: parseFloat(closeProfitUsd) || 0, profit_pct: parseFloat(closeProfitPct) || 0, comment: closeComment || prev.comment, self_grade: closeGrade } : prev)
         setShowCloseForm(false)
       } else { setCloseError(json.error || 'Error saving') }
     } catch { setCloseError('Network error') }
@@ -188,15 +199,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     if (!trade) return
     setAiLoading(true); setAiError(''); setAiProGate(false)
     try {
-      const res  = await fetch('/api/ai/trade-review', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trade, locale }),
-      })
+      const res  = await fetch('/api/ai/trade-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trade, locale }) })
       const json = await res.json()
-      if (json.success) {
-        setAiData(json.data)
-        setAiHistory(prev => [{ response: JSON.stringify(json.data), created_at: new Date().toISOString() }, ...prev])
-      }
+      if (json.success) { setAiData(json.data); setAiHistory(prev => [{ response: JSON.stringify(json.data), created_at: new Date().toISOString() }, ...prev]) }
       else if (json.code === 'PRO_REQUIRED') setAiProGate(true)
       else setAiError(json.error || 'AI error')
     } catch { setAiError(t('ai_net_error')) }
@@ -207,45 +212,36 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     if (!trade) return
     setScoreLoading(true); setScoreError(''); setScoreProGate(false)
     try {
-      const res  = await fetch('/api/ai/trade-score', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trade, locale }),
-      })
+      const res  = await fetch('/api/ai/trade-score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trade, locale }) })
       const json = await res.json()
-      if (json.success) {
-        setScoreData(json.data)
-        setScoreHistory(prev => [{ response: JSON.stringify(json.data), created_at: new Date().toISOString() }, ...prev])
-      }
+      if (json.success) { setScoreData(json.data); setScoreHistory(prev => [{ response: JSON.stringify(json.data), created_at: new Date().toISOString() }, ...prev]) }
       else if (json.code === 'PRO_REQUIRED') setScoreProGate(true)
       else setScoreError(json.error || 'AI error')
     } catch { setScoreError(t('ai_net_error')) }
     setScoreLoading(false)
   }
 
-  if (loading) return (
-    <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
-      <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_loading')}</div>
-    </div>
-  )
-
-  if (!trade) return (
-    <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
-      <NavBar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: c.text3 }}>{t('trade_detail_not_found')}</div>
-    </div>
-  )
-
-  const isPlanned = (trade as any).status === 'planned'
-
-  const cardStyle = {
-    background: c.surface, borderRadius: 18, padding: '20px',
-    border: `1px solid ${c.border}`, boxShadow: c.shadow,
+  function glassCard(accent?: string): React.CSSProperties {
+    return {
+      background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.55)',
+      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+      borderRadius: 20, padding: '20px',
+      border: `1px solid ${accent ? accent + '44' : borderColor}`,
+      boxShadow: dark
+        ? `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)`
+        : `inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.02)`,
+      position: 'relative', overflow: 'hidden',
+    }
   }
+
+  const glare = (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
+  )
 
   const btnStyle = (bg: string, color: string, disabled?: boolean): React.CSSProperties => ({
     padding: '9px 18px', borderRadius: 12, border: 'none',
-    background: disabled ? c.surface2 : bg, color: disabled ? c.text3 : color,
+    background: disabled ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' : bg,
+    color: disabled ? subColor : color,
     fontSize: 13, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
     fontFamily: FONT, opacity: disabled ? 0.7 : 1, transition: 'all 0.2s',
     boxShadow: disabled ? 'none' : `0 0 20px ${bg}44`,
@@ -254,306 +250,360 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 12,
-    border: `1px solid ${c.border}`, background: c.surface2,
-    color: c.text, fontSize: 14, fontFamily: FONT,
+    border: `1px solid ${borderColor}`,
+    background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+    color: textColor, fontSize: 14, fontFamily: FONT,
     outline: 'none', boxSizing: 'border-box',
+    backdropFilter: 'blur(10px)',
+    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
   }
 
   const toggleBtn = (active: boolean, color: string): React.CSSProperties => ({
-    padding: '8px 18px', borderRadius: 10, border: `1px solid ${active ? color : c.border}`,
-    background: active ? color + '22' : 'transparent', color: active ? color : c.text3,
+    padding: '8px 18px', borderRadius: 10,
+    border: `1px solid ${active ? color : borderColor}`,
+    background: active ? color + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
+    color: active ? color : subColor,
     fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
+    backdropFilter: 'blur(10px)',
   })
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 12, color: c.text3, fontWeight: 600,
+    fontSize: 12, color: subColor, fontWeight: 600,
     marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
   }
 
-  return (
-    <div style={{ background: c.bg, minHeight: '100vh', fontFamily: FONT }}>
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
       <NavBar />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{t('trade_detail_loading')}</div>
+    </div>
+  )
 
-        {/* HEADER */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <button onClick={() => router.back()} style={{
-            background: 'transparent', border: `1px solid ${c.border}`,
-            borderRadius: 10, padding: '8px 14px', color: c.text3,
-            fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-          }}>← {t('trade_detail_back').replace('← ', '')}</button>
+  if (!trade) return (
+    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+      <NavBar />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{t('trade_detail_not_found')}</div>
+    </div>
+  )
 
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.03em' }}>
-              {trade.pair} <span style={{ color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
-            </div>
-            <div style={{ fontSize: 13, color: c.text3, marginTop: 2 }}>{trade.date} · {trade.setup}</div>
-          </div>
+  const isPlanned = (trade as any).status === 'planned'
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            {isPlanned
-              ? <Badge label={t('trade_planned_badge')} color={ORANGE} />
-              : <Badge label={trade.result} color={resultColor(trade.result)} />
-            }
-            {trade.self_grade && !isPlanned && (
-              <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />
-            )}
-            <button onClick={() => router.push(`/trades/${tradeId}/edit`)} style={{
-              background: 'transparent', border: `1px solid ${c.border}`,
-              borderRadius: 10, padding: '8px 14px', color: c.text3,
+  return (
+    <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
+
+      {/* Фон */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
+      {dark ? (
+        <>
+          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        </>
+      ) : (
+        <>
+          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        </>
+      )}
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <NavBar />
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+            <button onClick={() => router.back()} style={{
+              background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+              border: `1px solid ${borderColor}`, backdropFilter: 'blur(10px)',
+              borderRadius: 10, padding: '8px 14px', color: subColor,
               fontSize: 13, cursor: 'pointer', fontFamily: FONT,
-            }}>✏️ {t('trade_detail_edit')}</button>
-            {isPlanned && (
-              <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
-                {t('trade_close_btn')}
-              </button>
-            )}
-          </div>
-        </div>
+              boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+            }}>← {t('trade_detail_back').replace('← ', '')}</button>
 
-        {/* Форма закриття */}
-        {showCloseForm && (
-          <div style={{ ...cardStyle, marginBottom: 20, border: `1px solid ${GREEN}44` }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: c.text, marginBottom: 20 }}>
-              {t('trade_close_title')}
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>{t('trade_close_result')}</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(['Тейк', 'Стоп', 'БУ'] as const).map(r => (
-                  <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
-                    {r === 'Тейк' ? t('new_trade_take') : r === 'Стоп' ? t('new_trade_stop') : t('new_trade_bu')}
-                  </button>
-                ))}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: textColor, letterSpacing: '-0.03em' }}>
+                {trade.pair} <span style={{ color: trade.direction === 'Long' ? GREEN : RED }}>{trade.direction}</span>
               </div>
+              <div style={{ fontSize: 13, color: subColor, marginTop: 2 }}>{trade.date} · {trade.setup}</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div>
-                <div style={labelStyle}>{t('new_trade_profit_usd')}</div>
-                <input type="number" placeholder="150.00" value={closeProfitUsd} onChange={e => setCloseProfitUsd(e.target.value)} style={inputStyle} />
-              </div>
-              <div>
-                <div style={labelStyle}>{t('new_trade_profit_pct')}</div>
-                <input type="number" placeholder="1.5" value={closeProfitPct} onChange={e => setCloseProfitPct(e.target.value)} style={inputStyle} />
-              </div>
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>{t('trade_close_grade')}</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(['A', 'B', 'C', 'D'] as const).map(g => (
-                  <button key={g} onClick={() => setCloseGrade(g)} style={toggleBtn(closeGrade === g, gradeColor(g))}>{g}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <div style={labelStyle}>{t('trade_close_comment')}</div>
-              <textarea placeholder={t('trade_close_comment_ph')} value={closeComment}
-                onChange={e => setCloseComment(e.target.value)} rows={3}
-                style={{ ...inputStyle, resize: 'vertical' }} />
-            </div>
-            {closeError && (
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12 }}>{closeError}</div>
-            )}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
-                {closeSaving ? t('trade_close_saving') : t('trade_close_save')}
-              </button>
-              <button onClick={() => setShowCloseForm(false)} style={{
-                padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
-                background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', fontFamily: FONT,
-              }}>{t('trade_close_cancel')}</button>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              {isPlanned
+                ? <Badge label={t('trade_planned_badge')} color={ORANGE} />
+                : <Badge label={trade.result} color={resultColor(trade.result)} />
+              }
+              {trade.self_grade && !isPlanned && <Badge label={`Grade ${trade.self_grade}`} color={gradeColor(trade.self_grade)} />}
+              <button onClick={() => router.push(`/trades/${tradeId}/edit`)} style={{
+                background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+                border: `1px solid ${borderColor}`, backdropFilter: 'blur(10px)',
+                borderRadius: 10, padding: '8px 14px', color: subColor,
+                fontSize: 13, cursor: 'pointer', fontFamily: FONT,
+                boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+              }}>✏️ {t('trade_detail_edit')}</button>
+              {isPlanned && (
+                <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
+                  {t('trade_close_btn')}
+                </button>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Content grid */}
-        <div className="trade-detail-grid">
-
-          {/* Left column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={cardStyle}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 16 }}>{t('trade_detail_fields')}</div>
-              <div className="trade-fields-grid">
-                {[
-                  { label: t('trade_detail_date'),      value: trade.date },
-                  { label: t('trade_detail_pair'),      value: trade.pair },
-                  { label: t('trade_detail_setup'),     value: trade.setup },
-                  { label: t('trade_detail_direction'), value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
-                  ...(!isPlanned ? [
-                    { label: t('trade_detail_result'),  value: trade.result, color: resultColor(trade.result) },
-                    { label: t('trade_detail_rr'),      value: String(trade.rr) },
-                    { label: t('trade_detail_pnl_usd'), value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
-                    { label: t('trade_detail_pnl_pct'), value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
-                  ] : [
-                    { label: t('trade_detail_rr'),         value: String(trade.rr) },
-                    { label: t('trade_detail_status'),     value: t('trade_detail_planned'), color: ORANGE },
-                    ...((trade as any).entry_price ? [{ label: t('trade_detail_entry'),      value: String((trade as any).entry_price) }] : []),
-                    ...((trade as any).stop_price  ? [{ label: t('trade_detail_stop_price'), value: String((trade as any).stop_price), color: RED   }] : []),
-                    ...((trade as any).take_price  ? [{ label: t('trade_detail_take_price'), value: String((trade as any).take_price), color: GREEN }] : []),
-                    ...((trade as any).risk_pct    ? [{ label: t('trade_detail_risk'),        value: `${(trade as any).risk_pct}%` }] : []),
-                  ]),
-                ].map(f => (
-                  <div key={f.label} style={{ background: c.surface2, borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 11, color: c.text3, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{f.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: (f as any).color || c.text }}>{f.value}</div>
-                  </div>
-                ))}
+          {/* Close form */}
+          {showCloseForm && (
+            <div style={{ ...glassCard(GREEN), marginBottom: 20 }}>
+              {glare}
+              <div style={{ fontSize: 15, fontWeight: 800, color: textColor, marginBottom: 20, position: 'relative' }}>{t('trade_close_title')}</div>
+              <div style={{ marginBottom: 16, position: 'relative' }}>
+                <div style={labelStyle}>{t('trade_close_result')}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['Тейк', 'Стоп', 'БУ'] as const).map(r => (
+                    <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
+                      {r === 'Тейк' ? t('new_trade_take') : r === 'Стоп' ? t('new_trade_stop') : t('new_trade_bu')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16, position: 'relative' }}>
+                <div>
+                  <div style={labelStyle}>{t('new_trade_profit_usd')}</div>
+                  <input type="number" placeholder="150.00" value={closeProfitUsd} onChange={e => setCloseProfitUsd(e.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <div style={labelStyle}>{t('new_trade_profit_pct')}</div>
+                  <input type="number" placeholder="1.5" value={closeProfitPct} onChange={e => setCloseProfitPct(e.target.value)} style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ marginBottom: 16, position: 'relative' }}>
+                <div style={labelStyle}>{t('trade_close_grade')}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['A', 'B', 'C', 'D'] as const).map(g => (
+                    <button key={g} onClick={() => setCloseGrade(g)} style={toggleBtn(closeGrade === g, gradeColor(g))}>{g}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: 20, position: 'relative' }}>
+                <div style={labelStyle}>{t('trade_close_comment')}</div>
+                <textarea placeholder={t('trade_close_comment_ph')} value={closeComment} onChange={e => setCloseComment(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+              </div>
+              {closeError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12, position: 'relative' }}>{closeError}</div>}
+              <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
+                <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
+                  {closeSaving ? t('trade_close_saving') : t('trade_close_save')}
+                </button>
+                <button onClick={() => setShowCloseForm(false)} style={{
+                  padding: '9px 18px', borderRadius: 12,
+                  border: `1px solid ${borderColor}`,
+                  background: 'transparent', color: subColor,
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                }}>{t('trade_close_cancel')}</button>
               </div>
             </div>
+          )}
 
-            {/* Comment */}
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('trade_detail_comment')}</div>
-                {!editingComment && (
-                  <button onClick={() => setEditingComment(true)} style={{
-                    background: 'transparent', border: `1px solid ${c.border}`,
-                    borderRadius: 8, padding: '5px 12px', color: c.text3,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-                  }}>{t('trade_detail_comment_edit')}</button>
-                )}
-              </div>
-              {editingComment ? (
-                <div>
-                  <textarea value={commentValue} onChange={e => setCommentValue(e.target.value)}
-                    rows={4} placeholder={t('trade_detail_comment_ph')}
-                    style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }} autoFocus />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={saveComment} disabled={commentSaving} style={btnStyle(BLUE, '#fff', commentSaving)}>
-                      {commentSaving ? t('trade_detail_saving') : t('trade_detail_save')}
-                    </button>
-                    <button onClick={() => { setEditingComment(false); setCommentValue(trade.comment || '') }} style={{
-                      padding: '9px 18px', borderRadius: 12, border: `1px solid ${c.border}`,
-                      background: 'transparent', color: c.text3, fontSize: 13, fontWeight: 700,
-                      cursor: 'pointer', fontFamily: FONT,
-                    }}>{t('trade_close_cancel')}</button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ fontSize: 14, color: trade.comment ? c.text2 : c.text3, lineHeight: 1.7, background: c.surface2, borderRadius: 12, padding: '14px 16px', fontStyle: trade.comment ? 'normal' : 'italic' }}>
-                  {trade.comment || t('trade_detail_no_comment')}
-                </div>
-              )}
-            </div>
+          {/* Content grid */}
+          <div className="trade-detail-grid">
 
-            {trade.tradingview_url && (
-              <div style={cardStyle}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 12 }}>TradingView</div>
-                <a href={trade.tradingview_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BLUE, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
-                  {t('trade_detail_tv_link')}
-                </a>
-              </div>
-            )}
-          </div>
+            {/* Left column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Right column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Trade Score */}
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('trade_score_title')}</div>
-                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>{t('trade_score_sub')}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {scoreHistory.length > 1 && (
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {scoreHistory.slice(1, 4).map((s, i) => (
-                        <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setScoreData(JSON.parse(s.response)) } catch {} }} />
-                      ))}
-                    </div>
-                  )}
-                  {!scoreProGate && (
-                    <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
-                      {scoreLoading ? t('trade_score_analyzing') : scoreData ? t('trade_score_rerun') : t('trade_score_get')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              {scoreProGate && <ProGate feature="Trade Score" />}
-              {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
-              {!scoreData && !scoreLoading && !scoreError && !scoreProGate && (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('trade_score_empty')}</div>
-              )}
-              {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('trade_score_analyzing')}</div>}
-              {scoreData && (
-                <div>
-                  <ScoreBar score={scoreData.score} />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '16px 0' }}>
-                    <div style={{ background: c.surface2, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_similar')}</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: c.text, marginTop: 4 }}>{scoreData.similar_trades}</div>
-                    </div>
-                    <div style={{ background: c.surface2, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, color: c.text3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_wr')}</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: scoreData.win_rate >= 50 ? GREEN : RED, marginTop: 4 }}>{scoreData.win_rate}%</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 14, color: c.text2, lineHeight: 1.6, marginBottom: 12 }}>{scoreData.explanation}</div>
-                  <div style={{
-                    padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                    background: scoreData.recommendation === 'enter' ? `${GREEN}18` : scoreData.recommendation === 'skip' ? `${RED}18` : `${ORANGE}18`,
-                    color: scoreData.recommendation === 'enter' ? GREEN : scoreData.recommendation === 'skip' ? RED : ORANGE,
-                  }}>
-                    {scoreData.recommendation === 'enter' ? t('trade_score_enter') : scoreData.recommendation === 'skip' ? t('trade_score_skip') : t('trade_score_reduce')}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* AI Analysis */}
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{t('ai_analysis_title')}</div>
-                  <div style={{ fontSize: 12, color: c.text3, marginTop: 2 }}>{t('ai_analysis_sub')}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {aiHistory.length > 1 && (
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {aiHistory.slice(1, 4).map((s, i) => (
-                        <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setAiData(JSON.parse(s.response)) } catch {} }} />
-                      ))}
-                    </div>
-                  )}
-                  {!aiProGate && (
-                    <button onClick={runAIReview} disabled={aiLoading} style={btnStyle(BLUE, '#fff', aiLoading)}>
-                      {aiLoading ? t('ai_running') : aiData ? t('ai_reanalyze') : t('ai_analyze')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              {aiProGate && <ProGate feature="AI Analysis" />}
-              {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
-              {!aiData && !aiLoading && !aiError && !aiProGate && (
-                <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('ai_empty_trade')}</div>
-              )}
-              {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: c.text3, fontSize: 13 }}>{t('ai_loading_trade')}</div>}
-              {aiData && (
-                <div>
+              {/* Fields */}
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>{t('trade_detail_fields')}</div>
+                <div className="trade-fields-grid" style={{ position: 'relative' }}>
                   {[
-                    { label: t('ai_entry_quality'),     value: aiData.entry_quality,     color: GREEN  },
-                    { label: t('ai_errors'),            value: aiData.errors,            color: RED    },
-                    { label: t('ai_system_compliance'), value: aiData.system_compliance, color: BLUE   },
-                    { label: t('ai_verdict'),           value: aiData.verdict,           color: ORANGE },
-                    { label: t('ai_recommendation'),    value: aiData.recommendation,    color: PURPLE },
-                  ].map((s, i) => (
-                    <div key={s.label}>
-                      {i > 0 && <div style={{ height: 1, background: c.border, margin: '10px 0' }} />}
-                      <div style={{ fontSize: 11, fontWeight: 700, color: s.color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>{s.label}</div>
-                      <div style={{ fontSize: 13, color: c.text2, lineHeight: 1.6 }}>{s.value}</div>
+                    { label: t('trade_detail_date'),      value: trade.date },
+                    { label: t('trade_detail_pair'),      value: trade.pair },
+                    { label: t('trade_detail_setup'),     value: trade.setup },
+                    { label: t('trade_detail_direction'), value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
+                    ...(!isPlanned ? [
+                      { label: t('trade_detail_result'),  value: trade.result, color: resultColor(trade.result) },
+                      { label: t('trade_detail_rr'),      value: String(trade.rr) },
+                      { label: t('trade_detail_pnl_usd'), value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
+                      { label: t('trade_detail_pnl_pct'), value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
+                    ] : [
+                      { label: t('trade_detail_rr'),      value: String(trade.rr) },
+                      { label: t('trade_detail_status'),  value: t('trade_detail_planned'), color: ORANGE },
+                      ...((trade as any).entry_price ? [{ label: t('trade_detail_entry'),      value: String((trade as any).entry_price) }] : []),
+                      ...((trade as any).stop_price  ? [{ label: t('trade_detail_stop_price'), value: String((trade as any).stop_price), color: RED   }] : []),
+                      ...((trade as any).take_price  ? [{ label: t('trade_detail_take_price'), value: String((trade as any).take_price), color: GREEN }] : []),
+                      ...((trade as any).risk_pct    ? [{ label: t('trade_detail_risk'),        value: `${(trade as any).risk_pct}%` }] : []),
+                    ]),
+                  ].map(f => (
+                    <div key={f.label} style={{
+                      background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.6)',
+                      borderRadius: 12, padding: '12px 14px',
+                      border: `1px solid ${borderColor}`,
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+                    }}>
+                      <div style={{ fontSize: 11, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{f.label}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: (f as any).color || textColor }}>{f.value}</div>
                     </div>
                   ))}
-                  {aiData.ai_grade && (
-                    <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 12, color: c.text3 }}>{t('ai_grade')}</span>
-                      <Badge label={aiData.ai_grade} color={gradeColor(aiData.ai_grade)} />
+                </div>
+              </div>
+
+              {/* Comment */}
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, position: 'relative' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>{t('trade_detail_comment')}</div>
+                  {!editingComment && (
+                    <button onClick={() => setEditingComment(true)} style={{
+                      background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+                      border: `1px solid ${borderColor}`, backdropFilter: 'blur(10px)',
+                      borderRadius: 8, padding: '5px 12px', color: subColor,
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                    }}>{t('trade_detail_comment_edit')}</button>
+                  )}
+                </div>
+                {editingComment ? (
+                  <div style={{ position: 'relative' }}>
+                    <textarea value={commentValue} onChange={e => setCommentValue(e.target.value)} rows={4}
+                      placeholder={t('trade_detail_comment_ph')}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: `1px solid ${borderColor}`, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', color: textColor, fontSize: 14, fontFamily: FONT, outline: 'none', boxSizing: 'border-box', resize: 'vertical', marginBottom: 10, backdropFilter: 'blur(10px)' }}
+                      autoFocus />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={saveComment} disabled={commentSaving} style={btnStyle(BLUE, '#fff', commentSaving)}>
+                        {commentSaving ? t('trade_detail_saving') : t('trade_detail_save')}
+                      </button>
+                      <button onClick={() => { setEditingComment(false); setCommentValue(trade.comment || '') }} style={{ padding: '9px 18px', borderRadius: 12, border: `1px solid ${borderColor}`, background: 'transparent', color: subColor, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}>
+                        {t('trade_close_cancel')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: 14, color: trade.comment ? textColor : subColor, lineHeight: 1.7,
+                    background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
+                    borderRadius: 12, padding: '14px 16px',
+                    border: `1px solid ${borderColor}`,
+                    fontStyle: trade.comment ? 'normal' : 'italic',
+                    position: 'relative',
+                  }}>
+                    {trade.comment || t('trade_detail_no_comment')}
+                  </div>
+                )}
+              </div>
+
+              {trade.tradingview_url && (
+                <div style={glassCard()}>
+                  {glare}
+                  <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 12, position: 'relative' }}>TradingView</div>
+                  <a href={trade.tradingview_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: BLUE, fontSize: 14, textDecoration: 'none', fontWeight: 600, position: 'relative' }}>
+                    {t('trade_detail_tv_link')}
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Right column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Trade Score */}
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8, position: 'relative' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>{t('trade_score_title')}</div>
+                    <div style={{ fontSize: 12, color: subColor, marginTop: 2 }}>{t('trade_score_sub')}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {scoreHistory.length > 1 && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {scoreHistory.slice(1, 4).map((s, i) => (
+                          <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setScoreData(JSON.parse(s.response)) } catch {} }} />
+                        ))}
+                      </div>
+                    )}
+                    {!scoreProGate && (
+                      <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
+                        {scoreLoading ? t('trade_score_analyzing') : scoreData ? t('trade_score_rerun') : t('trade_score_get')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  {scoreProGate && <ProGate feature="Trade Score" dark={dark} />}
+                  {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
+                  {!scoreData && !scoreLoading && !scoreError && !scoreProGate && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('trade_score_empty')}</div>}
+                  {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('trade_score_analyzing')}</div>}
+                  {scoreData && (
+                    <div>
+                      <ScoreBar score={scoreData.score} />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '16px 0' }}>
+                        <div style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.6)', border: `1px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: subColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_similar')}</div>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: textColor, marginTop: 4 }}>{scoreData.similar_trades}</div>
+                        </div>
+                        <div style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.6)', border: `1px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 11, color: subColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_wr')}</div>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: scoreData.win_rate >= 50 ? GREEN : RED, marginTop: 4 }}>{scoreData.win_rate}%</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 14, color: textColor, lineHeight: 1.6, marginBottom: 12 }}>{scoreData.explanation}</div>
+                      <div style={{ padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, background: scoreData.recommendation === 'enter' ? `${GREEN}18` : scoreData.recommendation === 'skip' ? `${RED}18` : `${ORANGE}18`, color: scoreData.recommendation === 'enter' ? GREEN : scoreData.recommendation === 'skip' ? RED : ORANGE }}>
+                        {scoreData.recommendation === 'enter' ? t('trade_score_enter') : scoreData.recommendation === 'skip' ? t('trade_score_skip') : t('trade_score_reduce')}
+                      </div>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* AI Analysis */}
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8, position: 'relative' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>{t('ai_analysis_title')}</div>
+                    <div style={{ fontSize: 12, color: subColor, marginTop: 2 }}>{t('ai_analysis_sub')}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {aiHistory.length > 1 && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {aiHistory.slice(1, 4).map((s, i) => (
+                          <HistoryTag key={i} date={s.created_at} onLoad={() => { try { setAiData(JSON.parse(s.response)) } catch {} }} />
+                        ))}
+                      </div>
+                    )}
+                    {!aiProGate && (
+                      <button onClick={runAIReview} disabled={aiLoading} style={btnStyle(BLUE, '#fff', aiLoading)}>
+                        {aiLoading ? t('ai_running') : aiData ? t('ai_reanalyze') : t('ai_analyze')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  {aiProGate && <ProGate feature="AI Analysis" dark={dark} />}
+                  {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
+                  {!aiData && !aiLoading && !aiError && !aiProGate && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('ai_empty_trade')}</div>}
+                  {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('ai_loading_trade')}</div>}
+                  {aiData && (
+                    <div>
+                      {[
+                        { label: t('ai_entry_quality'),     value: aiData.entry_quality,     color: GREEN  },
+                        { label: t('ai_errors'),            value: aiData.errors,            color: RED    },
+                        { label: t('ai_system_compliance'), value: aiData.system_compliance, color: BLUE   },
+                        { label: t('ai_verdict'),           value: aiData.verdict,           color: ORANGE },
+                        { label: t('ai_recommendation'),    value: aiData.recommendation,    color: PURPLE },
+                      ].map((s, i) => (
+                        <div key={s.label}>
+                          {i > 0 && <div style={{ height: 1, background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '10px 0' }} />}
+                          <div style={{ fontSize: 11, fontWeight: 700, color: s.color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>{s.label}</div>
+                          <div style={{ fontSize: 13, color: textColor, lineHeight: 1.6 }}>{s.value}</div>
+                        </div>
+                      ))}
+                      {aiData.ai_grade && (
+                        <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 12, color: subColor }}>{t('ai_grade')}</span>
+                          <Badge label={aiData.ai_grade} color={gradeColor(aiData.ai_grade)} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
