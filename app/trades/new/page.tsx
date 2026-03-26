@@ -7,7 +7,6 @@ import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 
-// PAIRS більше не хардкод — завантажуються динамічно
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const GRADES         = ['A', 'B', 'C', 'D']
 
@@ -52,15 +51,15 @@ export default function NewTradePage() {
   const { theme: c } = useTheme()
   const { t } = useLocale()
   const router = useRouter()
-  const [saving, setSaving]     = useState(false)
-  const [errors, setErrors]     = useState<FormErrors>({})
-  const [form, setForm]         = useState(initialForm)
-  const [mode, setMode]         = useState<'planned' | 'closed'>('planned')
-  const [riskMode, setRiskMode] = useState<'pct' | 'usdt'>('pct')
+  const [saving, setSaving]         = useState(false)
+  const [errors, setErrors]         = useState<FormErrors>({})
+  const [form, setForm]             = useState(initialForm)
+  const [mode, setMode]             = useState<'planned' | 'closed'>('planned')
+  const [riskMode, setRiskMode]     = useState<'pct' | 'usdt'>('pct')
+  const [tradeType, setTradeType]   = useState<'futures' | 'spot'>('futures')
 
   const [balance, setBalance]   = useState<number>(0)
   const [setups, setSetups]     = useState<string[]>(SETUPS_DEFAULT)
-  // Динамічні пари — тільки з угод юзера
   const [pairs, setPairs]       = useState<string[]>([])
 
   useEffect(() => {
@@ -69,7 +68,6 @@ export default function NewTradePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Баланс
       const { data: profile } = await supabase
         .from('users')
         .select('balance')
@@ -77,7 +75,6 @@ export default function NewTradePage() {
         .single()
       if (profile?.balance) setBalance(profile.balance)
 
-      // Динамічні пари — ТІЛЬКИ з угод юзера, без хардкоду
       const { data: pairsData } = await supabase
         .from('trades')
         .select('pair')
@@ -87,7 +84,6 @@ export default function NewTradePage() {
         setPairs(unique)
       }
 
-      // Динамічні сетапи (мерж з дефолтом)
       const { data: setupsData } = await supabase
         .from('trades')
         .select('setup')
@@ -102,7 +98,13 @@ export default function NewTradePage() {
     load()
   }, [])
 
-  // Підказка ризику в USDT
+  // Якщо спот — тільки Long
+  useEffect(() => {
+    if (tradeType === 'spot') {
+      setForm(f => ({ ...f, direction: 'Long' }))
+    }
+  }, [tradeType])
+
   const riskHint = (() => {
     if (riskMode !== 'pct' || balance <= 0) return null
     const pct = parseFloat(form.risk_pct)
@@ -198,6 +200,7 @@ export default function NewTradePage() {
       risk_pct:    parseFloat(form.risk_pct)    || null,
       risk_usdt:   parseFloat(form.risk_usdt)   || null,
       status:      mode,
+      trade_type:  tradeType,
     }
 
     if (mode === 'planned') {
@@ -270,6 +273,26 @@ export default function NewTradePage() {
           </h1>
         </div>
 
+        {/* Тип угоди: Futures / Spot */}
+        <div style={{
+          display: 'flex', gap: 0, marginBottom: 12,
+          background: c.surface2, borderRadius: 14, padding: 4,
+          border: `1px solid ${c.border}`,
+        }}>
+          {([
+            { val: 'futures', label: '📈 Futures', color: BLUE   },
+            { val: 'spot',    label: '🪙 Spot',    color: ORANGE },
+          ] as const).map(m => (
+            <button key={m.val} onClick={() => setTradeType(m.val)} style={{
+              flex: 1, padding: '9px 16px', borderRadius: 10, border: 'none',
+              background: tradeType === m.val ? m.color + '22' : 'transparent',
+              color: tradeType === m.val ? m.color : c.text3,
+              fontSize: 14, fontWeight: tradeType === m.val ? 700 : 500,
+              cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
+            }}>{m.label}</button>
+          ))}
+        </div>
+
         {/* Режим: План / Факт */}
         <div style={{
           display: 'flex', gap: 0, marginBottom: 20,
@@ -310,7 +333,6 @@ export default function NewTradePage() {
                 value={form.pair} onChange={e => set('pair', e.target.value.toUpperCase())}
                 style={inputStyle(!!errors.pair)} autoComplete="off"
               />
-              {/* Тільки пари юзера */}
               <datalist id="pairs-list">
                 {pairs.map(p => <option key={p} value={p} />)}
               </datalist>
@@ -332,10 +354,22 @@ export default function NewTradePage() {
             {errors.setup && <div style={errorStyle}>{errors.setup}</div>}
           </div>
 
-          {/* Direction */}
+          {/* Direction — для спот тільки Long */}
           <div>
             <label style={labelStyle}>{t('new_trade_direction')}</label>
-            {segmented('direction', ['Long', 'Short'], [GREEN, RED], [t('new_trade_long'), t('new_trade_short')])}
+            {tradeType === 'spot' ? (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '9px 16px', borderRadius: 10,
+                border: `1px solid ${GREEN}`,
+                background: GREEN + '22', color: GREEN,
+                fontSize: 13, fontWeight: 700,
+              }}>
+                🪙 Long (Spot only)
+              </div>
+            ) : (
+              segmented('direction', ['Long', 'Short'], [GREEN, RED], [t('new_trade_long'), t('new_trade_short')])
+            )}
           </div>
 
           {/* Блок планування */}
