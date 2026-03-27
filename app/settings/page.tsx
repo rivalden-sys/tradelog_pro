@@ -5,13 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
+import { DARK, LIGHT, BTN } from '@/lib/colors'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
-
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const BLUE   = '#0a84ff'
-const ORANGE = '#ff9f0a'
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -31,12 +27,15 @@ export default function SettingsPage() {
   const { t: tr } = useLocale()
   const router = useRouter()
 
-  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#6e6e73'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
-  const inputBg     = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
-  const inputBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
-  const inputShadow = dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)'
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -112,11 +111,13 @@ export default function SettingsPage() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: inputBg,
-    border: `1px solid ${inputBorder}`,
+    width: '100%',
+    background: dark ? DARK.inputBg : LIGHT.inputBg,
+    border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
     borderRadius: 10, padding: '10px 14px', fontSize: 14, color: textColor,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
-    backdropFilter: 'blur(10px)', boxShadow: inputShadow,
+    backdropFilter: 'blur(10px)',
+    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)',
   }
 
   const labelStyle: React.CSSProperties = {
@@ -124,30 +125,26 @@ export default function SettingsPage() {
     fontWeight: 600, letterSpacing: '0.02em',
   }
 
-  // Глянцева кнопка — еталон з edit page
   const glossyBtn = (color: 'green' | 'blue' | 'orange', state: 'normal' | 'saved' | 'saving'): React.CSSProperties => {
-    const isSaved   = state === 'saved'
-    const isSaving  = state === 'saving'
+    const isSaving = state === 'saving'
+    const isSaved  = state === 'saved'
     const bgMap = {
-      green:  { dark: GREEN,  light: 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)' },
-      blue:   { dark: BLUE,   light: 'linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%)' },
-      orange: { dark: ORANGE, light: 'linear-gradient(180deg, #e08b00 0%, #b36d00 100%)' },
+      green:  { dark: DARK.green,  light: BTN.green  },
+      blue:   { dark: DARK.blue,   light: BTN.blue   },
+      orange: { dark: DARK.orange, light: BTN.orange  },
     }
-    const savedBg = { dark: GREEN, light: 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)' }
     return {
       background: isSaving
         ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
         : isSaved
-          ? dark ? savedBg.dark : savedBg.light
+          ? dark ? DARK.green : BTN.green
           : dark ? bgMap[color].dark : bgMap[color].light,
       color: isSaving ? subColor : '#fff',
       border: 'none', borderRadius: 12, padding: '12px',
       fontSize: 14, fontWeight: 700,
       cursor: isSaving ? 'not-allowed' : 'pointer',
       fontFamily: FONT, transition: 'all 0.3s',
-      boxShadow: isSaving ? 'none' : dark
-        ? `0 0 20px ${color === 'green' ? GREEN : color === 'blue' ? BLUE : ORANGE}33`
-        : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+      boxShadow: isSaving ? 'none' : BTN.shadow,
       opacity: isSaving ? 0.7 : 1,
     }
   }
@@ -170,7 +167,7 @@ export default function SettingsPage() {
   )
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{tr('settings_loading')}</div>
     </div>
@@ -179,19 +176,10 @@ export default function SettingsPage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -226,7 +214,7 @@ export default function SettingsPage() {
             {glare}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, position: 'relative' }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>💰 Депозит</div>
-              <span style={{ background: dark ? ORANGE + '22' : '#fef3c7', color: dark ? ORANGE : '#92400e', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
+              <span style={{ background: dark ? DARK.orange + '22' : LIGHT.orangeBg, color: ORANGE, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
             </div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>
               Вкажіть поточний баланс депозиту. Використовується для розрахунку ризику при плануванні угод.
@@ -242,7 +230,6 @@ export default function SettingsPage() {
               <button onClick={saveBalance} disabled={balanceSaving} style={{
                 ...glossyBtn('orange', balanceSaved ? 'saved' : balanceSaving ? 'saving' : 'normal'),
                 padding: '10px 20px', whiteSpace: 'nowrap',
-                color: dark ? '#000' : '#fff',
               }}>
                 {balanceSaved ? '✓ Збережено' : balanceSaving ? '...' : 'Зберегти'}
               </button>
@@ -251,11 +238,12 @@ export default function SettingsPage() {
               <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap', position: 'relative' }}>
                 {[1, 2, 3].map(pct => (
                   <div key={pct} style={{
-                    background: inputBg, borderRadius: 10, padding: '8px 14px', fontSize: 12,
-                    border: `1px solid ${inputBorder}`,
+                    background: dark ? DARK.inputBg : LIGHT.inputBg,
+                    borderRadius: 10, padding: '8px 14px', fontSize: 12,
+                    border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
                   }}>
                     <span style={{ color: subColor }}>{pct}% ризику = </span>
-                    <span style={{ fontWeight: 700, color: dark ? ORANGE : '#92400e' }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
+                    <span style={{ fontWeight: 700, color: ORANGE }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
                   </div>
                 ))}
               </div>
@@ -268,12 +256,12 @@ export default function SettingsPage() {
             <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>🔑 Змінити пароль</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>Введіть новий пароль для вашого акаунту.</div>
             {pwSaved && (
-              <div style={{ background: dark ? `${GREEN}18` : '#e8f5ec', border: `1px solid ${dark ? GREEN + '44' : '#1a7a2e33'}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: dark ? GREEN : '#1a7a2e', fontWeight: 600, position: 'relative' }}>
+              <div style={{ background: dark ? `${DARK.green}18` : LIGHT.greenBg, border: `1px solid ${GREEN}33`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: GREEN, fontWeight: 600, position: 'relative' }}>
                 ✓ Пароль успішно змінено!
               </div>
             )}
             {pwError && (
-              <div style={{ background: dark ? `${RED}12` : '#fde8e8', border: `1px solid ${dark ? RED + '33' : '#b91c1c33'}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: dark ? RED : '#b91c1c', position: 'relative' }}>
+              <div style={{ background: dark ? `${DARK.red}12` : LIGHT.redBg, border: `1px solid ${RED}33`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: RED, position: 'relative' }}>
                 {pwError}
               </div>
             )}
@@ -286,9 +274,9 @@ export default function SettingsPage() {
                 <label style={labelStyle}>Підтвердіть пароль</label>
                 <input type="password" value={newPassword2} onChange={e => { setNewPassword2(e.target.value); setPwError('') }} placeholder="••••••••"
                   onKeyDown={e => e.key === 'Enter' && savePassword()}
-                  style={{ ...inputStyle, border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? dark ? RED + '66' : '#b91c1c55' : inputBorder}` }} />
+                  style={{ ...inputStyle, border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? RED + '66' : dark ? DARK.border : 'rgba(0,0,0,0.1)'}` }} />
                 {newPassword2 && newPassword !== newPassword2 && (
-                  <div style={{ fontSize: 11, color: dark ? RED : '#b91c1c', marginTop: 4 }}>Паролі не співпадають</div>
+                  <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>Паролі не співпадають</div>
                 )}
               </div>
               <button onClick={savePassword} disabled={pwSaving} style={glossyBtn('blue', pwSaved ? 'saved' : pwSaving ? 'saving' : 'normal')}>
@@ -316,7 +304,7 @@ export default function SettingsPage() {
                 <input type="number" step="0.5" min="1" max="20" value={dailyLoss} onChange={e => setDailyLoss(e.target.value)} style={inputStyle} />
               </div>
             </div>
-            <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: dark ? `${BLUE}12` : '#e8f0fe', fontSize: 13, color: subColor, position: 'relative', border: `1px solid ${dark ? BLUE + '20' : '#1e40af22'}` }}>
+            <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: dark ? `${DARK.blue}12` : LIGHT.blueBg, fontSize: 13, color: subColor, position: 'relative', border: `1px solid ${BLUE}22` }}>
               {tr('settings_risk_hint')}
             </div>
           </div>
@@ -338,7 +326,7 @@ export default function SettingsPage() {
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                 <span style={{ fontSize: 14, color: subColor }}>{tr('settings_subscription')}</span>
-                <a href="/billing" style={{ fontSize: 14, color: dark ? BLUE : '#1e40af', textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
+                <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
               </div>
             </div>
           </div>
@@ -346,13 +334,13 @@ export default function SettingsPage() {
           {/* Danger zone */}
           <div style={glassCard(RED)}>
             {glare}
-            <div style={{ fontSize: 16, fontWeight: 700, color: dark ? RED : '#b91c1c', marginBottom: 6, position: 'relative' }}>{tr('settings_danger')}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: RED, marginBottom: 6, position: 'relative' }}>{tr('settings_danger')}</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 16, position: 'relative' }}>{tr('settings_danger_sub')}</div>
             {!deleteConfirm ? (
               <button onClick={() => setDeleteConfirm(true)} style={{
-                background: dark ? `${RED}15` : '#fde8e8',
-                color: dark ? RED : '#b91c1c',
-                border: `1px solid ${dark ? RED + '44' : '#b91c1c33'}`,
+                background: dark ? `${DARK.red}15` : LIGHT.redBg,
+                color: RED,
+                border: `1px solid ${RED}44`,
                 borderRadius: 12, padding: '10px 20px',
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 fontFamily: FONT, position: 'relative',
@@ -361,15 +349,16 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
                 <span style={{ fontSize: 13, color: subColor }}>{tr('settings_confirm')}</span>
                 <button onClick={handleLogout} style={{
-                  background: dark ? RED : 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
+                  background: dark ? DARK.red : BTN.red,
                   color: '#fff', border: 'none', borderRadius: 10,
                   padding: '8px 16px', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: FONT,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  boxShadow: BTN.shadow,
                 }}>{tr('settings_yes')}</button>
                 <button onClick={() => setDeleteConfirm(false)} style={{
-                  background: inputBg, color: textColor,
-                  border: `1px solid ${inputBorder}`,
+                  background: dark ? DARK.inputBg : LIGHT.inputBg,
+                  color: textColor,
+                  border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
                   borderRadius: 10, padding: '8px 16px',
                   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
                 }}>{tr('settings_cancel')}</button>
