@@ -9,6 +9,7 @@ import {
 import { Trade, Period } from '@/types'
 import NavBar from '@/components/layout/NavBar'
 import { useLocale } from '@/hooks/useLocale'
+import { DARK, LIGHT } from '@/lib/colors'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
@@ -30,18 +31,12 @@ function th(dark: boolean) {
     bg:       dark ? '#0a0a0b' : 'transparent',
     surface:  dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.55)',
     surface2: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.4)',
-    border:   dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
-    text:     dark ? '#f5f5f7' : '#1c1c1e',
-    sub:      dark ? 'rgba(255,255,255,0.35)' : '#8e8e93',
+    border:   dark ? DARK.border : LIGHT.border,
+    text:     dark ? DARK.text   : LIGHT.text,
+    sub:      dark ? DARK.sub    : LIGHT.sub,
     shadow:   'none',
   }
 }
-
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const GRAY   = '#8e8e93'
-const BLUE   = '#0a84ff'
-const ORANGE = '#ff9f0a'
 
 function filterByPeriod(trades: Trade[], period: Period): Trade[] {
   if (period === 'all') return trades
@@ -149,6 +144,8 @@ function calcByWeekday(trades: Trade[]) {
 
 function CustomTooltip({ active, payload, dark }: any) {
   const t = th(dark)
+  const GREEN = dark ? DARK.green : LIGHT.green
+  const RED   = dark ? DARK.red   : LIGHT.red
   if (!active || !payload?.length) return null
   const val = payload[0].value
   return (
@@ -165,15 +162,13 @@ function CustomTooltip({ active, payload, dark }: any) {
   )
 }
 
-const PIE_COLORS = [GREEN, RED, GRAY]
-
 function glassCard(dark: boolean): React.CSSProperties {
   if (!dark) return {
     background: 'rgba(255,255,255,0.55)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     borderRadius: 20, padding: '22px 24px',
-    border: '1px solid rgba(255,255,255,0.8)',
+    border: `1px solid ${LIGHT.border}`,
     boxShadow: `
       inset 0 1px 0 rgba(255,255,255,0.9),
       inset 0 -1px 0 rgba(0,0,0,0.03),
@@ -186,7 +181,7 @@ function glassCard(dark: boolean): React.CSSProperties {
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 20, padding: '22px 24px',
-    border: '1px solid rgba(255,255,255,0.07)',
+    border: `1px solid ${DARK.border}`,
     boxShadow: `
       inset 0 1px 0 rgba(255,255,255,0.14),
       inset 0 -1px 0 rgba(255,255,255,0.03),
@@ -202,7 +197,7 @@ function statCard(dark: boolean): React.CSSProperties {
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     borderRadius: 16, padding: '16px 18px',
-    border: '1px solid rgba(255,255,255,0.8)',
+    border: `1px solid ${LIGHT.border}`,
     boxShadow: `
       inset 0 1px 0 rgba(255,255,255,0.95),
       inset 0 -1px 0 rgba(0,0,0,0.02)
@@ -214,7 +209,7 @@ function statCard(dark: boolean): React.CSSProperties {
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 16, padding: '16px 18px',
-    border: '1px solid rgba(255,255,255,0.07)',
+    border: `1px solid ${DARK.border}`,
     boxShadow: `
       inset 0 1px 0 rgba(255,255,255,0.16),
       inset 0 -1px 0 rgba(255,255,255,0.02),
@@ -230,6 +225,15 @@ export default function DashboardPage() {
   const dark = useDark()
   const t    = th(dark)
   const { t: tr } = useLocale()
+
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const GRAY   = dark ? DARK.gray   : LIGHT.gray
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+
+  const PIE_COLORS = [GREEN, RED, GRAY]
 
   const [trades,  setTrades]  = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
@@ -290,7 +294,7 @@ export default function DashboardPage() {
   ]
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: t.sub }}>
         {tr('dashboard_loading')}
@@ -306,62 +310,32 @@ export default function DashboardPage() {
       {/* Фон */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0,
-        background: dark
-          ? '#0a0a0b'
-          : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)',
+        background: dark ? DARK.bg : LIGHT.bg,
       }} />
 
       {/* Noise texture */}
-      {dark && (
-        <div style={{
-          position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-          backgroundImage: noiseSvg, opacity: 0.35,
-        }} />
-      )}
+      <div style={{
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15,
+      }} />
 
-      {/* Light mode subtle noise */}
-      {!dark && (
-        <div style={{
-          position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-          backgroundImage: noiseSvg, opacity: 0.15,
-        }} />
-      )}
-
-      {/* Ambient glow — dark */}
-      {dark && (
-        <>
-          <div style={{
-            position: 'fixed', top: -200, left: '30%',
-            width: 600, height: 600, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(48,209,88,0.07) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-          <div style={{
-            position: 'fixed', bottom: -200, right: '10%',
-            width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-        </>
-      )}
-
-      {/* Ambient glow — light */}
-      {!dark && (
-        <>
-          <div style={{
-            position: 'fixed', top: -150, left: '20%',
-            width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-          <div style={{
-            position: 'fixed', bottom: -150, right: '15%',
-            width: 400, height: 400, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-        </>
-      )}
+      {/* Ambient glow */}
+      <div style={{
+        position: 'fixed', top: -200, left: '30%',
+        width: 600, height: 600, borderRadius: '50%',
+        background: dark
+          ? 'radial-gradient(circle, rgba(48,209,88,0.07) 0%, transparent 70%)'
+          : 'radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
+      <div style={{
+        position: 'fixed', bottom: -200, right: '10%',
+        width: 500, height: 500, borderRadius: '50%',
+        background: dark
+          ? 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)'
+          : 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -425,7 +399,7 @@ export default function DashboardPage() {
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
               <div style={{ fontSize: 15, fontWeight: 700, color: t.text, marginBottom: 16, letterSpacing: '-0.02em', position: 'relative' }}>{tr('dashboard_long_short')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, position: 'relative' }}>
-                <div style={{ background: dark ? 'rgba(48,209,88,0.06)' : 'rgba(48,209,88,0.08)', border: `1px solid rgba(48,209,88,0.15)`, borderRadius: 14, padding: '16px 20px' }}>
+                <div style={{ background: dark ? `${DARK.green}10` : LIGHT.greenBg, border: `1px solid ${GREEN}26`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>↑ Long</span>
                     <span style={{ fontSize: 20, fontWeight: 900, color: GREEN, letterSpacing: '-0.03em' }}>{stats.long_wr !== null ? `${stats.long_wr}%` : '—'}</span>
@@ -435,7 +409,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontSize: 11, color: t.sub, marginTop: 6 }}>{filtered.filter(x => x.direction === 'Long').length} {tr('analytics_trades')}</div>
                 </div>
-                <div style={{ background: dark ? 'rgba(255,69,58,0.06)' : 'rgba(255,69,58,0.08)', border: `1px solid rgba(255,69,58,0.15)`, borderRadius: 14, padding: '16px 20px' }}>
+                <div style={{ background: dark ? `${DARK.red}10` : LIGHT.redBg, border: `1px solid ${RED}26`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: RED }}>↓ Short</span>
                     <span style={{ fontSize: 20, fontWeight: 900, color: RED, letterSpacing: '-0.03em' }}>{stats.short_wr !== null ? `${stats.short_wr}%` : '—'}</span>
