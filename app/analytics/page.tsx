@@ -6,12 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Trade } from '@/types'
 import NavBar from '@/components/layout/NavBar'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { DARK, LIGHT } from '@/lib/colors'
 
-const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const BLUE   = '#0a84ff'
-const ORANGE = '#ff9f0a'
+const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -30,9 +27,14 @@ export default function AnalyticsPage() {
   const dark = useDark()
   const { t: tr } = useLocale()
 
-  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -106,6 +108,8 @@ export default function AnalyticsPage() {
   const longWR  = longs.length  ? Math.round((longs.filter(tr2  => tr2.result === 'Тейк').length / longs.length)  * 100) : -1
   const shortWR = shorts.length ? Math.round((shorts.filter(tr2 => tr2.result === 'Тейк').length / shorts.length) * 100) : -1
 
+  const gradeColors: Record<string, string> = { A: GREEN, B: BLUE, C: ORANGE, D: RED }
+
   function glassCard(): React.CSSProperties {
     return {
       background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.55)',
@@ -137,7 +141,7 @@ export default function AnalyticsPage() {
   )
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{tr('analytics_loading')}</div>
     </div>
@@ -146,26 +150,15 @@ export default function AnalyticsPage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      {/* Фон */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
 
-          {/* Header */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: textColor, letterSpacing: '-0.04em' }}>{tr('analytics_title')}</div>
             <div style={{ fontSize: 13, color: subColor, marginTop: 2 }}>{trades.length} {tr('analytics_trades')}</div>
@@ -279,19 +272,16 @@ export default function AnalyticsPage() {
                 {glare}
                 <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>{tr('analytics_grades')}</div>
                 <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
-                  {byGrade.map(g => {
-                    const colors: Record<string, string> = { A: GREEN, B: BLUE, C: ORANGE, D: RED }
-                    return (
-                      <div key={g.grade} style={{
-                        flex: 1, textAlign: 'center', padding: '12px 8px', borderRadius: 12,
-                        background: (colors[g.grade] || subColor) + '18',
-                        border: `1px solid ${(colors[g.grade] || subColor)}33`,
-                      }}>
-                        <div style={{ fontSize: 20, fontWeight: 800, color: colors[g.grade] || subColor }}>{g.count}</div>
-                        <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>Grade {g.grade}</div>
-                      </div>
-                    )
-                  })}
+                  {byGrade.map(g => (
+                    <div key={g.grade} style={{
+                      flex: 1, textAlign: 'center', padding: '12px 8px', borderRadius: 12,
+                      background: (gradeColors[g.grade] || subColor) + '18',
+                      border: `1px solid ${(gradeColors[g.grade] || subColor)}33`,
+                    }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: gradeColors[g.grade] || subColor }}>{g.count}</div>
+                      <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>Grade {g.grade}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
