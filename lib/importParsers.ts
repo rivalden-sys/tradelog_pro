@@ -1,4 +1,3 @@
-
 // ============================================
 // TradeLog Pro — CSV Import Parsers
 // Підтримка: Bybit, Binance, OKX, KuCoin,
@@ -7,8 +6,8 @@
 // ============================================
 
 export type ParsedTrade = {
-  date:        string           // YYYY-MM-DD
-  pair:        string           // BTC/USDT
+  date:        string
+  pair:        string
   direction:   'Long' | 'Short'
   result:      'Тейк' | 'Стоп' | 'БУ'
   profit_usd:  number
@@ -56,12 +55,29 @@ export type ColumnMapping = {
 // ХЕЛПЕРИ
 // ─────────────────────────────────────────────
 
+// Фікс TypeScript: явно повертаємо ParsedTrade щоб status: 'closed' був літеральним типом
+function makeTrade(t: {
+  date: string
+  pair: string
+  direction: 'Long' | 'Short'
+  result: 'Тейк' | 'Стоп' | 'БУ'
+  profit_usd: number
+  profit_pct: number
+  entry_price: number | null
+  exit_price: number | null
+  rr: number
+  setup: string
+  trade_type: 'futures' | 'spot'
+  comment: string
+}): ParsedTrade {
+  return { ...t, status: 'closed' as const }
+}
+
 function parseDate(raw: string): string {
   if (!raw) return new Date().toISOString().split('T')[0]
   const cleaned = raw.trim().replace(/\//g, '-')
   const d = new Date(cleaned)
   if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]
-  // Спробуємо DD-MM-YYYY
   const parts = cleaned.split('-')
   if (parts.length === 3 && parts[0].length === 2) {
     const d2 = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
@@ -73,16 +89,12 @@ function parseDate(raw: string): string {
 function normalizePair(raw: string): string {
   if (!raw) return ''
   let s = raw.trim().toUpperCase()
-  // Видаляємо суфікси типу -USDT-SWAP, -PERP
   s = s.replace(/[-_](SWAP|PERP|FUTURES|PERPETUAL)$/i, '')
-  // Вже є слеш
   if (s.includes('/')) return s
-  // BTC-USDT → BTC/USDT
   if (s.includes('-')) {
     const parts = s.split('-')
     if (parts.length === 2) return parts[0] + '/' + parts[1]
   }
-  // BTCUSDT → BTC/USDT (розбиваємо по відомих quote)
   for (const quote of ['USDT', 'USDC', 'BUSD', 'BTC', 'ETH', 'BNB', 'USD']) {
     if (s.endsWith(quote) && s.length > quote.length) {
       return s.slice(0, -quote.length) + '/' + quote
@@ -97,7 +109,6 @@ function pnlToResult(pnl: number): 'Тейк' | 'Стоп' | 'БУ' {
   return 'БУ'
 }
 
-// Гнучке отримання колонки — шукаємо по кількох варіантах назви
 function col(row: Record<string, string>, ...keys: string[]): string {
   for (const key of keys) {
     const found = Object.keys(row).find(
@@ -121,7 +132,6 @@ function isLong(side: string): boolean {
   return s.includes('long') || s.includes('buy') || s === 'open_long' || s === 'close_short'
 }
 
-// Матчинг Buy→Sell для Spot бірж
 function matchSpotBuySell(
   rows: Record<string, string>[],
   pairKey: string,
@@ -130,14 +140,14 @@ function matchSpotBuySell(
   totalKey: string,
   dateKey: string,
   exchange: string,
-  tradeType: 'spot' = 'spot'
+  tradeType: 'futures' | 'spot' = 'spot'
 ): ParsedTrade[] {
   const trades: ParsedTrade[] = []
   const buyBuffer: Record<string, Array<{ price: number; total: number; date: string }>> = {}
 
-  const sorted = [...rows].sort((a, b) => {
-    return new Date(col(a, dateKey)).getTime() - new Date(col(b, dateKey)).getTime()
-  })
+  const sorted = [...rows].sort((a, b) =>
+    new Date(col(a, dateKey)).getTime() - new Date(col(b, dateKey)).getTime()
+  )
 
   for (const row of sorted) {
     const pair    = normalizePair(col(row, pairKey))
@@ -157,7 +167,7 @@ function matchSpotBuySell(
       const pnl = Math.round((price - buy.price) * qty * 100) / 100
       const pct = buy.price > 0 ? Math.round(((price - buy.price) / buy.price) * 10000) / 100 : 0
 
-      trades.push({
+      trades.push(makeTrade({
         date:        parseDate(dateRaw),
         pair,
         direction:   'Long',
@@ -168,10 +178,9 @@ function matchSpotBuySell(
         exit_price:  price,
         rr:          0,
         setup:       'Imported',
-        status:      'closed',
         trade_type:  tradeType,
         comment:     `Imported from ${exchange} Spot`,
-      })
+      }))
     }
   }
 
@@ -186,56 +195,23 @@ export function detectFormat(headers: string[]): DetectedFormat {
   const h = headers.map(x => x.trim().toLowerCase())
   const has = (...keys: string[]) => keys.every(k => h.some(hh => hh.includes(k.toLowerCase())))
 
-  // Bybit старий: "contracts" + "closing direction"
   if (has('contracts') && has('closing direction')) return 'bybit_futures_old'
-
-  // Bybit новий futures: "symbol" + "avg exit price"
-  if (has('symbol') && has('avg exit price')) return 'bybit_futures_new'
-
-  // Bybit spot: "pair" + "avgtrading price"
-  if (has('pair') && has('avgtrading price')) return 'bybit_spot'
-
-  // Binance Spot: "date(utc)" + "pair" + "type"
+  if (has('symbol') && has('avg exit price'))        return 'bybit_futures_new'
+  if (has('pair') && has('avgtrading price'))        return 'bybit_spot'
   if ((has('date(utc)') || has('date')) && has('pair') && has('type')) return 'binance_spot'
-
-  // Binance Futures: "symbol" + "side" + ("net p&l" або "closing p&l")
   if (has('symbol') && has('side') && (has('net p&l') || has('closing p&l'))) return 'binance_futures'
-
-  // OKX Futures: "instrument" + "direction" + "p&l"
   if (has('instrument') && has('direction') && has('p&l')) return 'okx_futures'
-
-  // OKX Spot: "instrument" + "trade id" + "side"
   if (has('instrument') && has('trade id') && has('side')) return 'okx_spot'
-
-  // KuCoin Futures: "symbol" + "side" + "realized pnl"
-  if (has('symbol') && has('side') && has('realized pnl')) return 'kucoin_futures'
-
-  // KuCoin Spot: "tradecreatedat" або "symbol" + "funds"
+  if (has('symbol') && has('side') && has('realized pnl'))  return 'kucoin_futures'
   if (has('tradecreatedat') || (has('symbol') && has('funds'))) return 'kucoin_spot'
-
-  // Gate.io Futures: "contract" + "close side" + "profit"
   if (has('contract') && has('close side') && has('profit')) return 'gateio_futures'
-
-  // Gate.io Spot: "no" + "pair" + "side"
-  if (has('no') && has('pair') && has('side')) return 'gateio_spot'
-
-  // MEXC Futures: "contract" + "direction" + "realized pnl"
+  if (has('no') && has('pair') && has('side'))               return 'gateio_spot'
   if (has('contract') && has('direction') && has('realized pnl')) return 'mexc_futures'
-
-  // MEXC Spot: "time" + "pair" + "side" + "quantity"
   if (has('time') && has('pair') && has('side') && has('quantity')) return 'mexc_spot'
-
-  // HTX Futures: "contract code" + "profit"
-  if (has('contract code') && has('profit')) return 'htx_futures'
-
-  // HTX Spot: "time" + "pair" + "type" + "fee"
+  if (has('contract code') && has('profit'))                 return 'htx_futures'
   if (has('time') && has('pair') && has('type') && has('fee') && !has('side')) return 'htx_spot'
-
-  // BingX Futures: "symbol" + "side" + "realized p&l"
-  if (has('symbol') && has('side') && has('realized p&l')) return 'bingx_futures'
-
-  // Kraken: "txid" + "ordertxid" + "pair"
-  if (has('txid') && has('ordertxid') && has('pair')) return 'kraken'
+  if (has('symbol') && has('side') && has('realized p&l'))   return 'bingx_futures'
+  if (has('txid') && has('ordertxid') && has('pair'))        return 'kraken'
 
   return 'unknown'
 }
@@ -246,21 +222,20 @@ export function detectFormat(headers: string[]): DetectedFormat {
 
 function parseBybitFuturesOld(rows: Record<string, string>[]): ParsedTrade[] {
   return rows.map(row => {
-    const pair      = normalizePair(col(row, 'Contracts'))
-    const side      = col(row, 'Closing Direction').toLowerCase()
-    const entryP    = num(row, 'Entry Price') || null
-    const exitP     = num(row, 'Exit Price') || null
-    const pnl       = num(row, 'Closed P&L')
-    const dateRaw   = col(row, 'Trade Time', 'Trade Time(UTC+0)')
-    // Closing Direction = напрям ЗАКРИТТЯ (протилежний до угоди)
+    const pair    = normalizePair(col(row, 'Contracts'))
+    const side    = col(row, 'Closing Direction').toLowerCase()
+    const entryP  = num(row, 'Entry Price') || null
+    const exitP   = num(row, 'Exit Price') || null
+    const pnl     = num(row, 'Closed P&L')
+    const dateRaw = col(row, 'Trade Time', 'Trade Time(UTC+0)')
     const direction: 'Long' | 'Short' = side.includes('sell') ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
+      trade_type: 'futures',
       comment: `Bybit Futures. Exit: ${col(row, 'Exit Type')}`,
-    }
+    })
   }).filter(t => t.pair)
 }
 
@@ -273,13 +248,12 @@ function parseBybitFuturesNew(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'Closed P&L', 'Realized P&L')
     const dateRaw = col(row, 'Created Time', 'Close Time', 'Time')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'Bybit Futures',
-    }
+      trade_type: 'futures', comment: 'Bybit Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -300,13 +274,12 @@ function parseBinanceFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'Net P&L', 'Closing P&L', 'Realized P&L')
     const dateRaw = col(row, 'Time', 'Date', 'Close Time')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'Binance Futures',
-    }
+      trade_type: 'futures', comment: 'Binance Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -327,13 +300,12 @@ function parseOKXFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'P&L', 'Realized P&L', 'PNL')
     const dateRaw = col(row, 'Close time', 'Close Time', 'Time', 'Date')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'OKX Futures',
-    }
+      trade_type: 'futures', comment: 'OKX Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -353,15 +325,14 @@ function parseKuCoinFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const exitP   = num(row, 'Avg Close Price', 'Close Price') || null
     const pnl     = num(row, 'Realized PNL', 'Realized P&L', 'PNL')
     const dateRaw = col(row, 'Close Time', 'Time', 'Date')
-    // KuCoin side для futures: "buy" = Long open, "sell" = Short open
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
+      trade_type: 'futures',
       comment: `KuCoin Futures. Leverage: ${col(row, 'Leverage')}x`,
-    }
+    })
   }).filter(t => t.pair)
 }
 
@@ -381,15 +352,13 @@ function parseGateIOFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const exitP   = num(row, 'Settle Price', 'Close Price', 'Exit Price') || null
     const pnl     = num(row, 'Profit', 'Realized P&L', 'PNL')
     const dateRaw = col(row, 'Time', 'Close Time', 'Date')
-    // Gate.io Close Side: "long" означає закрили Long = угода була Long
     const direction: 'Long' | 'Short' = side.includes('long') ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'Gate.io Futures',
-    }
+      trade_type: 'futures', comment: 'Gate.io Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -410,13 +379,12 @@ function parseMEXCFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'Realized PNL', 'Realized P&L', 'Profit')
     const dateRaw = col(row, 'Close Time', 'Time', 'Date')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'MEXC Futures',
-    }
+      trade_type: 'futures', comment: 'MEXC Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -437,13 +405,12 @@ function parseHTXFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'Profit', 'Realized P&L', 'PNL')
     const dateRaw = col(row, 'Close Time', 'Open Time', 'Time', 'Date')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'HTX Futures',
-    }
+      trade_type: 'futures', comment: 'HTX Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -464,13 +431,12 @@ function parseBingXFutures(rows: Record<string, string>[]): ParsedTrade[] {
     const pnl     = num(row, 'Realized P&L', 'Closed P&L', 'PNL', 'Profit')
     const dateRaw = col(row, 'Close Time', 'Time', 'Date')
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date: parseDate(dateRaw), pair, direction,
       result: pnlToResult(pnl), profit_usd: Math.round(pnl * 100) / 100, profit_pct: 0,
       entry_price: entryP, exit_price: exitP, rr: 0, setup: 'Imported',
-      status: 'closed', trade_type: 'futures',
-      comment: 'BingX Futures',
-    }
+      trade_type: 'futures', comment: 'BingX Futures',
+    })
   }).filter(t => t.pair)
 }
 
@@ -479,13 +445,11 @@ function parseBingXFutures(rows: Record<string, string>[]): ParsedTrade[] {
 // ─────────────────────────────────────────────
 
 function parseKraken(rows: Record<string, string>[]): ParsedTrade[] {
-  // Kraken: txid, ordertxid, pair, time, type, ordertype, price, cost, fee, vol
-  // Матчимо buy→sell по ordertxid або по парі
   return matchSpotBuySell(rows, 'pair', 'type', 'price', 'cost', 'time', 'Kraken')
 }
 
 // ─────────────────────────────────────────────
-// UNIVERSAL MAPPER (для Bitget та невідомих)
+// UNIVERSAL MAPPER
 // ─────────────────────────────────────────────
 
 export function parseUniversal(
@@ -493,14 +457,14 @@ export function parseUniversal(
   mapping: ColumnMapping
 ): ParsedTrade[] {
   return rows.map(row => {
-    const pair    = normalizePair(row[mapping.pair] || '')
-    const side    = (row[mapping.side] || '').toLowerCase()
-    const pnl     = parseFloat(row[mapping.pnl]) || 0
-    const dateRaw = row[mapping.date] || ''
-    const entryP  = parseFloat(row[mapping.entry_price]) || null
-    const exitP   = parseFloat(row[mapping.exit_price]) || null
+    const pair      = normalizePair(row[mapping.pair] || '')
+    const side      = (row[mapping.side] || '').toLowerCase()
+    const pnl       = parseFloat(row[mapping.pnl]) || 0
+    const dateRaw   = row[mapping.date] || ''
+    const entryP    = parseFloat(row[mapping.entry_price]) || null
+    const exitP     = parseFloat(row[mapping.exit_price]) || null
     const direction: 'Long' | 'Short' = isLong(side) ? 'Long' : 'Short'
-    return {
+    return makeTrade({
       date:        parseDate(dateRaw),
       pair,
       direction,
@@ -511,10 +475,9 @@ export function parseUniversal(
       exit_price:  exitP,
       rr:          0,
       setup:       'Imported',
-      status:      'closed',
       trade_type:  mapping.trade_type,
       comment:     'Imported via custom mapping',
-    }
+    })
   }).filter(t => t.pair)
 }
 
@@ -523,14 +486,9 @@ export function parseUniversal(
 // ─────────────────────────────────────────────
 
 function parseCSVText(csvText: string): { headers: string[]; rows: Record<string, string>[] } {
-  const lines = csvText
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0)
-
+  const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0)
   if (lines.length < 2) return { headers: [], rows: [] }
 
-  // Парсимо з урахуванням полів у лапках
   const parseLine = (line: string): string[] => {
     const result: string[] = []
     let current = ''
@@ -555,11 +513,9 @@ function parseCSVText(csvText: string): { headers: string[]; rows: Record<string
 
   for (let i = 1; i < lines.length; i++) {
     const values = parseLine(lines[i])
-    if (values.every(v => !v)) continue // пропускаємо порожні рядки
+    if (values.every(v => !v)) continue
     const obj: Record<string, string> = {}
-    headers.forEach((h, idx) => {
-      obj[h] = values[idx] || ''
-    })
+    headers.forEach((h, idx) => { obj[h] = values[idx] || '' })
     rows.push(obj)
   }
 
@@ -573,19 +529,13 @@ function parseCSVText(csvText: string): { headers: string[]; rows: Record<string
 export function parseCSV(
   csvText: string,
   mapping?: ColumnMapping
-): {
-  format:  DetectedFormat
-  trades:  ParsedTrade[]
-  headers: string[]
-  total:   number
-} {
+): { format: DetectedFormat; trades: ParsedTrade[]; headers: string[]; total: number } {
   const { headers, rows } = parseCSVText(csvText)
 
   if (headers.length === 0 || rows.length === 0) {
     return { format: 'unknown', trades: [], headers, total: 0 }
   }
 
-  // Якщо є маппінг — universal
   if (mapping) {
     const trades = parseUniversal(rows, mapping)
     return { format: 'unknown', trades, headers, total: trades.length }
@@ -619,7 +569,7 @@ export function parseCSV(
 }
 
 // ─────────────────────────────────────────────
-// СПИСОК ПІДТРИМУВАНИХ БІРЖ ДЛЯ UI
+// UI КОНСТАНТИ
 // ─────────────────────────────────────────────
 
 export const SUPPORTED_EXCHANGES = [
@@ -632,7 +582,7 @@ export const SUPPORTED_EXCHANGES = [
   { name: 'HTX',     formats: ['Futures', 'Spot'], path: 'Orders → Delivery/Perpetual → Export' },
   { name: 'BingX',   formats: ['Futures'], path: 'Orders → Futures Orders → Closed P&L → Export' },
   { name: 'Kraken',  formats: ['Spot'], path: 'History → Trades → Export' },
-  { name: 'Bitget',  formats: ['Маппінг вручну'], path: 'Assets → Transaction History → Export (потрібен маппінг)' },
+  { name: 'Bitget',  formats: ['Маппінг вручну'], path: 'Assets → Transaction History → Export' },
 ]
 
 export const FORMAT_LABELS: Record<DetectedFormat, string> = {
