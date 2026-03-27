@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useTheme } from '@/components/layout/ThemeProvider';
 import { useLocale } from '@/hooks/useLocale';
+import { DARK, LIGHT } from '@/lib/colors';
 
 const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif";
@@ -48,9 +49,9 @@ export default function NavBar() {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
-  // Кольори
-  const textColor  = dark ? '#f5f5f7' : '#1d1d1f';
-  const subColor   = dark ? 'rgba(255,255,255,0.4)' : '#6e6e73';
+  // Кольори через Design System
+  const textColor  = dark ? DARK.text   : LIGHT.text
+  const subColor   = dark ? DARK.sub    : LIGHT.sub
   const borderTop  = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)'
   const borderBot  = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
 
@@ -76,7 +77,7 @@ export default function NavBar() {
   const iconBtn = (onClick: () => void, children: React.ReactNode) => (
     <button onClick={onClick} style={{
       background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-      border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.07)',
+      border: dark ? `1px solid ${DARK.border}` : `1px solid rgba(0,0,0,0.07)`,
       borderRadius: 9,
       width: 32, height: 32,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -128,7 +129,7 @@ export default function NavBar() {
             display: 'flex', gap: 2,
             background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
             borderRadius: 11, padding: 3,
-            border: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.05)',
+            border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.05)',
           }}>
             {links.map(({ href, label }) => (
               <Link key={href} href={href} className="nav-link" style={{
@@ -160,7 +161,7 @@ export default function NavBar() {
             <button onClick={handleLogout} style={{
               fontSize: 13, color: subColor,
               background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-              border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
+              border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.06)',
               borderRadius: 9, padding: '5px 12px', height: 32,
               cursor: 'pointer', fontFamily: FONT,
               backdropFilter: 'blur(10px)',
@@ -176,7 +177,7 @@ export default function NavBar() {
         {isMobile && (
           <button onClick={() => setMenuOpen(v => !v)} style={{
             background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-            border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.07)',
+            border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.07)',
             borderRadius: 9, width: 36, height: 36,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', flexDirection: 'column', gap: 5, padding: '10px 8px',
@@ -231,7 +232,7 @@ export default function NavBar() {
             <button onClick={toggleLocale} style={{
               flex: 1, padding: '11px 8px', borderRadius: 12,
               background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-              border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.07)',
+              border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.07)',
               fontSize: 13, fontWeight: 700, color: textColor,
               cursor: 'pointer', fontFamily: FONT,
               boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
@@ -240,7 +241,7 @@ export default function NavBar() {
             <button onClick={toggle} style={{
               flex: 1, padding: '11px 8px', borderRadius: 12,
               background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-              border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.07)',
+              border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.07)',
               fontSize: 14, cursor: 'pointer', fontFamily: FONT,
               boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
             }}>{dark ? '☀️ Light' : '🌙 Dark'}</button>
