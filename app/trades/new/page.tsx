@@ -5,16 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
+import { DARK, LIGHT } from '@/lib/colors'
 
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const GRADES         = ['A', 'B', 'C', 'D']
-
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const ORANGE = '#ff9f0a'
-const BLUE   = '#0a84ff'
-const GRAY   = '#8e8e93'
-const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const FONT           = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -60,16 +55,20 @@ const initialForm = {
 }
 
 export default function NewTradePage() {
-  const dark   = useDark()
-  const { t }  = useLocale()
+  const dark  = useDark()
+  const { t } = useLocale()
   const router = useRouter()
 
-  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#6e6e73'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
-  const inputBg     = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
-  const inputBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
-  const inputShadow = dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)'
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const GRAY   = dark ? DARK.gray   : LIGHT.gray
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -180,11 +179,13 @@ export default function NewTradePage() {
   }
 
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
-    width: '100%', background: inputBg,
-    border: `1px solid ${hasError ? RED : inputBorder}`,
+    width: '100%',
+    background: dark ? DARK.inputBg : LIGHT.inputBg,
+    border: `1px solid ${hasError ? RED : dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
     borderRadius: 10, padding: '11px 14px', fontSize: 14, color: textColor,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
-    backdropFilter: 'blur(10px)', boxShadow: inputShadow,
+    backdropFilter: 'blur(10px)',
+    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)',
   })
 
   const labelStyle: React.CSSProperties = {
@@ -216,12 +217,12 @@ export default function NewTradePage() {
     background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
     backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
     borderRadius: 14, padding: '16px',
-    border: `1px solid ${accent ? accent + '33' : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`,
+    border: `1px solid ${accent ? accent + '33' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
   })
 
   const calcReady = form.entry_price && form.stop_price && form.take_price
 
-  const modeBtn = (val: 'planned' | 'closed' | 'futures' | 'spot', label: string, color: string, current: string): React.CSSProperties => ({
+  const modeBtn = (val: string, label: string, color: string, current: string): React.CSSProperties => ({
     flex: 1, padding: '10px 16px', borderRadius: 10, border: 'none',
     background: current === val ? color + '22' : 'transparent',
     color: current === val ? color : subColor,
@@ -232,19 +233,10 @@ export default function NewTradePage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -267,7 +259,7 @@ export default function NewTradePage() {
           <div style={{ ...glassSection(), marginBottom: 20, padding: 4 }}>
             <div style={{ display: 'flex' }}>
               <button onClick={() => setMode('planned')} style={modeBtn('planned', '🕐 Планова угода', ORANGE, mode)}>🕐 Планова угода</button>
-              <button onClick={() => setMode('closed')}  style={modeBtn('closed',  '✅ Закрита угода', GREEN,  mode)}>✅ Закрита угода</button>
+              <button onClick={() => setMode('closed')}  style={modeBtn('closed',  '✓ Закрита угода',  GREEN,  mode)}>✓ Закрита угода</button>
             </div>
           </div>
 
@@ -436,15 +428,15 @@ export default function NewTradePage() {
               background: saving
                 ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
                 : mode === 'planned'
-                  ? dark ? ORANGE : 'linear-gradient(180deg, #e08b00 0%, #b36d00 100%)'
-                  : dark ? GREEN  : 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)',
+                  ? dark ? DARK.orange : 'linear-gradient(180deg, #e08b00 0%, #b36d00 100%)'
+                  : dark ? DARK.green  : 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)',
               color: saving ? subColor : mode === 'planned' ? '#000' : '#fff',
               border: 'none', borderRadius: 12, padding: '14px',
               fontSize: 15, fontWeight: 700,
               cursor: saving ? 'not-allowed' : 'pointer',
               opacity: saving ? 0.6 : 1, fontFamily: FONT,
               boxShadow: saving ? 'none' : dark
-                ? `0 0 24px ${mode === 'planned' ? ORANGE : GREEN}44`
+                ? `0 0 24px ${mode === 'planned' ? DARK.orange : DARK.green}44`
                 : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
               transition: 'all 0.2s',
             }}>
