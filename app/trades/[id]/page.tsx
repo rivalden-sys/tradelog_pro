@@ -6,14 +6,9 @@ import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
+import { DARK, LIGHT } from '@/lib/colors'
 
-const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const BLUE   = '#0a84ff'
-const ORANGE = '#ff9f0a'
-const PURPLE = '#bf5af2'
-const GRAY   = '#8e8e93'
+const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -28,19 +23,6 @@ function useDark() {
   return dark
 }
 
-function resultColor(r: string) {
-  if (r === 'Тейк') return GREEN
-  if (r === 'Стоп') return RED
-  return GRAY
-}
-
-function gradeColor(g: string) {
-  if (g === 'A') return GREEN
-  if (g === 'B') return BLUE
-  if (g === 'C') return ORANGE
-  return RED
-}
-
 function Badge({ label, color }: { label: string; color: string }) {
   return (
     <span style={{ background: color + '22', color, padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
@@ -49,12 +31,13 @@ function Badge({ label, color }: { label: string; color: string }) {
   )
 }
 
-function ScoreBar({ score }: { score: number }) {
-  const color = score >= 70 ? GREEN : score >= 40 ? ORANGE : RED
+function ScoreBar({ score, green, orange, red }: { score: number; green: string; orange: string; red: string }) {
+  const color = score >= 70 ? green : score >= 40 ? orange : red
+  const gray = '#8e8e93'
   return (
     <div style={{ marginTop: 8 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ fontSize: 13, color: GRAY }}>Probability of success</span>
+        <span style={{ fontSize: 13, color: gray }}>Probability of success</span>
         <span style={{ fontSize: 20, fontWeight: 900, color, letterSpacing: '-0.03em' }}>{score}%</span>
       </div>
       <div style={{ height: 8, borderRadius: 4, background: 'rgba(128,128,128,0.15)', overflow: 'hidden' }}>
@@ -64,20 +47,20 @@ function ScoreBar({ score }: { score: number }) {
   )
 }
 
-function ProGate({ feature, dark }: { feature: string; dark: boolean }) {
-  const subColor = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
+function ProGate({ feature, dark, purple, blue }: { feature: string; dark: boolean; purple: string; blue: string }) {
+  const subColor = dark ? DARK.sub : LIGHT.sub
   return (
     <div style={{
       padding: '28px 20px', textAlign: 'center',
-      background: dark ? `linear-gradient(135deg, ${PURPLE}15, ${BLUE}10)` : `linear-gradient(135deg, ${PURPLE}10, ${BLUE}08)`,
-      borderRadius: 14, border: `1px solid ${PURPLE}30`,
+      background: dark ? `linear-gradient(135deg, ${purple}15, ${blue}10)` : `linear-gradient(135deg, ${purple}10, ${blue}08)`,
+      borderRadius: 14, border: `1px solid ${purple}30`,
     }}>
       <div style={{ fontSize: 24, marginBottom: 10 }}>⚡</div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: dark ? '#f5f5f7' : '#1c1c1e', marginBottom: 6 }}>Pro Feature</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: dark ? DARK.text : LIGHT.text, marginBottom: 6 }}>Pro Feature</div>
       <div style={{ fontSize: 13, color: subColor, marginBottom: 18, lineHeight: 1.6 }}>
         {feature} is available on Pro plan only.
       </div>
-      <a href="/billing" style={{ display: 'inline-block', background: PURPLE, color: '#fff', borderRadius: 10, padding: '9px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+      <a href="/billing" style={{ display: 'inline-block', background: purple, color: '#fff', borderRadius: 10, padding: '9px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
         Upgrade to Pro →
       </a>
     </div>
@@ -89,22 +72,43 @@ function HistoryTag({ date, onLoad }: { date: string; onLoad: () => void }) {
   return (
     <button onClick={onLoad} style={{
       padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(128,128,128,0.2)',
-      background: 'transparent', color: GRAY, fontSize: 11, fontWeight: 600,
+      background: 'transparent', color: '#8e8e93', fontSize: 11, fontWeight: 600,
       cursor: 'pointer', fontFamily: FONT,
     }}>{d}</button>
   )
 }
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const dark   = useDark()
+  const dark = useDark()
   const { t, locale } = useLocale()
   const router = useRouter()
 
-  const textColor  = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor   = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+  const PURPLE = dark ? DARK.purple : LIGHT.purple
+  const GRAY   = dark ? DARK.gray   : LIGHT.gray
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
+
+  const resultColor = (r: string) => {
+    if (r === 'Тейк') return GREEN
+    if (r === 'Стоп') return RED
+    return GRAY
+  }
+
+  const gradeColor = (g: string) => {
+    if (g === 'A') return GREEN
+    if (g === 'B') return BLUE
+    if (g === 'C') return ORANGE
+    return RED
+  }
 
   const [trade,        setTrade]        = useState<Trade | null>(null)
   const [loading,      setLoading]      = useState(true)
@@ -251,7 +255,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 12,
     border: `1px solid ${borderColor}`,
-    background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+    background: dark ? DARK.inputBg : LIGHT.inputBg,
     color: textColor, fontSize: 14, fontFamily: FONT,
     outline: 'none', boxSizing: 'border-box',
     backdropFilter: 'blur(10px)',
@@ -273,14 +277,14 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{t('trade_detail_loading')}</div>
     </div>
   )
 
   if (!trade) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>{t('trade_detail_not_found')}</div>
     </div>
@@ -291,20 +295,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      {/* Фон */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -462,7 +456,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{ position: 'relative' }}>
                     <textarea value={commentValue} onChange={e => setCommentValue(e.target.value)} rows={4}
                       placeholder={t('trade_detail_comment_ph')}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: `1px solid ${borderColor}`, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', color: textColor, fontSize: 14, fontFamily: FONT, outline: 'none', boxSizing: 'border-box', resize: 'vertical', marginBottom: 10, backdropFilter: 'blur(10px)' }}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: `1px solid ${borderColor}`, background: dark ? DARK.inputBg : LIGHT.inputBg, color: textColor, fontSize: 14, fontFamily: FONT, outline: 'none', boxSizing: 'border-box', resize: 'vertical', marginBottom: 10, backdropFilter: 'blur(10px)' }}
                       autoFocus />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={saveComment} disabled={commentSaving} style={btnStyle(BLUE, '#fff', commentSaving)}>
@@ -525,13 +519,13 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div style={{ position: 'relative' }}>
-                  {scoreProGate && <ProGate feature="Trade Score" dark={dark} />}
+                  {scoreProGate && <ProGate feature="Trade Score" dark={dark} purple={PURPLE} blue={BLUE} />}
                   {scoreError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{scoreError}</div>}
                   {!scoreData && !scoreLoading && !scoreError && !scoreProGate && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('trade_score_empty')}</div>}
                   {scoreLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('trade_score_analyzing')}</div>}
                   {scoreData && (
                     <div>
-                      <ScoreBar score={scoreData.score} />
+                      <ScoreBar score={scoreData.score} green={GREEN} orange={ORANGE} red={RED} />
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '16px 0' }}>
                         <div style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.6)', border: `1px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
                           <div style={{ fontSize: 11, color: subColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('trade_score_similar')}</div>
@@ -575,7 +569,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div style={{ position: 'relative' }}>
-                  {aiProGate && <ProGate feature="AI Analysis" dark={dark} />}
+                  {aiProGate && <ProGate feature="AI Analysis" dark={dark} purple={PURPLE} blue={BLUE} />}
                   {aiError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13 }}>{aiError}</div>}
                   {!aiData && !aiLoading && !aiError && !aiProGate && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('ai_empty_trade')}</div>}
                   {aiLoading && <div style={{ padding: '24px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{t('ai_loading_trade')}</div>}
