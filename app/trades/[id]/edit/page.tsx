@@ -5,15 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
+import { DARK, LIGHT } from '@/lib/colors'
 
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
-
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const ORANGE = '#ff9f0a'
-const BLUE   = '#0a84ff'
-const GRAY   = '#8e8e93'
-const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
+const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -29,16 +24,20 @@ function useDark() {
 }
 
 export default function EditTradePage({ params }: { params: Promise<{ id: string }> }) {
-  const dark   = useDark()
-  const { t }  = useLocale()
+  const dark  = useDark()
+  const { t } = useLocale()
   const router = useRouter()
 
-  const textColor    = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor     = dark ? 'rgba(255,255,255,0.35)' : '#6e6e73'
-  const borderColor  = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
-  const inputBg      = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
-  const inputBorder  = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
-  const inputShadow  = dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)'
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const GRAY   = dark ? DARK.gray   : LIGHT.gray
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -161,11 +160,13 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   }
 
   const inputStyle = (): React.CSSProperties => ({
-    width: '100%', background: inputBg,
-    border: `1px solid ${inputBorder}`,
+    width: '100%',
+    background: dark ? DARK.inputBg : LIGHT.inputBg,
+    border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
     borderRadius: 10, padding: '11px 14px', fontSize: 14, color: textColor,
     outline: 'none', boxSizing: 'border-box', fontFamily: FONT,
-    backdropFilter: 'blur(10px)', boxShadow: inputShadow,
+    backdropFilter: 'blur(10px)',
+    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 2px 4px rgba(0,0,0,0.04)',
   })
 
   const labelStyle: React.CSSProperties = {
@@ -193,7 +194,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   )
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: dark ? '#0a0a0b' : '#f2f2f7', fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', background: dark ? DARK.bg : LIGHT.bg, fontFamily: FONT }}>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: subColor }}>Завантаження...</div>
     </div>
@@ -205,19 +206,10 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.04) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -272,7 +264,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
               backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
               borderRadius: 14, padding: '16px',
-              border: `1px solid ${isPlanned ? ORANGE + '33' : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`,
+              border: `1px solid ${isPlanned ? ORANGE + '33' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: isPlanned ? ORANGE : subColor, marginBottom: 14 }}>📍 Точки входу</div>
               <div className="form-grid-3" style={{ marginBottom: 14 }}>
@@ -388,10 +380,10 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, position: 'relative' }}>{error}</div>
             )}
 
-            {/* Save button — глянцева темно-зелена */}
+            {/* Save button */}
             <button onClick={save} disabled={saving} style={{
               background: dark
-                ? (saving ? 'rgba(255,255,255,0.05)' : GREEN)
+                ? (saving ? 'rgba(255,255,255,0.05)' : DARK.green)
                 : (saving ? 'rgba(0,0,0,0.05)' : 'linear-gradient(180deg, #1f9e3f 0%, #166b2b 100%)'),
               color: saving ? subColor : '#fff',
               border: 'none', borderRadius: 12, padding: '14px',
@@ -399,7 +391,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               cursor: saving ? 'not-allowed' : 'pointer',
               opacity: saving ? 0.6 : 1, fontFamily: FONT,
               boxShadow: saving ? 'none' : dark
-                ? `0 0 24px ${GREEN}44`
+                ? `0 0 24px ${DARK.green}44`
                 : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
               transition: 'all 0.2s', position: 'relative',
             }}>
