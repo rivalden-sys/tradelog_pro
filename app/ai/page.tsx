@@ -4,13 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
+import { DARK, LIGHT } from '@/lib/colors'
 
-const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
-const GREEN  = '#30d158'
-const RED    = '#ff453a'
-const BLUE   = '#0a84ff'
-const ORANGE = '#ff9f0a'
-const PURPLE = '#bf5af2'
+const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 function useDark() {
   const [dark, setDark] = useState(false)
@@ -40,19 +36,19 @@ function Section({ title, color, children, textColor }: any) {
   )
 }
 
-function ProGate({ dark }: { dark: boolean }) {
-  const textColor = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor  = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
+function ProGate({ dark, purple, blue }: { dark: boolean; purple: string; blue: string }) {
+  const textColor = dark ? DARK.text : LIGHT.text
+  const subColor  = dark ? DARK.sub  : LIGHT.sub
   return (
     <div style={{
       padding: '28px 20px', textAlign: 'center',
-      background: dark ? `linear-gradient(135deg, ${PURPLE}15, ${BLUE}10)` : `linear-gradient(135deg, ${PURPLE}10, ${BLUE}08)`,
-      borderRadius: 14, border: `1px solid ${PURPLE}30`,
+      background: dark ? `linear-gradient(135deg, ${purple}15, ${blue}10)` : `linear-gradient(135deg, ${purple}10, ${blue}08)`,
+      borderRadius: 14, border: `1px solid ${purple}30`,
     }}>
       <div style={{ fontSize: 28, marginBottom: 12 }}>⚡</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 8 }}>Pro Feature</div>
       <div style={{ fontSize: 13, color: subColor, marginBottom: 20, lineHeight: 1.6 }}>AI analysis is available on Pro plan only.</div>
-      <a href="/billing" style={{ display: 'inline-block', background: PURPLE, color: '#fff', borderRadius: 12, padding: '10px 24px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+      <a href="/billing" style={{ display: 'inline-block', background: purple, color: '#fff', borderRadius: 12, padding: '10px 24px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
         Upgrade to Pro →
       </a>
     </div>
@@ -60,9 +56,11 @@ function ProGate({ dark }: { dark: boolean }) {
 }
 
 function HistoryItem({ session, onLoad, locale, dark }: { session: any; onLoad: (data: any, type: string) => void; locale: string; dark: boolean }) {
-  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const PURPLE = dark ? DARK.purple : LIGHT.purple
   const date = new Date(session.created_at).toLocaleDateString(locale === 'uk' ? 'uk-UA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   const typeLabel: Record<string, Record<string, string>> = {
     coach:      { uk: 'Аналіз журналу', en: 'Journal Analysis' },
@@ -115,9 +113,16 @@ export default function AIPage() {
   const { t: tr, locale } = useLocale()
   const chatEndRef = useRef<HTMLDivElement>(null)
 
-  const textColor   = dark ? '#f5f5f7' : '#1c1c1e'
-  const subColor    = dark ? 'rgba(255,255,255,0.35)' : '#8e8e93'
-  const borderColor = dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.8)'
+  // Theme-aware кольори
+  const GREEN  = dark ? DARK.green  : LIGHT.green
+  const RED    = dark ? DARK.red    : LIGHT.red
+  const BLUE   = dark ? DARK.blue   : LIGHT.blue
+  const ORANGE = dark ? DARK.orange : LIGHT.orange
+  const PURPLE = dark ? DARK.purple : LIGHT.purple
+
+  const textColor   = dark ? DARK.text   : LIGHT.text
+  const subColor    = dark ? DARK.sub    : LIGHT.sub
+  const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
@@ -218,7 +223,7 @@ export default function AIPage() {
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '35%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
   )
 
-  const runBtn = (onClick: () => void, loading: boolean, label: string, loadLabel: string): React.CSSProperties => ({
+  const runBtnStyle = (loading: boolean): React.CSSProperties => ({
     padding: '9px 20px', borderRadius: 12, border: 'none',
     cursor: loading ? 'default' : 'pointer',
     background: loading
@@ -255,20 +260,10 @@ export default function AIPage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
 
-      {/* Фон */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? '#0a0a0b' : 'linear-gradient(135deg, #e8edf5 0%, #f0f2f7 50%, #e8f0ed 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
-      {dark ? (
-        <>
-          <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(191,90,242,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: 'fixed', top: -150, left: '20%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(191,90,242,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-          <div style={{ position: 'fixed', bottom: -150, right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        </>
-      )}
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(191,90,242,0.07) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(191,90,242,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -320,13 +315,13 @@ export default function AIPage() {
                   </div>
                   <div style={{ fontSize: 12, color: subColor, marginTop: 3, paddingLeft: 16 }}>{tr('ai_journal_sub')}</div>
                 </div>
-                <button onClick={runCoach} disabled={coachLoading} style={runBtn(runCoach, coachLoading, tr('ai_run'), tr('ai_running'))}>
+                <button onClick={runCoach} disabled={coachLoading} style={runBtnStyle(coachLoading)}>
                   {coachLoading ? tr('ai_running') : tr('ai_run')}
                 </button>
               </div>
 
               <div style={{ position: 'relative' }}>
-                {coachPro  && <ProGate dark={dark} />}
+                {coachPro  && <ProGate dark={dark} purple={PURPLE} blue={BLUE} />}
                 {coachError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{coachError}</div>}
                 {!coachData && !coachLoading && !coachError && !coachPro && <div style={{ padding: '40px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{tr('ai_empty_coach')}</div>}
                 {coachLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{tr('ai_loading_coach')}</div>}
@@ -368,13 +363,13 @@ export default function AIPage() {
                   </div>
                   <div style={{ fontSize: 12, color: subColor, marginTop: 3, paddingLeft: 16 }}>{tr('ai_psych_sub')}</div>
                 </div>
-                <button onClick={runPsych} disabled={psychLoading} style={runBtn(runPsych, psychLoading, tr('ai_run'), tr('ai_running'))}>
+                <button onClick={runPsych} disabled={psychLoading} style={runBtnStyle(psychLoading)}>
                   {psychLoading ? tr('ai_running') : tr('ai_run')}
                 </button>
               </div>
 
               <div style={{ position: 'relative' }}>
-                {psychPro  && <ProGate dark={dark} />}
+                {psychPro  && <ProGate dark={dark} purple={PURPLE} blue={BLUE} />}
                 {psychError && <div style={{ padding: '12px 16px', borderRadius: 12, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 16 }}>{psychError}</div>}
                 {!psychData && !psychLoading && !psychError && !psychPro && <div style={{ padding: '40px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{tr('ai_empty_psych')}</div>}
                 {psychLoading && <div style={{ padding: '40px 0', textAlign: 'center', color: subColor, fontSize: 13 }}>{tr('ai_loading_psych')}</div>}
@@ -439,7 +434,7 @@ export default function AIPage() {
               )}
             </div>
 
-            {chatPro && <ProGate dark={dark} />}
+            {chatPro && <ProGate dark={dark} purple={PURPLE} blue={BLUE} />}
 
             {!chatPro && (
               <>
@@ -506,7 +501,7 @@ export default function AIPage() {
                     style={{
                       flex: 1, padding: '12px 16px', borderRadius: 12,
                       border: `1px solid ${borderColor}`,
-                      background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)',
+                      background: dark ? DARK.inputBg : LIGHT.inputBg,
                       color: textColor, fontSize: 14, outline: 'none', fontFamily: FONT,
                       backdropFilter: 'blur(10px)',
                       boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
