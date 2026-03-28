@@ -64,7 +64,7 @@ export default function JournalPage() {
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [saved,        setSaved]        = useState(false)
-  const [history,      setHistory]      = useState<DailyNote[]>([])
+  const [history, setHistory] = useState<Pick<DailyNote, 'id' | 'date' | 'mood' | 'content'>[]>([])
   const [histLoading,  setHistLoading]  = useState(true)
 
   const loadNote = async (date: string) => {
