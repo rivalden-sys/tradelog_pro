@@ -1,5 +1,4 @@
 'use client'
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { lightTheme, darkTheme, type Theme } from '@/lib/design'
 
@@ -12,13 +11,23 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
 
   useEffect(() => {
     const saved = localStorage.getItem('tlp-dark')
-    if (saved === 'true') {
+    if (saved === null) {
+      // Перший візит — dark за замовчуванням
       setDark(true)
       document.documentElement.classList.add('dark')
+      localStorage.setItem('tlp-dark', 'true')
+    } else {
+      const isDark = saved === 'true'
+      setDark(isDark)
+      if (isDark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
     }
   }, [])
 
