@@ -6,7 +6,7 @@ const TRADE_COLUMNS = `
   profit_usd, profit_pct, tradingview_url, screenshot_url,
   comment, self_grade, trade_score, created_at,
   status, entry_price, stop_price, take_price, risk_usdt, risk_pct,
-  trade_type
+  trade_type, emotion
 `
 
 export async function getTrades(userId: string, filters?: {
@@ -65,13 +65,14 @@ export async function createTrade(userId: string, form: TradeFormData) {
       tradingview_url: form.tradingview_url || null,
       comment:         form.comment || null,
       self_grade:      form.self_grade || null,
-      status:          (form as any).status     || 'closed',
-      trade_type:      (form as any).trade_type || 'futures',
+      status:          (form as any).status      || 'closed',
+      trade_type:      (form as any).trade_type  || 'futures',
       entry_price:     (form as any).entry_price || null,
       stop_price:      (form as any).stop_price  || null,
       take_price:      (form as any).take_price  || null,
       risk_usdt:       (form as any).risk_usdt   || null,
       risk_pct:        (form as any).risk_pct    || null,
+      emotion:         (form as any).emotion     || null,
     })
     .select(TRADE_COLUMNS)
     .single()
@@ -101,6 +102,7 @@ export async function updateTrade(id: string, userId: string, form: Partial<Trad
   if ((form as any).take_price  !== undefined) updates.take_price  = (form as any).take_price
   if ((form as any).risk_usdt   !== undefined) updates.risk_usdt   = (form as any).risk_usdt
   if ((form as any).risk_pct    !== undefined) updates.risk_pct    = (form as any).risk_pct
+  if ((form as any).emotion     !== undefined) updates.emotion     = (form as any).emotion || null
 
   const { data, error } = await supabase
     .from('trades')
