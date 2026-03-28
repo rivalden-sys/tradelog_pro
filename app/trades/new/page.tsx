@@ -11,6 +11,15 @@ const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order
 const GRADES         = ['A', 'B', 'C', 'D']
 const FONT           = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
+const EMOTIONS = [
+  { value: 'calm',     emoji: '😌', label: 'Спокій',    color: '#30d158' },
+  { value: 'fear',     emoji: '😰', label: 'Страх',     color: '#0a84ff' },
+  { value: 'greed',    emoji: '🤑', label: 'Жадібність', color: '#ff9f0a' },
+  { value: 'anger',    emoji: '😤', label: 'Злість',     color: '#ff453a' },
+  { value: 'euphoria', emoji: '🚀', label: 'Ейфорія',   color: '#bf5af2' },
+  { value: 'revenge',  emoji: '😈', label: 'Revenge',   color: '#ff453a' },
+]
+
 function useDark() {
   const [dark, setDark] = useState(false)
   useEffect(() => {
@@ -84,6 +93,7 @@ export default function NewTradePage() {
   const [playbooks,          setPlaybooks]          = useState<any[]>([])
   const [selectedPlaybookId, setSelectedPlaybookId] = useState<string>('')
   const [ruleChecks,         setRuleChecks]         = useState<Record<string, boolean>>({})
+  const [emotion,            setEmotion]            = useState<string>('calm')
 
   const activePlaybook = playbooks.find(pb => pb.id === selectedPlaybookId) ?? playbooks[0] ?? null
 
@@ -191,6 +201,7 @@ export default function NewTradePage() {
       risk_pct:    parseFloat(form.risk_pct)    || null,
       risk_usdt:   parseFloat(form.risk_usdt)   || null,
       status:      mode, trade_type: tradeType,
+      emotion,
     }
     if (mode === 'planned') { payload.result = 'Тейк'; payload.profit_usd = 0; payload.profit_pct = 0 }
     const res  = await fetch('/api/trades', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -263,6 +274,8 @@ export default function NewTradePage() {
     fontSize: 14, fontWeight: current === val ? 700 : 500,
     cursor: 'pointer', fontFamily: FONT, transition: 'all 0.15s',
   })
+
+  const activeEmotion = EMOTIONS.find(e => e.value === emotion)
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
@@ -418,14 +431,8 @@ export default function NewTradePage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, marginBottom: 14 }}>📋 Playbook — чи дотримався правил?</div>
                 {playbooks.length > 1 && (
                   <div style={{ marginBottom: 12 }}>
-                    <select
-                      value={selectedPlaybookId}
-                      onChange={e => setSelectedPlaybookId(e.target.value)}
-                      style={{ ...inputStyle(), width: 'auto', minWidth: 220 }}
-                    >
-                      {playbooks.map(pb => (
-                        <option key={pb.id} value={pb.id}>{pb.setup_name}</option>
-                      ))}
+                    <select value={selectedPlaybookId} onChange={e => setSelectedPlaybookId(e.target.value)} style={{ ...inputStyle(), width: 'auto', minWidth: 220 }}>
+                      {playbooks.map(pb => <option key={pb.id} value={pb.id}>{pb.setup_name}</option>)}
                     </select>
                   </div>
                 )}
@@ -434,35 +441,19 @@ export default function NewTradePage() {
                     {activePlaybook.rules.map((rule: any, i: number) => {
                       const checked = ruleChecks[rule.id] ?? true
                       return (
-                        <div
-                          key={rule.id}
-                          onClick={() => setRuleChecks(prev => ({ ...prev, [rule.id]: !checked }))}
-                          style={{
-                            display: 'flex', alignItems: 'flex-start', gap: 10,
-                            padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                            background: checked
-                              ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)'
-                              : dark ? 'rgba(255,69,58,0.08)'  : 'rgba(255,69,58,0.06)',
-                            border: `1px solid ${checked ? GREEN + '44' : RED + '44'}`,
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          <div style={{
-                            width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                            border: `2px solid ${checked ? GREEN : RED}`,
-                            background: checked ? GREEN : 'transparent',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.15s',
-                          }}>
+                        <div key={rule.id} onClick={() => setRuleChecks(prev => ({ ...prev, [rule.id]: !checked }))} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 10,
+                          padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+                          background: checked ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)' : dark ? 'rgba(255,69,58,0.08)' : 'rgba(255,69,58,0.06)',
+                          border: `1px solid ${checked ? GREEN + '44' : RED + '44'}`,
+                          transition: 'all 0.15s',
+                        }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1, border: `2px solid ${checked ? GREEN : RED}`, background: checked ? GREEN : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
                             {checked && <span style={{ color: '#fff', fontSize: 11, fontWeight: 800 }}>✓</span>}
                           </div>
                           <div>
-                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>
-                              Правило {i + 1}
-                            </div>
-                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>
-                              {rule.text}
-                            </div>
+                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>Правило {i + 1}</div>
+                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>{rule.text}</div>
                           </div>
                         </div>
                       )
@@ -474,6 +465,40 @@ export default function NewTradePage() {
                 )}
               </div>
             )}
+
+            {/* Emotion tracking */}
+            <div style={glassSection(activeEmotion?.color)}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: activeEmotion?.color || subColor, marginBottom: 14 }}>
+                {activeEmotion?.emoji} Емоційний стан
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {EMOTIONS.map(em => (
+                  <button
+                    key={em.value}
+                    onClick={() => setEmotion(em.value)}
+                    style={{
+                      flex: 1, minWidth: 80,
+                      padding: '10px 8px', borderRadius: 12, border: 'none',
+                      background: emotion === em.value
+                        ? em.color + '22'
+                        : dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                      cursor: 'pointer', fontFamily: FONT,
+                      outline: emotion === em.value ? `2px solid ${em.color}` : `1px solid ${borderColor}`,
+                      transition: 'all 0.15s',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <span style={{ fontSize: 22 }}>{em.emoji}</span>
+                    <span style={{ fontSize: 11, color: emotion === em.value ? em.color : subColor, fontWeight: 600 }}>{em.label}</span>
+                  </button>
+                ))}
+              </div>
+              {(emotion === 'revenge' || emotion === 'euphoria' || emotion === 'anger') && (
+                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 10, background: RED + '12', border: `1px solid ${RED}33`, fontSize: 12, color: RED, fontWeight: 600 }}>
+                  ⚠️ {emotion === 'revenge' ? 'Revenge trade — подумай двічі перед входом' : emotion === 'euphoria' ? 'Ейфорія після прибутку — небезпечний стан' : 'Злість заважає об\'єктивному аналізу'}
+                </div>
+              )}
+            </div>
 
             {/* Closed fields */}
             {mode === 'closed' && (
