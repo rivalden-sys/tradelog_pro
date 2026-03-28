@@ -42,6 +42,7 @@ export default function NavBar() {
     { href: '/dashboard', label: t('nav_dashboard') },
     { href: '/trades',    label: t('nav_journal')   },
     { href: '/playbook',  label: '📋 Playbook'       },
+    { href: '/journal',   label: '📓 Journal'         },
     { href: '/ai',        label: t('nav_ai')         },
     { href: '/analytics', label: t('nav_analytics')  },
     { href: '/settings',  label: t('nav_settings')   },
