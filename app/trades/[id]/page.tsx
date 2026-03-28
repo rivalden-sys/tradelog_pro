@@ -83,7 +83,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const { t, locale } = useLocale()
   const router = useRouter()
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
@@ -134,6 +133,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [closeSaving,    setCloseSaving]    = useState(false)
   const [closeError,     setCloseError]     = useState('')
   const [tradeId,        setTradeId]        = useState<string>('')
+  const [ruleChecks,     setRuleChecks]     = useState<any[]>([])
+  const [playbook,       setPlaybook]       = useState<any>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -145,6 +146,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       setTrade(json.data)
       setCommentValue(json.data.comment || '')
       const supabase = createClient()
+
+      // AI sessions
       const { data: sessions } = await supabase
         .from('ai_sessions').select('*').eq('trade_id', id)
         .in('type', ['trade_review', 'trade_score'])
@@ -157,6 +160,22 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         if (reviews.length > 0) { try { setAiData(JSON.parse(reviews[0].response)) } catch {} }
         if (scores.length > 0)  { try { setScoreData(JSON.parse(scores[0].response)) } catch {} }
       }
+
+      // Rule checks
+      const { data: checks } = await supabase
+        .from('trade_rule_checks')
+        .select('*')
+        .eq('trade_id', id)
+      if (checks?.length) {
+        setRuleChecks(checks)
+        const { data: pb } = await supabase
+          .from('playbooks')
+          .select('*')
+          .eq('id', checks[0].playbook_id)
+          .single()
+        if (pb) setPlaybook(pb)
+      }
+
       setLoading(false)
     }
     load()
@@ -291,6 +310,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   )
 
   const isPlanned = (trade as any).status === 'planned'
+  const followedCount = ruleChecks.filter(c => c.followed).length
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
@@ -437,6 +457,62 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               </div>
+
+              {/* Playbook rule checks */}
+              {playbook && ruleChecks.length > 0 && (
+                <div style={glassCard(PURPLE)}>
+                  {glare}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, position: 'relative' }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>📋 Playbook</div>
+                      <div style={{ fontSize: 12, color: subColor, marginTop: 2 }}>{playbook.setup_name}</div>
+                    </div>
+                    <div style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                      background: followedCount === ruleChecks.length ? GREEN + '22' : followedCount === 0 ? RED + '22' : ORANGE + '22',
+                      color: followedCount === ruleChecks.length ? GREEN : followedCount === 0 ? RED : ORANGE,
+                    }}>
+                      {followedCount}/{ruleChecks.length} правил
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+                    {playbook.rules.map((rule: any, i: number) => {
+                      const check = ruleChecks.find(c => c.rule_id === rule.id)
+                      const followed = check?.followed ?? false
+                      return (
+                        <div key={rule.id} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 10,
+                          padding: '10px 12px', borderRadius: 10,
+                          background: followed
+                            ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)'
+                            : dark ? 'rgba(255,69,58,0.08)'  : 'rgba(255,69,58,0.06)',
+                          border: `1px solid ${followed ? GREEN + '44' : RED + '44'}`,
+                        }}>
+                          <div style={{
+                            width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                            border: `2px solid ${followed ? GREEN : RED}`,
+                            background: followed ? GREEN : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {followed
+                              ? <span style={{ color: '#fff', fontSize: 11, fontWeight: 800 }}>✓</span>
+                              : <span style={{ color: RED, fontSize: 11, fontWeight: 800 }}>✕</span>
+                            }
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>
+                              Правило {i + 1}
+                            </div>
+                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>
+                              {rule.text}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Comment */}
               <div style={glassCard()}>
