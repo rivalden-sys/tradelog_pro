@@ -24,6 +24,7 @@ const TradeSchema = z.object({
   take_price:      z.number().optional().nullable(),
   risk_usdt:       z.number().optional().nullable(),
   risk_pct:        z.number().optional().nullable(),
+  emotion:         z.enum(['calm', 'fear', 'greed', 'anger', 'euphoria', 'revenge']).optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
