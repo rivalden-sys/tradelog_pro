@@ -55,16 +55,16 @@ const initialForm = {
 }
 
 export default function NewTradePage() {
-  const dark  = useDark()
-  const { t } = useLocale()
+  const dark   = useDark()
+  const { t }  = useLocale()
   const router = useRouter()
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const ORANGE = dark ? DARK.orange : LIGHT.orange
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
   const GRAY   = dark ? DARK.gray   : LIGHT.gray
+  const PURPLE = dark ? DARK.purple : LIGHT.purple
 
   const textColor   = dark ? DARK.text   : LIGHT.text
   const subColor    = dark ? DARK.sub    : LIGHT.sub
@@ -72,15 +72,20 @@ export default function NewTradePage() {
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
-  const [saving,    setSaving]    = useState(false)
-  const [errors,    setErrors]    = useState<FormErrors>({})
-  const [form,      setForm]      = useState(initialForm)
-  const [mode,      setMode]      = useState<'planned' | 'closed'>('planned')
-  const [riskMode,  setRiskMode]  = useState<'pct' | 'usdt'>('pct')
-  const [tradeType, setTradeType] = useState<'futures' | 'spot'>('futures')
-  const [balance,   setBalance]   = useState<number>(0)
-  const [setups,    setSetups]    = useState<string[]>(SETUPS_DEFAULT)
-  const [pairs,     setPairs]     = useState<string[]>([])
+  const [saving,             setSaving]             = useState(false)
+  const [errors,             setErrors]             = useState<FormErrors>({})
+  const [form,               setForm]               = useState(initialForm)
+  const [mode,               setMode]               = useState<'planned' | 'closed'>('planned')
+  const [riskMode,           setRiskMode]           = useState<'pct' | 'usdt'>('pct')
+  const [tradeType,          setTradeType]          = useState<'futures' | 'spot'>('futures')
+  const [balance,            setBalance]            = useState<number>(0)
+  const [setups,             setSetups]             = useState<string[]>(SETUPS_DEFAULT)
+  const [pairs,              setPairs]              = useState<string[]>([])
+  const [playbooks,          setPlaybooks]          = useState<any[]>([])
+  const [selectedPlaybookId, setSelectedPlaybookId] = useState<string>('')
+  const [ruleChecks,         setRuleChecks]         = useState<Record<string, boolean>>({})
+
+  const activePlaybook = playbooks.find(pb => pb.id === selectedPlaybookId) ?? playbooks[0] ?? null
 
   useEffect(() => {
     const load = async () => {
@@ -96,6 +101,14 @@ export default function NewTradePage() {
         const unique = [...new Set(setupsData.map((t: any) => t.setup).filter(Boolean))] as string[]
         if (unique.length) setSetups([...new Set([...unique, ...SETUPS_DEFAULT])])
       }
+      const { data: pbData } = await supabase.from('playbooks').select('*').order('created_at', { ascending: false })
+      if (pbData?.length) {
+        setPlaybooks(pbData)
+        setSelectedPlaybookId(pbData[0].id)
+        const checks: Record<string, boolean> = {}
+        pbData[0].rules.forEach((r: any) => { checks[r.id] = true })
+        setRuleChecks(checks)
+      }
     }
     load()
   }, [])
@@ -103,6 +116,15 @@ export default function NewTradePage() {
   useEffect(() => {
     if (tradeType === 'spot') setForm(f => ({ ...f, direction: 'Long' }))
   }, [tradeType])
+
+  useEffect(() => {
+    const pb = playbooks.find(p => p.id === selectedPlaybookId)
+    if (pb) {
+      const checks: Record<string, boolean> = {}
+      pb.rules.forEach((r: any) => { checks[r.id] = true })
+      setRuleChecks(checks)
+    }
+  }, [selectedPlaybookId])
 
   const riskHint = (() => {
     if (riskMode !== 'pct' || balance <= 0) return null
@@ -173,7 +195,19 @@ export default function NewTradePage() {
     if (mode === 'planned') { payload.result = 'Тейк'; payload.profit_usd = 0; payload.profit_pct = 0 }
     const res  = await fetch('/api/trades', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const json = await res.json()
-    if (json.success) router.push('/trades')
+    if (json.success) {
+      if (activePlaybook && json.data?.id) {
+        const supabase = createClient()
+        const checks = activePlaybook.rules.map((r: any) => ({
+          trade_id:    json.data.id,
+          playbook_id: activePlaybook.id,
+          rule_id:     r.id,
+          followed:    ruleChecks[r.id] ?? true,
+        }))
+        await supabase.from('trade_rule_checks').insert(checks)
+      }
+      router.push('/trades')
+    }
     else if (json.code === 'FREE_LIMIT_REACHED') router.push('/billing')
     else { setErrors({ pair: json.error || t('new_trade_error_required') }); setSaving(false) }
   }
@@ -377,6 +411,69 @@ export default function NewTradePage() {
                 </div>
               )}
             </div>
+
+            {/* Playbook */}
+            {playbooks.length > 0 && (
+              <div style={glassSection(PURPLE)}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, marginBottom: 14 }}>📋 Playbook — чи дотримався правил?</div>
+                {playbooks.length > 1 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <select
+                      value={selectedPlaybookId}
+                      onChange={e => setSelectedPlaybookId(e.target.value)}
+                      style={{ ...inputStyle(), width: 'auto', minWidth: 220 }}
+                    >
+                      {playbooks.map(pb => (
+                        <option key={pb.id} value={pb.id}>{pb.setup_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {activePlaybook && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {activePlaybook.rules.map((rule: any, i: number) => {
+                      const checked = ruleChecks[rule.id] ?? true
+                      return (
+                        <div
+                          key={rule.id}
+                          onClick={() => setRuleChecks(prev => ({ ...prev, [rule.id]: !checked }))}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 10,
+                            padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+                            background: checked
+                              ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)'
+                              : dark ? 'rgba(255,69,58,0.08)'  : 'rgba(255,69,58,0.06)',
+                            border: `1px solid ${checked ? GREEN + '44' : RED + '44'}`,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <div style={{
+                            width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                            border: `2px solid ${checked ? GREEN : RED}`,
+                            background: checked ? GREEN : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                          }}>
+                            {checked && <span style={{ color: '#fff', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>
+                              Правило {i + 1}
+                            </div>
+                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>
+                              {rule.text}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div style={{ fontSize: 12, color: subColor, marginTop: 4 }}>
+                      ✓ {Object.values(ruleChecks).filter(Boolean).length} / {activePlaybook.rules.length} правил дотримано
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Closed fields */}
             {mode === 'closed' && (
