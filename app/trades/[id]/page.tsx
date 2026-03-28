@@ -430,6 +430,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                     { label: t('trade_detail_pair'),      value: trade.pair },
                     { label: t('trade_detail_setup'),     value: trade.setup },
                     { label: t('trade_detail_direction'), value: trade.direction, color: trade.direction === 'Long' ? GREEN : RED },
+                    ...((trade as any).emotion ? [{ label: '🧠 Емоція', value: (() => { const em: Record<string,string> = { calm: '😌 Спокій', fear: '😰 Страх', greed: '🤑 Жадібність', anger: '😤 Злість', euphoria: '🚀 Ейфорія', revenge: '😈 Revenge' }; return em[(trade as any).emotion] || (trade as any).emotion })(), color: (() => { const c: Record<string,string> = { calm: GREEN, fear: BLUE, greed: ORANGE, anger: RED, euphoria: PURPLE, revenge: RED }; return c[(trade as any).emotion] || subColor })() }] : []),
                     ...(!isPlanned ? [
                       { label: t('trade_detail_result'),  value: trade.result, color: resultColor(trade.result) },
                       { label: t('trade_detail_rr'),      value: String(trade.rr) },
