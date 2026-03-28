@@ -21,6 +21,7 @@ const UpdateSchema = z.object({
   take_price:      z.number().optional(),
   risk_usdt:       z.number().optional(),
   risk_pct:        z.number().optional(),
+  emotion:         z.enum(['calm', 'fear', 'greed', 'anger', 'euphoria', 'revenge']).optional().nullable(),
 })
 
 type Params = Promise<{ id: string }>
