@@ -23,11 +23,10 @@ function useDark() {
 }
 
 export default function SettingsPage() {
-  const dark = useDark()
-  const { t: tr } = useLocale()
-  const router = useRouter()
+  const dark        = useDark()
+  const { t: tr }   = useLocale()
+  const router      = useRouter()
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
@@ -92,9 +91,9 @@ export default function SettingsPage() {
 
   const savePassword = async () => {
     setPwError('')
-    if (!newPassword.trim())          { setPwError('Введіть новий пароль'); return }
-    if (newPassword.length < 6)       { setPwError('Мінімум 6 символів'); return }
-    if (newPassword !== newPassword2) { setPwError('Паролі не співпадають'); return }
+    if (!newPassword.trim())          { setPwError(tr('settings_pw_enter')); return }
+    if (newPassword.length < 6)       { setPwError(tr('settings_pw_min')); return }
+    if (newPassword !== newPassword2) { setPwError(tr('settings_pw_mismatch')); return }
     setPwSaving(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: newPassword })
@@ -136,9 +135,8 @@ export default function SettingsPage() {
     return {
       background: isSaving
         ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-        : isSaved
-          ? dark ? DARK.green : BTN.green
-          : dark ? bgMap[color].dark : bgMap[color].light,
+        : isSaved ? dark ? DARK.green : BTN.green
+        : dark ? bgMap[color].dark : bgMap[color].light,
       color: isSaving ? subColor : '#fff',
       border: 'none', borderRadius: 12, padding: '12px',
       fontSize: 14, fontWeight: 700,
@@ -190,7 +188,7 @@ export default function SettingsPage() {
             <div style={{ fontSize: 13, color: subColor, marginTop: 2 }}>{tr('settings_subtitle')}</div>
           </div>
 
-          {/* Профіль */}
+          {/* Profile */}
           <div style={glassCard()}>
             {glare}
             <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative' }}>{tr('settings_profile')}</div>
@@ -209,19 +207,19 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Депозит */}
+          {/* Deposit */}
           <div style={glassCard(ORANGE)}>
             {glare}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, position: 'relative' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>💰 Депозит</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>{tr('settings_deposit_title')}</div>
               <span style={{ background: dark ? DARK.orange + '22' : LIGHT.orangeBg, color: ORANGE, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
             </div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>
-              Вкажіть поточний баланс депозиту. Використовується для розрахунку ризику при плануванні угод.
+              {tr('settings_deposit_sub')}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end', position: 'relative' }}>
               <div>
-                <label style={labelStyle}>Баланс депозиту (USDT)</label>
+                <label style={labelStyle}>{tr('settings_deposit_label')}</label>
                 <div style={{ position: 'relative' }}>
                   <input type="number" step="1" min="0" placeholder="10000" value={balance} onChange={e => setBalance(e.target.value)} style={{ ...inputStyle, paddingRight: 60 }} />
                   <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 600, color: subColor }}>USDT</span>
@@ -231,18 +229,14 @@ export default function SettingsPage() {
                 ...glossyBtn('orange', balanceSaved ? 'saved' : balanceSaving ? 'saving' : 'normal'),
                 padding: '10px 20px', whiteSpace: 'nowrap',
               }}>
-                {balanceSaved ? '✓ Збережено' : balanceSaving ? '...' : 'Зберегти'}
+                {balanceSaved ? tr('settings_deposit_saved') : balanceSaving ? tr('settings_deposit_saving') : tr('settings_deposit_save')}
               </button>
             </div>
             {balance && !isNaN(parseFloat(balance)) && (
               <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap', position: 'relative' }}>
                 {[1, 2, 3].map(pct => (
-                  <div key={pct} style={{
-                    background: dark ? DARK.inputBg : LIGHT.inputBg,
-                    borderRadius: 10, padding: '8px 14px', fontSize: 12,
-                    border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
-                  }}>
-                    <span style={{ color: subColor }}>{pct}% ризику = </span>
+                  <div key={pct} style={{ background: dark ? DARK.inputBg : LIGHT.inputBg, borderRadius: 10, padding: '8px 14px', fontSize: 12, border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}` }}>
+                    <span style={{ color: subColor }}>{pct}% = </span>
                     <span style={{ fontWeight: 700, color: ORANGE }}>{(parseFloat(balance) * pct / 100).toFixed(2)} USDT</span>
                   </div>
                 ))}
@@ -250,14 +244,14 @@ export default function SettingsPage() {
             )}
           </div>
 
-          {/* Зміна пароля */}
+          {/* Change Password */}
           <div style={glassCard(BLUE)}>
             {glare}
-            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>🔑 Змінити пароль</div>
-            <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>Введіть новий пароль для вашого акаунту.</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>{tr('settings_pw_title')}</div>
+            <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>{tr('settings_pw_sub')}</div>
             {pwSaved && (
               <div style={{ background: dark ? `${DARK.green}18` : LIGHT.greenBg, border: `1px solid ${GREEN}33`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: GREEN, fontWeight: 600, position: 'relative' }}>
-                ✓ Пароль успішно змінено!
+                {tr('settings_pw_saved')}
               </div>
             )}
             {pwError && (
@@ -267,25 +261,25 @@ export default function SettingsPage() {
             )}
             <div style={{ display: 'grid', gap: 16, position: 'relative' }}>
               <div>
-                <label style={labelStyle}>Новий пароль</label>
+                <label style={labelStyle}>{tr('settings_pw_new')}</label>
                 <input type="password" value={newPassword} onChange={e => { setNewPassword(e.target.value); setPwError('') }} placeholder="••••••••" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Підтвердіть пароль</label>
+                <label style={labelStyle}>{tr('settings_pw_confirm')}</label>
                 <input type="password" value={newPassword2} onChange={e => { setNewPassword2(e.target.value); setPwError('') }} placeholder="••••••••"
                   onKeyDown={e => e.key === 'Enter' && savePassword()}
                   style={{ ...inputStyle, border: `1px solid ${newPassword2 && newPassword !== newPassword2 ? RED + '66' : dark ? DARK.border : 'rgba(0,0,0,0.1)'}` }} />
                 {newPassword2 && newPassword !== newPassword2 && (
-                  <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>Паролі не співпадають</div>
+                  <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>{tr('settings_pw_mismatch')}</div>
                 )}
               </div>
               <button onClick={savePassword} disabled={pwSaving} style={glossyBtn('blue', pwSaved ? 'saved' : pwSaving ? 'saving' : 'normal')}>
-                {pwSaved ? '✓ Збережено' : pwSaving ? 'Збереження...' : 'Змінити пароль'}
+                {pwSaved ? tr('settings_saved') : pwSaving ? tr('settings_pw_saving') : tr('settings_pw_btn')}
               </button>
             </div>
           </div>
 
-          {/* Ризик-менеджмент */}
+          {/* Risk Management */}
           <div style={glassCard()}>
             {glare}
             <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>{tr('settings_risk')}</div>
@@ -309,7 +303,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Акаунт */}
+          {/* Account */}
           <div style={glassCard()}>
             {glare}
             <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 6, position: 'relative' }}>{tr('settings_account')}</div>
@@ -338,30 +332,15 @@ export default function SettingsPage() {
             <div style={{ fontSize: 13, color: subColor, marginBottom: 16, position: 'relative' }}>{tr('settings_danger_sub')}</div>
             {!deleteConfirm ? (
               <button onClick={() => setDeleteConfirm(true)} style={{
-                background: dark ? `${DARK.red}15` : LIGHT.redBg,
-                color: RED,
-                border: `1px solid ${RED}44`,
-                borderRadius: 12, padding: '10px 20px',
-                fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: FONT, position: 'relative',
+                background: dark ? `${DARK.red}15` : LIGHT.redBg, color: RED,
+                border: `1px solid ${RED}44`, borderRadius: 12, padding: '10px 20px',
+                fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, position: 'relative',
               }}>{tr('settings_logout')}</button>
             ) : (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
                 <span style={{ fontSize: 13, color: subColor }}>{tr('settings_confirm')}</span>
-                <button onClick={handleLogout} style={{
-                  background: dark ? DARK.red : BTN.red,
-                  color: '#fff', border: 'none', borderRadius: 10,
-                  padding: '8px 16px', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: FONT,
-                  boxShadow: BTN.shadow,
-                }}>{tr('settings_yes')}</button>
-                <button onClick={() => setDeleteConfirm(false)} style={{
-                  background: dark ? DARK.inputBg : LIGHT.inputBg,
-                  color: textColor,
-                  border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`,
-                  borderRadius: 10, padding: '8px 16px',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
-                }}>{tr('settings_cancel')}</button>
+                <button onClick={handleLogout} style={{ background: dark ? DARK.red : BTN.red, color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT, boxShadow: BTN.shadow }}>{tr('settings_yes')}</button>
+                <button onClick={() => setDeleteConfirm(false)} style={{ background: dark ? DARK.inputBg : LIGHT.inputBg, color: textColor, border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.1)'}`, borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}>{tr('settings_cancel')}</button>
               </div>
             )}
           </div>
