@@ -10,6 +10,16 @@ import { DARK, LIGHT } from '@/lib/colors'
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
+const EMOTIONS = [
+  { value: 'calm',     emoji: '😌', label_uk: 'Спокій',   label_en: 'Calm'     },
+  { value: 'fear',     emoji: '😰', label_uk: 'Страх',    label_en: 'Fear'     },
+  { value: 'greed',    emoji: '🤑', label_uk: 'Жадібність', label_en: 'Greed'  },
+  { value: 'anger',    emoji: '😤', label_uk: 'Злість',   label_en: 'Anger'    },
+  { value: 'euphoria', emoji: '🚀', label_uk: 'Ейфорія',  label_en: 'Euphoria' },
+  { value: 'revenge',  emoji: '💀', label_uk: 'Revenge',  label_en: 'Revenge'  },
+]
+const DANGER_EMOTIONS = ['fear', 'greed', 'anger', 'euphoria', 'revenge']
+
 function useDark() {
   const [dark, setDark] = useState(false)
   useEffect(() => {
@@ -28,7 +38,6 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   const { t } = useLocale()
   const router = useRouter()
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const ORANGE = dark ? DARK.orange : LIGHT.orange
@@ -48,15 +57,19 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
   const [balance,  setBalance]  = useState<number>(0)
   const [setups,   setSetups]   = useState<string[]>(SETUPS_DEFAULT)
   const [riskMode, setRiskMode] = useState<'pct' | 'usdt'>('pct')
+  const [locale,   setLocale]   = useState('uk')
 
   const [form, setForm] = useState({
     date: '', pair: '', setup: '', direction: 'Long', result: 'Тейк',
     rr: '', profit_usd: '', profit_pct: '', self_grade: 'A',
     comment: '', tradingview_url: '', entry_price: '', stop_price: '',
     take_price: '', risk_pct: '', risk_usdt: '', status: 'closed',
+    emotion: '' as string,
   })
 
   useEffect(() => {
+    const loc = localStorage.getItem('tlp-locale') || 'uk'
+    setLocale(loc)
     const load = async () => {
       const supabase = createClient()
       const { id } = await params
@@ -83,6 +96,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
         risk_pct:        String(d.risk_pct    ?? ''),
         risk_usdt:       String(d.risk_usdt   ?? ''),
         status:          d.status          || 'closed',
+        emotion:         d.emotion         || '',
       })
       if (d.risk_usdt && !d.risk_pct) setRiskMode('usdt')
       const { data: { user } } = await supabase.auth.getUser()
@@ -152,6 +166,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
         risk_pct:    parseFloat(form.risk_pct)    || null,
         risk_usdt:   parseFloat(form.risk_usdt)   || null,
         status: form.status,
+        emotion: form.emotion || null,
       }),
     })
     const json = await res.json()
@@ -202,6 +217,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
 
   const isPlanned = form.status === 'planned'
   const calcReady = form.entry_price && form.stop_price && form.take_price
+  const isDanger  = form.emotion && DANGER_EMOTIONS.includes(form.emotion)
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
@@ -324,6 +340,37 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
                   {riskMode === 'pct' && form.risk_pct && balance > 0 && (
                     <div style={{ fontSize: 12, fontWeight: 700, color: BLUE }}>Ризик: {(balance * parseFloat(form.risk_pct) / 100).toFixed(2)} USDT</div>
                   )}
+                </div>
+              )}
+            </div>
+
+            {/* Emotion picker */}
+            <div>
+              <label style={labelStyle}>{locale === 'uk' ? 'Емоційний стан' : 'Emotional State'}</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {EMOTIONS.map(em => {
+                  const active = form.emotion === em.value
+                  return (
+                    <button
+                      key={em.value}
+                      onClick={() => set('emotion', active ? '' : em.value)}
+                      style={{
+                        padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
+                        fontFamily: FONT, fontSize: 13, fontWeight: active ? 700 : 500,
+                        border: `1px solid ${active ? ORANGE : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                        background: active ? ORANGE + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                        color: active ? ORANGE : subColor,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {em.emoji} {locale === 'uk' ? em.label_uk : em.label_en}
+                    </button>
+                  )
+                })}
+              </div>
+              {isDanger && (
+                <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: ORANGE + '15', border: `1px solid ${ORANGE}33`, fontSize: 12, color: ORANGE, fontWeight: 600 }}>
+                  ⚠️ {locale === 'uk' ? 'Небезпечний емоційний стан. Переконайся що рішення прийнято по плану.' : 'Dangerous emotional state. Make sure your decision follows the plan.'}
                 </div>
               )}
             </div>
