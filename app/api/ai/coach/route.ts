@@ -42,32 +42,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No trades to analyze', code: 'NO_DATA' }, { status: 400 })
     }
 
-    // Playbook compliance статистика
+    // Playbook compliance — всі перевірки юзера
     const { data: ruleChecks } = await supabase
       .from('trade_rule_checks')
-      .select('followed, trade_id')
-      .in('trade_id', trades.map(t => t.trade_id).filter(Boolean))
+      .select('followed, trade_id, playbook_id')
 
-    const totalChecks   = ruleChecks?.length || 0
-    const followedChecks = ruleChecks?.filter(r => r.followed).length || 0
+    const totalChecks    = ruleChecks?.length || 0
+    const followedChecks = ruleChecks?.filter((r: any) => r.followed).length || 0
     const playbookCompliance = totalChecks > 0 ? Math.round((followedChecks / totalChecks) * 100) : null
-
-    // Playbook wins vs violations
-    const { data: tradeRuleData } = await supabase
-      .from('trade_rule_checks')
-      .select('trade_id, followed')
-
-    const tradeCompliance: Record<string, boolean> = {}
-    if (tradeRuleData?.length) {
-      const grouped: Record<string, boolean[]> = {}
-      tradeRuleData.forEach(r => {
-        if (!grouped[r.trade_id]) grouped[r.trade_id] = []
-        grouped[r.trade_id].push(r.followed)
-      })
-      Object.entries(grouped).forEach(([tid, checks]) => {
-        tradeCompliance[tid] = checks.every(c => c)
-      })
-    }
 
     // Emotion статистика
     const emotionStats: Record<string, { total: number; wins: number }> = {}
