@@ -148,12 +148,6 @@ export default function AIPage() {
       if (!user) return
       const { data: sessions } = await supabase.from('ai_sessions').select('*').eq('user_id', user.id).in('type', ['coach', 'psychology']).order('created_at', { ascending: false }).limit(20)
       setHistory(sessions || [])
-      const { data: chatSessions } = await supabase.from('ai_sessions').select('prompt, response, created_at').eq('user_id', user.id).eq('type', 'chat').order('created_at', { ascending: true }).limit(20)
-      if (chatSessions?.length) {
-        const msgs: ChatMessage[] = []
-        chatSessions.forEach(s => { msgs.push({ role: 'user', content: s.prompt }); msgs.push({ role: 'assistant', content: s.response }) })
-        setChatMessages(msgs)
-      }
     }
     load()
   }, [coachData, psychData])
