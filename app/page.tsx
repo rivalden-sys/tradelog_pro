@@ -29,36 +29,66 @@ function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   )
 }
 
-function GlassCard({ children, accent, style }: { children: React.ReactNode; accent?: string; style?: React.CSSProperties }) {
+function Glass({ children, accent, style, hover }: { children: React.ReactNode; accent?: string; style?: React.CSSProperties; hover?: boolean }) {
+  const [hovered, setHovered] = useState(false)
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.03)',
-      backdropFilter: 'blur(24px)',
-      WebkitBackdropFilter: 'blur(24px)',
-      border: `1px solid ${accent ? accent + '33' : 'rgba(255,255,255,0.08)'}`,
-      borderRadius: 24,
-      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(255,255,255,0.02)`,
-      position: 'relative',
-      overflow: 'hidden',
-      ...style,
-    }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)', borderRadius: '24px 24px 0 0', pointerEvents: 'none' }} />
+    <div
+      onMouseEnter={() => hover && setHovered(true)}
+      onMouseLeave={() => hover && setHovered(false)}
+      style={{
+        background: hovered
+          ? 'rgba(255,255,255,0.07)'
+          : 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: `1px solid ${accent ? accent + '40' : hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.1)'}`,
+        borderRadius: 28,
+        boxShadow: accent
+          ? `inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), 0 0 80px ${accent}15`
+          : `inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)`,
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease',
+        ...style,
+      }}
+    >
+      {/* Top glare */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '45%', background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%)', borderRadius: '28px 28px 0 0', pointerEvents: 'none', zIndex: 0 }} />
+      {/* Bottom gradient */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 100%)', pointerEvents: 'none', zIndex: 0 }} />
       {children}
     </div>
   )
 }
 
+function Pill({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: `${color}18`, border: `1px solid ${color}35`, borderRadius: 100, padding: '6px 16px', marginBottom: 20 }}>
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}` }} />
+      <span style={{ fontSize: 12, color, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{children}</span>
+    </div>
+  )
+}
+
+function GradientText({ children, from, to, style }: { children: React.ReactNode; from?: string; to?: string; style?: React.CSSProperties }) {
+  return (
+    <span style={{
+      background: `linear-gradient(135deg, ${from || '#fff'} 0%, ${to || 'rgba(255,255,255,0.55)'} 100%)`,
+      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      ...style,
+    }}>{children}</span>
+  )
+}
+
 export default function Landing() {
-  const [scrolled,  setScrolled]  = useState(false)
-  const [isMobile,  setIsMobile]  = useState(false)
-  const [openFaq,   setOpenFaq]   = useState<number | null>(null)
+  const [scrolled,   setScrolled]   = useState(false)
+  const [isMobile,   setIsMobile]   = useState(false)
+  const [openFaq,    setOpenFaq]    = useState<number | null>(null)
   const [showSticky, setShowSticky] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 40)
-      setShowSticky(window.scrollY > 600)
-    }
+    const onScroll = () => { setScrolled(window.scrollY > 40); setShowSticky(window.scrollY > 600) }
     const checkMobile = () => setIsMobile(window.innerWidth <= 768)
     checkMobile(); onScroll()
     window.addEventListener('scroll', onScroll)
@@ -66,389 +96,491 @@ export default function Landing() {
     return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', checkMobile) }
   }, [])
 
-  const faqs = [
-    { q: 'Is my trading data safe?',          a: 'Yes. All data is stored securely in Supabase with Row Level Security — only you can access your trades.' },
-    { q: 'Is there a mobile version?',         a: 'TradeLog Pro is fully responsive and works great on any device — phone, tablet, or desktop.' },
-    { q: 'Can I cancel my subscription?',      a: 'Absolutely. Cancel anytime from your billing settings — no questions asked, no hidden fees.' },
-    { q: 'What markets does it support?',      a: 'Futures and Spot trading. Long and Short positions. Any trading pair — crypto, forex, stocks.' },
-    { q: 'How does the AI know my patterns?',  a: 'AI reads your actual trade history — setup, result, comment, grade — and finds patterns specific to your trading.' },
-    { q: 'Can I try it before paying?',        a: 'Yes! The Free plan includes up to 20 trades with basic analytics. No credit card required.' },
-  ]
-
-  const testimonials = [
-    { name: 'Alex M.',  role: 'Crypto Futures Trader', text: 'After 2 weeks with TradeLog AI Coach I realized I was overtrading on weekends. Win rate jumped from 44% to 61%.', avatar: 'AM', color: BLUE   },
-    { name: 'Sarah K.', role: 'Swing Trader',           text: 'The Psychology Analysis is scary accurate. It caught my revenge trading pattern before I even noticed it myself.', avatar: 'SK', color: PURPLE },
-    { name: 'Denis N.', role: 'Day Trader',             text: 'Trade Score saved me from 3 bad entries last week. The AI literally told me my CHoCH setup has 38% win rate on Mondays.', avatar: 'DN', color: GREEN  },
-    { name: 'Maria T.', role: 'Spot Trader',            text: 'Finally a journal that works for spot too. Clean design, fast, and the AI chat answers questions about MY data.', avatar: 'MT', color: ORANGE },
-  ]
-
   const px = isMobile ? '16px' : '48px'
-  const sectionPb = isMobile ? '80px' : '120px'
+  const pb = isMobile ? '80px' : '120px'
+
+  const faqs = [
+    { q: 'Is my trading data safe?',         a: 'Yes. All data is stored securely in Supabase with Row Level Security — only you can access your trades.' },
+    { q: 'Is there a mobile version?',        a: 'TradeLog Pro is fully responsive and works great on any device — phone, tablet, or desktop.' },
+    { q: 'Can I cancel my subscription?',     a: 'Absolutely. Cancel anytime from your billing settings — no questions asked, no hidden fees.' },
+    { q: 'What markets does it support?',     a: 'Futures and Spot trading. Long and Short positions. Any trading pair — crypto, forex, stocks.' },
+    { q: 'How does the AI know my patterns?', a: 'AI reads your actual trade history — setup, result, emotion, playbook compliance, journal mood — and finds patterns specific to your trading.' },
+    { q: 'Can I try it before paying?',       a: 'Yes! The Free plan includes up to 20 trades with basic analytics. No credit card required.' },
+    { q: 'What is CSV Import?',               a: 'Upload your trades directly from Bybit, Binance, OKX, Bitget, MEXC and more. Trades are parsed and added automatically — no manual entry needed.' },
+  ]
 
   return (
-    <main style={{ background: '#080808', minHeight: '100vh', color: '#fff', fontFamily: FONT, overflowX: 'hidden' }}>
+    <main style={{ background: '#060608', minHeight: '100vh', color: '#fff', fontFamily: FONT, overflowX: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
+        ::selection { background: ${GREEN}44; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes glow  { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      {/* STICKY CTA — mobile only */}
+      {/* Ambient background orbs */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-10%', left: '20%', width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}12 0%, transparent 65%)`, animation: 'glow 6s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', top: '30%', right: '-10%', width: 600, height: 600, borderRadius: '50%', background: `radial-gradient(circle, ${BLUE}0e 0%, transparent 65%)`, animation: 'glow 8s ease-in-out infinite 2s' }} />
+        <div style={{ position: 'absolute', bottom: '10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(circle, ${PURPLE}0a 0%, transparent 65%)`, animation: 'glow 10s ease-in-out infinite 4s' }} />
+      </div>
+
+      {/* Sticky mobile CTA */}
       {isMobile && showSticky && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-          padding: '12px 16px 20px',
-          background: 'rgba(8,8,8,0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
-        }}>
-          <Link href="/register" style={{
-            display: 'block', textAlign: 'center',
-            padding: '15px', borderRadius: 14,
-            background: GREEN, color: '#000',
-            textDecoration: 'none', fontSize: 16, fontWeight: 800,
-            boxShadow: `0 0 30px ${GREEN}4d`,
-          }}>
-            Start for free — it's free →
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, padding: '12px 16px 24px', background: 'rgba(6,6,8,0.94)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 -16px 48px rgba(0,0,0,0.5)' }}>
+          <Link href="/register" style={{ display: 'block', textAlign: 'center', padding: '15px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 16, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}55` }}>
+            Start for free →
           </Link>
         </div>
       )}
 
       {/* NAV */}
-      <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: isMobile ? '0 16px' : '0 24px', height: 60,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: scrolled ? 'rgba(8,8,8,0.85)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none',
-        transition: 'all 0.4s ease',
-      }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(6,6,8,0.88)' : 'transparent', backdropFilter: scrolled ? 'blur(32px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : 'none', transition: 'all 0.4s ease' }}>
         <Logo size={isMobile ? 'sm' : 'md'} />
         <div style={{ display: 'flex', gap: 6 }}>
-          <Link href="/login" style={{ padding: isMobile ? '7px 12px' : '8px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', color: '#fff', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 500 }}>Log in</Link>
-          <Link href="/register" style={{ padding: isMobile ? '7px 12px' : '8px 16px', borderRadius: 10, background: GREEN, color: '#000', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 700 }}>Start free</Link>
+          <Link href="/login"    style={{ padding: isMobile ? '7px 14px' : '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 500, backdropFilter: 'blur(10px)', background: 'rgba(255,255,255,0.04)' }}>Log in</Link>
+          <Link href="/register" style={{ padding: isMobile ? '7px 14px' : '8px 18px', borderRadius: 10, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 800, boxShadow: `0 0 20px ${GREEN}44` }}>Start free</Link>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: isMobile ? '100px 20px 80px' : '120px 24px 80px' }}>
-        <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: isMobile ? 280 : 600, height: isMobile ? 280 : 600, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}1a 0%, transparent 70%)`, pointerEvents: 'none' }} />
-        <div style={{ textAlign: 'center', maxWidth: 800, position: 'relative', zIndex: 1, width: '100%' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${GREEN}1a`, border: `1px solid ${GREEN}33`, borderRadius: 100, padding: '6px 16px', marginBottom: 24 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />
-            <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>AI-powered trading journal</span>
-          </div>
-          <h1 style={{ fontSize: isMobile ? 38 : 72, fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: 20, background: 'linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Trade smarter.<br />
-            <span style={{ background: `linear-gradient(135deg, ${GREEN}, #34d399)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Grow faster.</span>
+      {/* ══════════════════════════════════
+          HERO
+      ══════════════════════════════════ */}
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: isMobile ? '110px 20px 80px' : '130px 24px 100px', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', maxWidth: 860, width: '100%' }}>
+          <Pill color={GREEN}>AI-powered trading journal</Pill>
+          <h1 style={{ fontSize: isMobile ? 42 : 80, fontWeight: 900, lineHeight: 1.02, letterSpacing: '-0.05em', marginBottom: 24 }}>
+            <GradientText from="#ffffff" to="rgba(255,255,255,0.65)">Trade smarter.</GradientText>
+            <br />
+            <GradientText from={GREEN} to="#2ecc71">Grow faster.</GradientText>
           </h1>
-          <p style={{ fontSize: isMobile ? 15 : 20, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, maxWidth: 560, margin: '0 auto 36px' }}>
-            A trading journal with AI coaching, psychological analysis, Trade Score and AI Chat. Stop losing money on the same mistakes.
+          <p style={{ fontSize: isMobile ? 16 : 21, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 600, margin: '0 auto 40px' }}>
+            An AI trading journal with coaching, psychology analysis, playbook rules, emotion tracking and daily notes. Stop repeating the same mistakes.
           </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/register" style={{ padding: isMobile ? '13px 24px' : '16px 36px', borderRadius: 14, background: GREEN, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 16, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}4d` }}>Start for free →</Link>
-            <Link href="/login" style={{ padding: isMobile ? '13px 24px' : '16px 36px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', color: '#fff', textDecoration: 'none', fontSize: isMobile ? 15 : 16, fontWeight: 500, background: 'rgba(255,255,255,0.04)' }}>Log in</Link>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+            <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55`, letterSpacing: '-0.01em' }}>Start for free →</Link>
+            <Link href="/login"    style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 500, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Log in</Link>
           </div>
-          <p style={{ marginTop: 16, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Free up to 20 trades · No credit card required</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>Free up to 20 trades · No credit card required</p>
+
+          {/* Hero dashboard preview */}
+          <div style={{ marginTop: isMobile ? 48 : 72, animation: 'float 6s ease-in-out infinite' }}>
+            <Glass style={{ padding: isMobile ? '16px' : '24px', borderRadius: 24, maxWidth: 720, margin: '0 auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 8 : 10, marginBottom: 12, position: 'relative', zIndex: 1 }}>
+                {[
+                  { l: 'Win Rate',  v: '62%',    c: GREEN  },
+                  { l: 'Total P&L', v: '+$1,240', c: GREEN  },
+                  { l: 'Avg RR',    v: '2.14',   c: ORANGE },
+                  { l: 'Streak',    v: '7 days',  c: BLUE   },
+                ].map(s => (
+                  <div key={s.l} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: isMobile ? '12px' : '14px 16px' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{s.l}</div>
+                    <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, color: s.c, letterSpacing: '-0.03em' }}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Mini chart bars */}
+              <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: isMobile ? '12px' : '14px 18px', position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>P&L by Day of Week</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isMobile ? 4 : 8, height: isMobile ? 40 : 56 }}>
+                  {[{ d:'Mon',v:320 },{ d:'Tue',v:-80 },{ d:'Wed',v:210 },{ d:'Thu',v:480 },{ d:'Fri',v:140 },{ d:'Sat',v:-120 },{ d:'Sun',v:60 }].map(b => (
+                    <div key={b.d} style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', gap: 4 }}>
+                      <div style={{ width:'60%', height: `${Math.abs(b.v)/480*100}%`, minHeight: 3, borderRadius: 3, background: b.v > 0 ? `linear-gradient(180deg, #4ade80, ${GREEN})` : `linear-gradient(180deg, #ff6b61, ${RED})` }} />
+                      <div style={{ fontSize: isMobile ? 7 : 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{b.d}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Glass>
+          </div>
         </div>
       </section>
 
-      {/* STATS */}
-      <section style={{ padding: `0 ${px} 80px`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
+      {/* ══════════════════════════════════
+          STATS
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} 80px`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 10 : 16 }}>
           {[
             { value: '12,430+', label: 'Trades logged',         color: GREEN  },
-            { value: '57%',     label: 'Average win rate',      color: BLUE   },
+            { value: '57%',     label: 'Avg win rate',          color: BLUE   },
             { value: '84k',     label: 'AI insights generated', color: PURPLE },
             { value: '2,300+',  label: 'Active traders',        color: ORANGE },
           ].map(s => (
-            <GlassCard key={s.label} accent={s.color} style={{ padding: isMobile ? '18px 14px' : '28px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: isMobile ? 26 : 36, fontWeight: 900, letterSpacing: '-0.04em', color: s.color, marginBottom: 6, position: 'relative' }}>{s.value}</div>
-              <div style={{ fontSize: isMobile ? 11 : 14, color: 'rgba(255,255,255,0.4)', position: 'relative' }}>{s.label}</div>
-            </GlassCard>
+            <Glass key={s.label} accent={s.color} style={{ padding: isMobile ? '20px 16px' : '30px 26px', textAlign: 'center', borderRadius: 22 }}>
+              <div style={{ fontSize: isMobile ? 28 : 38, fontWeight: 900, letterSpacing: '-0.04em', color: s.color, marginBottom: 6, position: 'relative', zIndex: 1 }}>{s.value}</div>
+              <div style={{ fontSize: isMobile ? 11 : 13, color: 'rgba(255,255,255,0.35)', position: 'relative', zIndex: 1, fontWeight: 500 }}>{s.label}</div>
+            </Glass>
           ))}
         </div>
       </section>
 
-      {/* FUTURES + SPOT */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: ORANGE, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Markets</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 14, background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Futures & Spot — both covered
+      {/* ══════════════════════════════════
+          KILLER FEATURES — NEW
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={PURPLE}>What's new</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05 }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Features your competitors<br />don't have</GradientText>
           </h2>
-          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', maxWidth: 500, margin: '0 auto' }}>One journal for all your trading styles</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
-          {[
-            { icon: '📈', title: 'Futures Trading', color: BLUE, features: ['Long & Short positions', 'RR auto-calculation', 'Risk % of deposit', 'Long vs Short win rate analytics'], desc: 'Full support for Long & Short positions. Track leverage, entry/stop/take prices, risk per trade. AI analyzes both directions separately.' },
-            { icon: '🪙', title: 'Spot Trading',    color: ORANGE, features: ['Long-only spot entries', 'P&L in USDT & %', 'Setup & pair analytics', 'AI insights for spot traders'], desc: 'Log spot buys and sells. Track P&L in USDT and %. AI Coach works the same — finds your best pairs, worst setups, discipline patterns.' },
-          ].map(item => (
-            <GlassCard key={item.title} accent={item.color} style={{ padding: isMobile ? '24px 20px' : '40px 36px' }}>
-              <div style={{ fontSize: 32, marginBottom: 14, position: 'relative' }}>{item.icon}</div>
-              <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, color: '#fff', marginBottom: 10, position: 'relative' }}>{item.title}</div>
-              <div style={{ fontSize: isMobile ? 13 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 20, position: 'relative' }}>{item.desc}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative' }}>
-                {item.features.map(f => (
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20, marginBottom: isMobile ? 12 : 20 }}>
+
+          {/* Playbook */}
+          <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: 28 }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 36, marginBottom: 16 }}>📋</div>
+              <div style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.03em' }}>Playbook</div>
+              <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 24 }}>
+                Define your setup rules. Every trade tracks which rules you followed — and shows win rate with vs without compliance.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Define entry rules per setup', 'Track compliance on every trade', 'Win rate: followed vs violated', '+X% insight when rules work'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: `${item.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: item.color, flexShrink: 0 }}>✓</div>
+                    <div style={{ width: 22, height: 22, borderRadius: 7, background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
                     <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.7)' }}>{f}</span>
                   </div>
                 ))}
               </div>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
-
-      {/* DASHBOARD PREVIEW */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: GREEN, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Dashboard</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 14, background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Your stats at a glance</h2>
-          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', maxWidth: 500, margin: '0 auto' }}>Everything that matters — in one screen</p>
-        </div>
-
-        <GlassCard style={{ padding: isMobile ? '16px' : '32px 28px' }}>
-          {/* Stat cards — 2 cols on mobile, 4 on desktop */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 10, marginBottom: 16, position: 'relative' }}>
-            {[
-              { label: 'Total Trades', value: '48',      color: BLUE   },
-              { label: 'Win Rate',     value: '62%',     color: GREEN  },
-              { label: 'Total P&L',    value: '+$1,240', color: GREEN  },
-              { label: 'Avg RR',       value: '2.14',    color: ORANGE },
-              { label: 'Avg P&L',      value: '+$25.8',  color: GREEN  },
-              { label: 'Max Drawdown', value: '-$180',   color: RED    },
-              { label: 'Best Setup',   value: 'CHoCH',   color: '#fff' },
-              { label: 'Streak',       value: '7W / 2L', color: 'rgba(255,255,255,0.4)' },
-            ].map(s => (
-              <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: isMobile ? '12px 12px' : '14px 16px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)', pointerEvents: 'none' }} />
-                <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 5, position: 'relative' }}>{s.label}</div>
-                <div style={{ fontSize: isMobile ? 15 : 20, fontWeight: 800, color: s.color, letterSpacing: '-0.03em', position: 'relative' }}>{s.value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Long vs Short */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 10, marginBottom: 16, position: 'relative' }}>
-            <div style={{ background: `${GREEN}0d`, border: `1px solid ${GREEN}22`, borderRadius: 12, padding: isMobile ? '14px 16px' : '16px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: GREEN }}>↑ Long</span>
-                <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, color: GREEN }}>68%</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '68%', background: `linear-gradient(90deg, ${GREEN}, #4ade80)`, borderRadius: 3 }} />
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>32 trades</div>
-            </div>
-            <div style={{ background: `${RED}0d`, border: `1px solid ${RED}22`, borderRadius: 12, padding: isMobile ? '14px 16px' : '16px 20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: RED }}>↓ Short</span>
-                <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, color: RED }}>44%</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '44%', background: `linear-gradient(90deg, ${RED}, #ff6b61)`, borderRadius: 3 }} />
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>16 trades</div>
-            </div>
-          </div>
-
-          {/* P&L by weekday */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: isMobile ? '14px 12px' : '16px 20px', position: 'relative' }}>
-            <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: '#fff', marginBottom: 14 }}>P&L by Day of Week</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? 4 : 8 }}>
-              {[
-                { day: 'Mon', pnl: +320, h: 70 },
-                { day: 'Tue', pnl: -80,  h: 18 },
-                { day: 'Wed', pnl: +210, h: 46 },
-                { day: 'Thu', pnl: +480, h: 100 },
-                { day: 'Fri', pnl: +140, h: 32 },
-                { day: 'Sat', pnl: -120, h: 26 },
-                { day: 'Sun', pnl: 0,    h: 4  },
-              ].map(d => (
-                <div key={d.day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  <div style={{ fontSize: isMobile ? 8 : 11, fontWeight: 700, color: d.pnl > 0 ? GREEN : d.pnl < 0 ? RED : 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-                    {d.pnl !== 0 ? `${d.pnl > 0 ? '+' : ''}${isMobile ? Math.abs(d.pnl) : d.pnl}` : '—'}
+              {/* Mini playbook card */}
+              <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.04)', border: `1px solid ${GREEN}30`, borderRadius: 16, padding: '16px' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 10 }}>CHoCH + BOS + FVG</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{ background: `${GREEN}15`, border: `1px solid ${GREEN}30`, borderRadius: 10, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>✓ Followed</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: GREEN }}>71%</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>win rate</div>
                   </div>
-                  <div style={{ width: '100%', height: isMobile ? 48 : 64, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                    <div style={{ width: '60%', height: d.h * (isMobile ? 0.75 : 1), borderRadius: 4, background: d.pnl > 0 ? `linear-gradient(180deg, #4ade80, ${GREEN})` : d.pnl < 0 ? `linear-gradient(180deg, #ff6b61, ${RED})` : 'rgba(255,255,255,0.08)', opacity: d.pnl !== 0 ? 1 : 0.3 }} />
+                  <div style={{ background: `${RED}15`, border: `1px solid ${RED}30`, borderRadius: 10, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 9, color: RED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>✕ Violated</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: RED }}>34%</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>win rate</div>
                   </div>
-                  <div style={{ fontSize: isMobile ? 9 : 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>{d.day}</div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </GlassCard>
-      </section>
-
-      {/* FEATURES */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: GREEN, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Features</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 14, background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Everything you need to grow</h2>
-          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', maxWidth: 500, margin: '0 auto' }}>Not just a journal — a full AI coach that sees your patterns</p>
-        </div>
-        {/* Mobile: 2 cols, Desktop: 3 cols */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 20 }}>
-          {[
-            { icon: '📊', title: 'Trade Journal',       desc: 'Setup, RR, direction, result, screenshot, self-grade.',                              color: BLUE   },
-            { icon: '🧠', title: 'AI Coach',            desc: 'Best setup, worst setup, main mistake, concrete next steps.',                        color: GREEN  },
-            { icon: '🎯', title: 'Trade Score',         desc: 'AI estimates success probability based on your own history.',                        color: ORANGE },
-            { icon: '🧬', title: 'Psychology',          desc: 'Detects fear, greed, revenge trading patterns automatically.',                       color: PURPLE },
-            { icon: '💬', title: 'AI Chat',             desc: 'Ask questions — AI answers with insights from your journal.',                       color: GREEN  },
-            { icon: '📈', title: 'Analytics',           desc: 'Win rate by setup, P&L by pair, weekday stats, RR distribution.',                   color: RED    },
-            { icon: '🕐', title: 'AI History',          desc: 'All AI analyses saved. Load any previous session anytime.',                         color: BLUE   },
-            { icon: '🌙', title: 'Dark & Light',        desc: 'Beautiful in both modes. English and Ukrainian.',                                    color: '#636366' },
-            { icon: '🔒', title: 'Free / Pro',          desc: 'Start free with 20 trades. Upgrade for unlimited + all AI.',                        color: ORANGE },
-          ].map(f => (
-            <GlassCard key={f.title} accent={f.color} style={{ padding: isMobile ? '16px 14px' : '32px 28px' }}>
-              <div style={{ width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 12, background: `${f.color}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 22, marginBottom: isMobile ? 10 : 16, position: 'relative' }}>{f.icon}</div>
-              <div style={{ position: 'relative' }}>
-                <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 700, marginBottom: 5, color: '#fff' }}>{f.title}</div>
-                <div style={{ fontSize: isMobile ? 11 : 15, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{f.desc}</div>
+                <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: GREEN, background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 8, padding: '7px 10px' }}>
+                  📈 Following rules gives +37% win rate
+                </div>
               </div>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
+            </div>
+          </Glass>
 
-      {/* HOW IT WORKS */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: BLUE, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>How it works</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Three steps to results</h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 2 }}>
-          {[
-            { num: '01', title: 'Log your trades',  desc: 'Fill in setup, RR, direction, result, screenshot, comment and self-grade.', color: GREEN  },
-            { num: '02', title: 'AI analyzes',       desc: 'Run AI Coach, get Trade Score, chat with AI — it knows your journal.', color: BLUE   },
-            { num: '03', title: 'Grow as a trader', desc: 'Follow concrete AI steps. Watch win rate and discipline improve month over month.', color: ORANGE },
-          ].map((s, i) => (
-            <GlassCard key={s.num} accent={s.color} style={{ padding: isMobile ? '24px 20px' : '40px 32px', background: i === 1 ? `${BLUE}0d` : 'rgba(255,255,255,0.02)' }}>
-              <div style={{ fontSize: isMobile ? 36 : 52, fontWeight: 900, color: s.color, opacity: 0.3, letterSpacing: '-0.05em', marginBottom: 10, position: 'relative' }}>{s.num}</div>
-              <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, marginBottom: 8, color: '#fff', position: 'relative' }}>{s.title}</div>
-              <div style={{ fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, position: 'relative' }}>{s.desc}</div>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
+          {/* Emotion + Journal */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 20 }}>
 
-      {/* TESTIMONIALS */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: PURPLE, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Testimonials</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Traders love it</h2>
+            {/* Emotion tracking */}
+            <Glass accent={ORANGE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>🧠</div>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Emotion Tracking</div>
+                <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
+                  Log your emotional state on every trade. AI finds which emotions hurt your win rate most.
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[
+                    { e: '😌', l: 'Calm',     c: GREEN,  wr: '71%' },
+                    { e: '🤑', l: 'Greed',    c: ORANGE, wr: '38%' },
+                    { e: '💀', l: 'Revenge',  c: RED,    wr: '22%' },
+                    { e: '🚀', l: 'Euphoria', c: PURPLE, wr: '41%' },
+                  ].map(em => (
+                    <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 52 }}>
+                      <div style={{ fontSize: 18 }}>{em.e}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{em.l}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: em.c, marginTop: 1 }}>{em.wr}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Glass>
+
+            {/* Daily Journal */}
+            <Glass accent={BLUE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>📓</div>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Daily Journal</div>
+                <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
+                  Note your mood, market observations, plans, and mistakes — even on no-trade days.
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {['😞','😕','😐','🙂','😄'].map((em, i) => (
+                    <div key={em} style={{ flex: 1, background: i === 3 ? `${BLUE}25` : 'rgba(255,255,255,0.05)', border: `1px solid ${i === 3 ? BLUE + '50' : 'rgba(255,255,255,0.08)'}`, borderRadius: 10, padding: '8px 4px', textAlign: 'center', outline: i === 3 ? `2px solid ${BLUE}` : 'none' }}>
+                      <div style={{ fontSize: 20 }}>{em}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Glass>
+          </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 10 : 20 }}>
-          {testimonials.map(t => (
-            <GlassCard key={t.name} accent={t.color} style={{ padding: isMobile ? '20px 18px' : '32px 28px' }}>
-              <div style={{ fontSize: isMobile ? 13 : 16, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, marginBottom: 18, position: 'relative' }}>"{t.text}"</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-                <div style={{ width: 38, height: 38, borderRadius: '50%', background: `${t.color}22`, border: `1px solid ${t.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: t.color, flexShrink: 0 }}>{t.avatar}</div>
+
+        {/* CSV Import — full width */}
+        <Glass accent={ORANGE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            <div>
+              <div style={{ fontSize: 36, marginBottom: 16 }}>📥</div>
+              <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.03em' }}>CSV Import</div>
+              <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 20 }}>
+                Stop entering trades manually. Upload your history directly from your exchange — we auto-detect format.
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {['Bybit', 'Binance', 'OKX', 'MEXC', 'Bitget', 'Gate.io', 'HTX', 'KuCoin', 'BingX', 'Phemex'].map(ex => (
+                  <div key={ex} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{ex}</div>
+                ))}
+              </div>
+            </div>
+            <div>
+              {/* Mock upload UI */}
+              <div style={{ border: `2px dashed ${ORANGE}55`, borderRadius: 18, padding: '28px 20px', textAlign: 'center', background: `${ORANGE}08` }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📁</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Drop your CSV here</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Supports .csv and .xlsx</div>
+              </div>
+              <div style={{ marginTop: 12, background: `${GREEN}12`, border: `1px solid ${GREEN}30`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 18 }}>✅</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{t.role}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>Format detected: Bybit Futures</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Found 47 trades — ready to import</div>
                 </div>
-                <div style={{ marginLeft: 'auto', color: ORANGE, fontSize: isMobile ? 12 : 14 }}>★★★★★</div>
               </div>
-            </GlassCard>
+            </div>
+          </div>
+        </Glass>
+      </section>
+
+      {/* ══════════════════════════════════
+          AI FEATURES
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={GREEN}>AI Features</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">AI that reads<br />your journal</GradientText>
+          </h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 20 }}>
+          {[
+            { icon: '🧠', title: 'AI Coach',         color: GREEN,  desc: 'Analyzes last 50 trades, emotion patterns, playbook compliance. Gives main mistakes + 4 concrete steps.', badge: 'Pro' },
+            { icon: '🎯', title: 'Trade Score',       color: ORANGE, desc: 'AI estimates success probability before you enter. Based on your personal historical win rate for this exact setup.', badge: 'Pro' },
+            { icon: '🧬', title: 'Psychology',        color: PURPLE, desc: 'Reads your comments and emotions. Finds fear, greed, revenge trading. Gives severity + action for each pattern.', badge: 'Pro' },
+            { icon: '💬', title: 'AI Chat',           color: BLUE,   desc: 'Chat with AI that has full context of your journal, emotions, playbook, and journal mood. Ask anything.', badge: 'Pro' },
+            { icon: '📊', title: 'Trade Analysis',    color: RED,    desc: 'Detailed breakdown per trade: entry quality, mistakes, system compliance, AI grade. Runs on demand.', badge: 'Pro' },
+            { icon: '📈', title: 'Analytics',         color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, Max Drawdown, grade distribution and more.', badge: 'Free' },
+          ].map(f => (
+            <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '32px 28px', borderRadius: 22 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: f.badge === 'Pro' ? PURPLE : GREEN, background: f.badge === 'Pro' ? `${PURPLE}20` : `${GREEN}20`, border: `1px solid ${f.badge === 'Pro' ? PURPLE : GREEN}35`, borderRadius: 20, padding: '3px 10px' }}>{f.badge}</span>
+                </div>
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{f.title}</div>
+                <div style={{ fontSize: isMobile ? 12 : 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{f.desc}</div>
+              </div>
+            </Glass>
           ))}
         </div>
       </section>
 
-      {/* PRICING */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: ORANGE, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Pricing</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Start for free</h2>
+      {/* ══════════════════════════════════
+          MARKETS
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={ORANGE}>Markets</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Futures & Spot — both covered</GradientText>
+          </h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
-          <GlassCard style={{ padding: isMobile ? '24px 20px' : '40px 36px' }}>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 8, position: 'relative' }}>Free</div>
-            <div style={{ fontSize: isMobile ? 36 : 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 4, position: 'relative' }}>$0</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 24, position: 'relative' }}>forever</div>
-            {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n'].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, position: 'relative' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>✓</div>
-                <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
+          {[
+            { icon: '📈', title: 'Futures', color: BLUE, features: ['Long & Short positions', 'RR auto-calculation', 'Risk % of deposit', 'Long vs Short win rate'], desc: 'Full support for leveraged futures. Track direction, entry/stop/take, risk per trade. AI analyzes both sides separately.' },
+            { icon: '🪙', title: 'Spot',    color: ORANGE, features: ['Spot buy & sell entries', 'P&L in USDT & %', 'Setup & pair analytics', 'AI insights for spot'], desc: 'Log spot buys and sells. Track P&L in USDT and %. AI Coach finds your best pairs, worst setups, discipline patterns.' },
+          ].map(item => (
+            <Glass key={item.title} accent={item.color} style={{ padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: 28 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 36, marginBottom: 16 }}>{item.icon}</div>
+                <div style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.03em' }}>{item.title} Trading</div>
+                <div style={{ fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 20 }}>{item.desc}</div>
+                {item.features.map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${item.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: item.color, flexShrink: 0 }}>✓</div>
+                    <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.65)' }}>{f}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 24, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, position: 'relative' }}>Get started →</Link>
-          </GlassCard>
-
-          <GlassCard accent={GREEN} style={{ padding: isMobile ? '24px 20px' : '40px 36px', background: `${GREEN}0d` }}>
-            <div style={{ position: 'absolute', top: 16, right: 16, background: GREEN, color: '#000', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 100 }}>BEST VALUE</div>
-            <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 600, position: 'relative' }}>Pro ⚡</div>
-            <div style={{ fontSize: isMobile ? 36 : 48, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 4, position: 'relative' }}>$19</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 24, position: 'relative' }}>per month</div>
-            {['Unlimited trades', 'Advanced analytics', 'AI Coach', 'AI Trade Score', 'AI Psychology Analysis', 'AI Chat', 'Analysis history saved', 'Priority support'].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, position: 'relative' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0 }}>✓</div>
-                <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
-              </div>
-            ))}
-            <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 24, padding: '13px', borderRadius: 12, background: GREEN, color: '#000', textDecoration: 'none', fontSize: 14, fontWeight: 800, boxShadow: `0 0 30px ${GREEN}40`, position: 'relative' }}>Start Pro →</Link>
-          </GlassCard>
+            </Glass>
+          ))}
         </div>
       </section>
 
-      {/* FAQ */}
-      <section style={{ padding: `0 ${px} ${sectionPb}`, maxWidth: 800, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 64 }}>
-          <div style={{ fontSize: 12, color: BLUE, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>FAQ</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.04em', background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Common questions</h2>
+      {/* ══════════════════════════════════
+          HOW IT WORKS
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={BLUE}>How it works</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Three steps to results</GradientText>
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 16 }}>
+          {[
+            { num: '01', title: 'Log your trades',   desc: 'Fill in setup, direction, result, emotion, playbook rules, screenshot, comment.', color: GREEN  },
+            { num: '02', title: 'AI analyzes',        desc: 'Run AI Coach, get Trade Score, Psychology — all using your actual journal data.', color: BLUE   },
+            { num: '03', title: 'Grow as a trader',  desc: 'Follow concrete AI steps. Watch win rate and discipline improve over time.', color: ORANGE },
+          ].map((s, i) => (
+            <Glass key={s.num} accent={s.color} style={{ padding: isMobile ? '28px 22px' : '44px 36px', borderRadius: 24, background: i === 1 ? `${BLUE}0d` : 'rgba(255,255,255,0.03)' }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: isMobile ? 48 : 64, fontWeight: 900, color: s.color, opacity: 0.25, letterSpacing: '-0.06em', lineHeight: 1, marginBottom: 14 }}>{s.num}</div>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.03em' }}>{s.title}</div>
+                <div style={{ fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7 }}>{s.desc}</div>
+              </div>
+            </Glass>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={PURPLE}>Testimonials</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Traders love it</GradientText>
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: isMobile ? 10 : 20 }}>
+          {[
+            { name: 'Alex M.',  role: 'Crypto Futures Trader', text: 'After 2 weeks with AI Coach I realized I was overtrading on weekends. Win rate jumped from 44% to 61%.', avatar: 'AM', color: BLUE   },
+            { name: 'Sarah K.', role: 'Swing Trader',           text: 'The Psychology Analysis is scary accurate. It caught my revenge trading before I even noticed it myself.', avatar: 'SK', color: PURPLE },
+            { name: 'Denis N.', role: 'Day Trader',             text: 'Trade Score saved me from 3 bad entries last week. AI told me my setup has 38% win rate on Mondays.', avatar: 'DN', color: GREEN  },
+            { name: 'Maria T.', role: 'Spot Trader',            text: 'Finally a journal that works for spot too. The Playbook feature is exactly what I was missing.', avatar: 'MT', color: ORANGE },
+          ].map(t => (
+            <Glass key={t.name} accent={t.color} hover style={{ padding: isMobile ? '24px 20px' : '36px 32px', borderRadius: 24 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.7)', lineHeight: 1.75, marginBottom: 20 }}>"{t.text}"</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${t.color}25`, border: `1px solid ${t.color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: t.color }}>{t.avatar}</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{t.role}</div>
+                    </div>
+                  </div>
+                  <div style={{ color: ORANGE, fontSize: isMobile ? 12 : 14, letterSpacing: 2 }}>★★★★★</div>
+                </div>
+              </div>
+            </Glass>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          PRICING
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 900, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={ORANGE}>Pricing</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Start for free</GradientText>
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
+          <Glass style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28 }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 8, fontWeight: 500 }}>Free</div>
+              <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$0</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>forever</div>
+              {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n', 'CSV Import (limited)'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>✓</div>
+                  <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.55)' }}>{f}</span>
+                </div>
+              ))}
+              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Get started →</Link>
+            </div>
+          </Glass>
+
+          <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28, background: `${GREEN}0d` }}>
+            <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>BEST VALUE</div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro ⚡</div>
+              <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$19</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>per month</div>
+              {['Unlimited trades', 'CSV Import (all exchanges)', 'Playbook + compliance', 'Emotion tracking', 'Daily Journal', 'AI Coach', 'AI Trade Score', 'AI Psychology Analysis', 'AI Chat', 'Analysis history'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                  <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
+                </div>
+              ))}
+              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 14, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}44` }}>Start Pro →</Link>
+            </div>
+          </Glass>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          FAQ
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 800, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
+          <Pill color={BLUE}>FAQ</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Common questions</GradientText>
+          </h2>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {faqs.map((faq, i) => (
-            <GlassCard key={i} style={{ padding: 0, borderRadius: 16 }}>
+            <Glass key={i} style={{ padding: 0, borderRadius: 18 }}>
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{ width: '100%', padding: isMobile ? '18px 20px' : '20px 24px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, fontFamily: FONT, minHeight: 56 }}
+                style={{ width: '100%', padding: isMobile ? '18px 20px' : '20px 26px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, fontFamily: FONT, minHeight: 58 }}
               >
-                <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: '#fff', textAlign: 'left', lineHeight: 1.4 }}>{faq.q}</span>
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                  background: openFaq === i ? `${GREEN}22` : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${openFaq === i ? GREEN + '44' : 'rgba(255,255,255,0.1)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: openFaq === i ? GREEN : 'rgba(255,255,255,0.4)',
-                  fontSize: 16, transition: 'all 0.2s',
-                  transform: openFaq === i ? 'rotate(45deg)' : 'none',
-                }}>+</div>
+                <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: openFaq === i ? '#fff' : 'rgba(255,255,255,0.8)', textAlign: 'left', lineHeight: 1.4, position: 'relative', zIndex: 1 }}>{faq.q}</span>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: openFaq === i ? `${GREEN}22` : 'rgba(255,255,255,0.06)', border: `1px solid ${openFaq === i ? GREEN + '55' : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: openFaq === i ? GREEN : 'rgba(255,255,255,0.35)', fontSize: 18, transition: 'all 0.25s', transform: openFaq === i ? 'rotate(45deg)' : 'none', position: 'relative', zIndex: 1 }}>+</div>
               </button>
               {openFaq === i && (
-                <div style={{ padding: isMobile ? '0 20px 18px' : '0 24px 20px', fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, position: 'relative' }}>
-                  {faq.a}
-                </div>
+                <div style={{ padding: isMobile ? '0 20px 20px' : '0 26px 22px', fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.75, position: 'relative', zIndex: 1 }}>{faq.a}</div>
               )}
-            </GlassCard>
+            </Glass>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ padding: `0 ${px} ${isMobile ? '100px' : '120px'}`, maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
-        <GlassCard accent={GREEN} style={{ padding: isMobile ? '40px 20px' : '64px 48px', background: `${GREEN}0d` }}>
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
-          <h2 style={{ fontSize: isMobile ? 26 : 42, fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 12, background: 'linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', position: 'relative' }}>Ready to trade smarter?</h2>
-          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', marginBottom: 28, position: 'relative' }}>Join traders who are already using AI to improve their results</p>
-          <Link href="/register" style={{ padding: isMobile ? '14px 32px' : '16px 44px', borderRadius: 14, background: GREEN, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}4d`, position: 'relative', display: 'inline-block' }}>
-            Start for free →
-          </Link>
-        </GlassCard>
+      {/* ══════════════════════════════════
+          FINAL CTA
+      ══════════════════════════════════ */}
+      <section style={{ padding: `0 ${px} ${isMobile ? '100px' : '130px'}`, maxWidth: 860, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <Glass accent={GREEN} style={{ padding: isMobile ? '48px 24px' : '80px 64px', borderRadius: 32, background: `${GREEN}0d`, textAlign: 'center' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}18 0%, transparent 70%)`, pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: isMobile ? 40 : 68, marginBottom: 16 }}>🚀</div>
+            <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 14, lineHeight: 1.05 }}>
+              <GradientText from="#fff" to="rgba(255,255,255,0.7)">Ready to trade smarter?</GradientText>
+            </h2>
+            <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', marginBottom: 32, lineHeight: 1.6 }}>
+              Join traders who are already using AI<br />to improve their results
+            </p>
+            <Link href="/register" style={{ padding: isMobile ? '15px 36px' : '18px 52px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 16 : 18, fontWeight: 800, boxShadow: `0 0 60px ${GREEN}55`, display: 'inline-block', letterSpacing: '-0.01em' }}>
+              Start for free →
+            </Link>
+            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Free · No credit card · Cancel anytime</div>
+          </div>
+        </Glass>
       </section>
 
       {/* FOOTER */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isMobile ? '20px 16px 80px' : '32px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 8 }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: isMobile ? '24px 16px 80px' : '36px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 10, position: 'relative', zIndex: 1 }}>
         <Logo size={isMobile ? 'sm' : 'md'} />
-        <div style={{ display: 'flex', gap: isMobile ? 14 : 20, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Link href="/login"    style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>Log in</Link>
-          <Link href="/register" style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>Register</Link>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>by dnproduction · 2026</div>
+        <div style={{ display: 'flex', gap: isMobile ? 16 : 24, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Link href="/login"    style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Log in</Link>
+          <Link href="/register" style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Register</Link>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>by dnproduction · 2026</div>
         </div>
       </footer>
     </main>
