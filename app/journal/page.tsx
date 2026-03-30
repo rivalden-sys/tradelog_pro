@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
+import { useLocale } from '@/hooks/useLocale'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
@@ -20,14 +21,6 @@ function useDark() {
   return dark
 }
 
-const MOODS = [
-  { value: 1, emoji: '😞', label: 'Погано' },
-  { value: 2, emoji: '😕', label: 'Не дуже' },
-  { value: 3, emoji: '😐', label: 'Нейтрально' },
-  { value: 4, emoji: '🙂', label: 'Добре' },
-  { value: 5, emoji: '😄', label: 'Відмінно' },
-]
-
 interface DailyNote {
   id?: string
   date: string
@@ -43,19 +36,27 @@ const emptyNote = (date: string): DailyNote => ({
 })
 
 export default function JournalPage() {
-  const dark = useDark()
+  const dark           = useDark()
+  const { t, locale }  = useLocale()
 
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
   const ORANGE = dark ? DARK.orange : LIGHT.orange
-  const PURPLE = dark ? DARK.purple : LIGHT.purple
 
   const textColor   = dark ? DARK.text   : LIGHT.text
   const subColor    = dark ? DARK.sub    : LIGHT.sub
   const borderColor = dark ? DARK.border : LIGHT.border
 
   const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
+
+  const MOODS = [
+    { value: 1, emoji: '😞', label: t('journal_mood_1') },
+    { value: 2, emoji: '😕', label: t('journal_mood_2') },
+    { value: 3, emoji: '😐', label: t('journal_mood_3') },
+    { value: 4, emoji: '🙂', label: t('journal_mood_4') },
+    { value: 5, emoji: '😄', label: t('journal_mood_5') },
+  ]
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -64,7 +65,7 @@ export default function JournalPage() {
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [saved,        setSaved]        = useState(false)
-  const [history, setHistory] = useState<Pick<DailyNote, 'id' | 'date' | 'mood' | 'content'>[]>([])
+  const [history,      setHistory]      = useState<Pick<DailyNote, 'id' | 'date' | 'mood' | 'content'>[]>([])
   const [histLoading,  setHistLoading]  = useState(true)
 
   const loadNote = async (date: string) => {
@@ -88,7 +89,7 @@ export default function JournalPage() {
       .select('id, date, mood, content')
       .order('date', { ascending: false })
       .limit(30)
-    setHistory(data || [])
+    setHistory((data || []) as any)
     setHistLoading(false)
   }
 
@@ -109,13 +110,13 @@ export default function JournalPage() {
     if (!user) { setSaving(false); return }
 
     const payload = {
-      user_id:  user.id,
-      date:     selectedDate,
-      mood:     note.mood,
-      content:  note.content,
-      market:   note.market,
-      plans:    note.plans,
-      mistakes: note.mistakes,
+      user_id:    user.id,
+      date:       selectedDate,
+      mood:       note.mood,
+      content:    note.content,
+      market:     note.market,
+      plans:      note.plans,
+      mistakes:   note.mistakes,
       updated_at: new Date().toISOString(),
     }
 
@@ -168,11 +169,12 @@ export default function JournalPage() {
   }
 
   const formatDate = (d: string) => {
-    const date = new Date(d + 'T00:00:00')
-    const isToday = d === today
-    const isYesterday = d === new Date(Date.now() - 86400000).toISOString().split('T')[0]
-    const label = isToday ? 'Сьогодні' : isYesterday ? 'Вчора' : date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
-    const weekday = date.toLocaleDateString('uk-UA', { weekday: 'long' })
+    const date      = new Date(d + 'T00:00:00')
+    const isToday   = d === today
+    const isYest    = d === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const dateLocale = locale === 'uk' ? 'uk-UA' : 'en-GB'
+    const label     = isToday ? t('journal_today') : isYest ? t('journal_yesterday') : date.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' })
+    const weekday   = date.toLocaleDateString(dateLocale, { weekday: 'long' })
     return { label, weekday }
   }
 
@@ -191,11 +193,9 @@ export default function JournalPage() {
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>
-              📓 Daily Journal
+              📓 {t('journal_title')}
             </h1>
-            <div style={{ fontSize: 13, color: subColor, marginTop: 4 }}>
-              Нотатки дня — навіть якщо угод не було
-            </div>
+            <div style={{ fontSize: 13, color: subColor, marginTop: 4 }}>{t('journal_subtitle')}</div>
           </div>
 
           <div className="journal-grid">
@@ -222,14 +222,14 @@ export default function JournalPage() {
               </div>
 
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '48px 0', color: subColor }}>Завантаження...</div>
+                <div style={{ textAlign: 'center', padding: '48px 0', color: subColor }}>{t('journal_loading')}</div>
               ) : (
                 <>
                   {/* Mood */}
                   <div style={glassCard(moodColor(note.mood))}>
                     {glare}
                     <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 14, position: 'relative' }}>
-                      Настрій дня
+                      {t('journal_mood_title')}
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', position: 'relative' }}>
                       {MOODS.map(m => (
@@ -259,49 +259,21 @@ export default function JournalPage() {
                   <div style={glassCard()}>
                     {glare}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative' }}>
-
                       <div>
-                        <label style={labelStyle}>📝 Загальні нотатки</label>
-                        <textarea
-                          value={note.content}
-                          onChange={e => setNote(prev => ({ ...prev, content: e.target.value }))}
-                          placeholder="Як пройшов день? Що відбувалось? Будь-які думки..."
-                          rows={4}
-                          style={inputStyle}
-                        />
+                        <label style={labelStyle}>{t('journal_notes')}</label>
+                        <textarea value={note.content} onChange={e => setNote(prev => ({ ...prev, content: e.target.value }))} placeholder={t('journal_notes_ph')} rows={4} style={inputStyle} />
                       </div>
-
                       <div>
-                        <label style={labelStyle}>📈 Що сталося на ринку</label>
-                        <textarea
-                          value={note.market}
-                          onChange={e => setNote(prev => ({ ...prev, market: e.target.value }))}
-                          placeholder="Ключові рухи, новини, контекст ринку..."
-                          rows={3}
-                          style={inputStyle}
-                        />
+                        <label style={labelStyle}>{t('journal_market')}</label>
+                        <textarea value={note.market} onChange={e => setNote(prev => ({ ...prev, market: e.target.value }))} placeholder={t('journal_market_ph')} rows={3} style={inputStyle} />
                       </div>
-
                       <div>
-                        <label style={labelStyle}>🎯 Плани на завтра</label>
-                        <textarea
-                          value={note.plans}
-                          onChange={e => setNote(prev => ({ ...prev, plans: e.target.value }))}
-                          placeholder="Які пари слідкувати? Які сетапи очікуєш?"
-                          rows={3}
-                          style={inputStyle}
-                        />
+                        <label style={labelStyle}>{t('journal_plans')}</label>
+                        <textarea value={note.plans} onChange={e => setNote(prev => ({ ...prev, plans: e.target.value }))} placeholder={t('journal_plans_ph')} rows={3} style={inputStyle} />
                       </div>
-
                       <div>
-                        <label style={labelStyle}>⚠️ Помилки та висновки</label>
-                        <textarea
-                          value={note.mistakes}
-                          onChange={e => setNote(prev => ({ ...prev, mistakes: e.target.value }))}
-                          placeholder="Що зробив не так? Що вивчив сьогодні?"
-                          rows={3}
-                          style={inputStyle}
-                        />
+                        <label style={labelStyle}>{t('journal_mistakes')}</label>
+                        <textarea value={note.mistakes} onChange={e => setNote(prev => ({ ...prev, mistakes: e.target.value }))} placeholder={t('journal_mistakes_ph')} rows={3} style={inputStyle} />
                       </div>
                     </div>
                   </div>
@@ -309,18 +281,16 @@ export default function JournalPage() {
                   {/* Save button */}
                   <button onClick={save} disabled={saving} style={{
                     padding: '14px', borderRadius: 12, border: 'none',
-                    background: saved
-                      ? GREEN
-                      : saving
-                        ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                        : dark ? DARK.blue : 'linear-gradient(180deg, #0a7fd4 0%, #065fa0 100%)',
+                    background: saved ? GREEN : saving
+                      ? dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                      : dark ? DARK.blue : 'linear-gradient(180deg, #0a7fd4 0%, #065fa0 100%)',
                     color: saving && !saved ? subColor : '#fff',
                     fontSize: 15, fontWeight: 700,
                     cursor: saving ? 'not-allowed' : 'pointer',
                     fontFamily: FONT, transition: 'all 0.2s',
                     boxShadow: saving ? 'none' : `0 0 24px ${BLUE}44`,
                   }}>
-                    {saved ? '✓ Збережено' : saving ? 'Збереження...' : '💾 Зберегти запис'}
+                    {saved ? t('journal_saved') : saving ? t('journal_saving') : t('journal_save')}
                   </button>
                 </>
               )}
@@ -328,20 +298,18 @@ export default function JournalPage() {
 
             {/* Right — history */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>Останні записи</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>{t('journal_history')}</div>
 
               {histLoading ? (
-                <div style={{ color: subColor, fontSize: 13 }}>Завантаження...</div>
+                <div style={{ color: subColor, fontSize: 13 }}>{t('journal_loading')}</div>
               ) : history.length === 0 ? (
                 <div style={{ ...glassCard(), padding: '24px', textAlign: 'center' }}>
                   {glare}
                   <div style={{ fontSize: 28, marginBottom: 10 }}>📓</div>
-                  <div style={{ fontSize: 14, color: subColor, lineHeight: 1.6 }}>
-                    Записів ще немає. Почни вести журнал щодня!
-                  </div>
+                  <div style={{ fontSize: 14, color: subColor, lineHeight: 1.6 }}>{t('journal_empty_title')}</div>
                 </div>
               ) : (
-                history.map(h => {
+                history.map((h: any) => {
                   const { label, weekday: wd } = formatDate(h.date)
                   const isSelected = h.date === selectedDate
                   const mc = moodColor(h.mood)
@@ -370,7 +338,6 @@ export default function JournalPage() {
                           {h.content}
                         </div>
                       )}
-                      {/* Mood bar */}
                       <div style={{ height: 3, borderRadius: 2, background: 'rgba(128,128,128,0.15)', overflow: 'hidden', marginTop: 10, position: 'relative' }}>
                         <div style={{ height: '100%', width: `${h.mood * 20}%`, background: mc, borderRadius: 2 }} />
                       </div>
