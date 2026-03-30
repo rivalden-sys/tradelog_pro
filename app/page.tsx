@@ -6,24 +6,28 @@ import { useState, useEffect } from 'react'
 const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
 const GREEN  = '#30d158'
+const GOLD   = '#f5c842'
 const BLUE   = '#0a84ff'
 const ORANGE = '#ff9f0a'
 const PURPLE = '#bf5af2'
 const RED    = '#ff453a'
 
 function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const scale = size === 'sm' ? 0.8 : size === 'lg' ? 1.3 : 1
+  const scale = size === 'sm' ? 0.8 : size === 'lg' ? 1.4 : 1
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9 * scale }}>
-      <svg width={20 * scale} height={22 * scale} viewBox="0 0 20 22" fill="none">
-        <rect x="0"  y="13" width="4" height="9"  rx="2" fill={GREEN} opacity="0.4"/>
-        <rect x="5"  y="9"  width="4" height="13" rx="2" fill={GREEN} opacity="0.62"/>
-        <rect x="10" y="4"  width="4" height="18" rx="2" fill={GREEN} opacity="0.82"/>
-        <rect x="15" y="0"  width="4" height="22" rx="2" fill={GREEN}/>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 * scale }}>
+      <svg width={28 * scale} height={28 * scale} viewBox="0 0 28 28" fill="none">
+        <rect x="0" y="0" width="28" height="28" rx="8" fill={`${GREEN}18`} />
+        <rect x="0" y="0" width="28" height="28" rx="8" stroke={`${GREEN}50`} strokeWidth="1" />
+        <path d="M14 6L20.5 22H17.8L16.2 18H11.8L10.2 22H7.5L14 6Z" fill={GREEN} />
+        <path d="M12.7 15.5H15.3L14 11.5L12.7 15.5Z" fill="#060608" />
+        <circle cx="14" cy="6" r="1.5" fill={GOLD} />
       </svg>
       <div style={{ lineHeight: 1 }}>
-        <div style={{ fontFamily: NUNITO, fontSize: 15 * scale, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: '1.1' }}>TradeLog</div>
-        <div style={{ fontFamily: NUNITO, fontSize: 10 * scale, fontWeight: 500, color: GREEN, letterSpacing: '0.04em', lineHeight: '1.1' }}>Pro Edition</div>
+        <div style={{ fontFamily: NUNITO, fontSize: 16 * scale, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: '1.1' }}>
+          Aurum<span style={{ color: GREEN }}>Trade</span>
+        </div>
+        <div style={{ fontFamily: NUNITO, fontSize: 9 * scale, fontWeight: 600, color: `${GOLD}cc`, letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
       </div>
     </div>
   )
@@ -36,25 +40,19 @@ function Glass({ children, accent, style, hover }: { children: React.ReactNode; 
       onMouseEnter={() => hover && setHovered(true)}
       onMouseLeave={() => hover && setHovered(false)}
       style={{
-        background: hovered
-          ? 'rgba(255,255,255,0.07)'
-          : 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
+        background: hovered ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
         border: `1px solid ${accent ? accent + '40' : hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.1)'}`,
         borderRadius: 28,
         boxShadow: accent
-          ? `inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), 0 0 80px ${accent}15`
+          ? `inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), 0 0 80px ${accent}12`
           : `inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)`,
-        position: 'relative',
-        overflow: 'hidden',
+        position: 'relative', overflow: 'hidden',
         transition: 'all 0.3s ease',
         ...style,
       }}
     >
-      {/* Top glare */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '45%', background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%)', borderRadius: '28px 28px 0 0', pointerEvents: 'none', zIndex: 0 }} />
-      {/* Bottom gradient */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 100%)', pointerEvents: 'none', zIndex: 0 }} />
       {children}
     </div>
@@ -72,12 +70,9 @@ function Pill({ color, children }: { color: string; children: React.ReactNode })
 
 function GradientText({ children, from, to, style }: { children: React.ReactNode; from?: string; to?: string; style?: React.CSSProperties }) {
   return (
-    <span style={{
-      background: `linear-gradient(135deg, ${from || '#fff'} 0%, ${to || 'rgba(255,255,255,0.55)'} 100%)`,
-      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      ...style,
-    }}>{children}</span>
+    <span style={{ background: `linear-gradient(135deg, ${from || '#fff'} 0%, ${to || 'rgba(255,255,255,0.55)'} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', ...style }}>
+      {children}
+    </span>
   )
 }
 
@@ -101,7 +96,7 @@ export default function Landing() {
 
   const faqs = [
     { q: 'Is my trading data safe?',         a: 'Yes. All data is stored securely in Supabase with Row Level Security — only you can access your trades.' },
-    { q: 'Is there a mobile version?',        a: 'TradeLog Pro is fully responsive and works great on any device — phone, tablet, or desktop.' },
+    { q: 'Is there a mobile version?',        a: 'AurumTrade is fully responsive and works great on any device — phone, tablet, or desktop.' },
     { q: 'Can I cancel my subscription?',     a: 'Absolutely. Cancel anytime from your billing settings — no questions asked, no hidden fees.' },
     { q: 'What markets does it support?',     a: 'Futures and Spot trading. Long and Short positions. Any trading pair — crypto, forex, stocks.' },
     { q: 'How does the AI know my patterns?', a: 'AI reads your actual trade history — setup, result, emotion, playbook compliance, journal mood — and finds patterns specific to your trading.' },
@@ -112,25 +107,16 @@ export default function Landing() {
   return (
     <main style={{ background: '#060608', minHeight: '100vh', color: '#fff', fontFamily: FONT, overflowX: 'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         ::selection { background: ${GREEN}44; }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-        @keyframes glow  { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
-
-      {/* Ambient background orbs */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-10%', left: '20%', width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}12 0%, transparent 65%)`, animation: 'glow 6s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', top: '30%', right: '-10%', width: 600, height: 600, borderRadius: '50%', background: `radial-gradient(circle, ${BLUE}0e 0%, transparent 65%)`, animation: 'glow 8s ease-in-out infinite 2s' }} />
-        <div style={{ position: 'absolute', bottom: '10%', left: '-5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(circle, ${PURPLE}0a 0%, transparent 65%)`, animation: 'glow 10s ease-in-out infinite 4s' }} />
-      </div>
 
       {/* Sticky mobile CTA */}
       {isMobile && showSticky && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, padding: '12px 16px 24px', background: 'rgba(6,6,8,0.94)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 -16px 48px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, padding: '12px 16px 24px', background: 'rgba(6,6,8,0.94)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <Link href="/register" style={{ display: 'block', textAlign: 'center', padding: '15px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 16, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}55` }}>
             Start for free →
           </Link>
@@ -146,9 +132,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* ══════════════════════════════════
-          HERO
-      ══════════════════════════════════ */}
+      {/* HERO */}
       <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: isMobile ? '110px 20px 80px' : '130px 24px 100px', zIndex: 1 }}>
         <div style={{ textAlign: 'center', maxWidth: 860, width: '100%' }}>
           <Pill color={GREEN}>AI-powered trading journal</Pill>
@@ -161,28 +145,21 @@ export default function Landing() {
             An AI trading journal with coaching, psychology analysis, playbook rules, emotion tracking and daily notes. Stop repeating the same mistakes.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-            <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55`, letterSpacing: '-0.01em' }}>Start for free →</Link>
+            <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55` }}>Start for free →</Link>
             <Link href="/login"    style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 500, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Log in</Link>
           </div>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>Free up to 20 trades · No credit card required</p>
 
-          {/* Hero dashboard preview */}
           <div style={{ marginTop: isMobile ? 48 : 72, animation: 'float 6s ease-in-out infinite' }}>
             <Glass style={{ padding: isMobile ? '16px' : '24px', borderRadius: 24, maxWidth: 720, margin: '0 auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 8 : 10, marginBottom: 12, position: 'relative', zIndex: 1 }}>
-                {[
-                  { l: 'Win Rate',  v: '62%',    c: GREEN  },
-                  { l: 'Total P&L', v: '+$1,240', c: GREEN  },
-                  { l: 'Avg RR',    v: '2.14',   c: ORANGE },
-                  { l: 'Streak',    v: '7 days',  c: BLUE   },
-                ].map(s => (
+                {[{ l:'Win Rate',v:'62%',c:GREEN },{ l:'Total P&L',v:'+$1,240',c:GREEN },{ l:'Avg RR',v:'2.14',c:ORANGE },{ l:'Streak',v:'7 days',c:BLUE }].map(s => (
                   <div key={s.l} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: isMobile ? '12px' : '14px 16px' }}>
                     <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{s.l}</div>
                     <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 900, color: s.c, letterSpacing: '-0.03em' }}>{s.v}</div>
                   </div>
                 ))}
               </div>
-              {/* Mini chart bars */}
               <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: isMobile ? '12px' : '14px 18px', position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>P&L by Day of Week</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isMobile ? 4 : 8, height: isMobile ? 40 : 56 }}>
@@ -199,9 +176,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          STATS
-      ══════════════════════════════════ */}
+      {/* STATS */}
       <section style={{ padding: `0 ${px} 80px`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 10 : 16 }}>
           {[
@@ -218,9 +193,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          KILLER FEATURES — NEW
-      ══════════════════════════════════ */}
+      {/* KILLER FEATURES */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
           <Pill color={PURPLE}>What's new</Pill>
@@ -230,8 +203,6 @@ export default function Landing() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20, marginBottom: isMobile ? 12 : 20 }}>
-
-          {/* Playbook */}
           <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: 36, marginBottom: 16 }}>📋</div>
@@ -239,7 +210,7 @@ export default function Landing() {
               <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 24 }}>
                 Define your setup rules. Every trade tracks which rules you followed — and shows win rate with vs without compliance.
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
                 {['Define entry rules per setup', 'Track compliance on every trade', 'Win rate: followed vs violated', '+X% insight when rules work'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 22, height: 22, borderRadius: 7, background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
@@ -247,10 +218,9 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              {/* Mini playbook card */}
-              <div style={{ marginTop: 24, background: 'rgba(255,255,255,0.04)', border: `1px solid ${GREEN}30`, borderRadius: 16, padding: '16px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${GREEN}30`, borderRadius: 16, padding: '16px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 10 }}>CHoCH + BOS + FVG</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ background: `${GREEN}15`, border: `1px solid ${GREEN}30`, borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>✓ Followed</div>
                     <div style={{ fontSize: 22, fontWeight: 900, color: GREEN }}>71%</div>
@@ -262,17 +232,14 @@ export default function Landing() {
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>win rate</div>
                   </div>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: GREEN, background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 8, padding: '7px 10px' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 8, padding: '7px 10px' }}>
                   📈 Following rules gives +37% win rate
                 </div>
               </div>
             </div>
           </Glass>
 
-          {/* Emotion + Journal */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 20 }}>
-
-            {/* Emotion tracking */}
             <Glass accent={ORANGE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>🧠</div>
@@ -281,12 +248,7 @@ export default function Landing() {
                   Log your emotional state on every trade. AI finds which emotions hurt your win rate most.
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[
-                    { e: '😌', l: 'Calm',     c: GREEN,  wr: '71%' },
-                    { e: '🤑', l: 'Greed',    c: ORANGE, wr: '38%' },
-                    { e: '💀', l: 'Revenge',  c: RED,    wr: '22%' },
-                    { e: '🚀', l: 'Euphoria', c: PURPLE, wr: '41%' },
-                  ].map(em => (
+                  {[{ e:'😌',l:'Calm',c:GREEN,wr:'71%' },{ e:'🤑',l:'Greed',c:ORANGE,wr:'38%' },{ e:'💀',l:'Revenge',c:RED,wr:'22%' },{ e:'🚀',l:'Euphoria',c:PURPLE,wr:'41%' }].map(em => (
                     <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 52 }}>
                       <div style={{ fontSize: 18 }}>{em.e}</div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{em.l}</div>
@@ -297,7 +259,6 @@ export default function Landing() {
               </div>
             </Glass>
 
-            {/* Daily Journal */}
             <Glass accent={BLUE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>📓</div>
@@ -317,7 +278,6 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* CSV Import — full width */}
         <Glass accent={ORANGE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <div>
@@ -327,13 +287,12 @@ export default function Landing() {
                 Stop entering trades manually. Upload your history directly from your exchange — we auto-detect format.
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {['Bybit', 'Binance', 'OKX', 'MEXC', 'Bitget', 'Gate.io', 'HTX', 'KuCoin', 'BingX', 'Phemex'].map(ex => (
+                {['Bybit','Binance','OKX','MEXC','Bitget','Gate.io','HTX','KuCoin','BingX','Phemex'].map(ex => (
                   <div key={ex} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{ex}</div>
                 ))}
               </div>
             </div>
             <div>
-              {/* Mock upload UI */}
               <div style={{ border: `2px dashed ${ORANGE}55`, borderRadius: 18, padding: '28px 20px', textAlign: 'center', background: `${ORANGE}08` }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📁</div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Drop your CSV here</div>
@@ -351,9 +310,7 @@ export default function Landing() {
         </Glass>
       </section>
 
-      {/* ══════════════════════════════════
-          AI FEATURES
-      ══════════════════════════════════ */}
+      {/* AI FEATURES */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
           <Pill color={GREEN}>AI Features</Pill>
@@ -361,15 +318,14 @@ export default function Landing() {
             <GradientText from="#fff" to="rgba(255,255,255,0.55)">AI that reads<br />your journal</GradientText>
           </h2>
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 20 }}>
           {[
-            { icon: '🧠', title: 'AI Coach',         color: GREEN,  desc: 'Analyzes last 50 trades, emotion patterns, playbook compliance. Gives main mistakes + 4 concrete steps.', badge: 'Pro' },
-            { icon: '🎯', title: 'Trade Score',       color: ORANGE, desc: 'AI estimates success probability before you enter. Based on your personal historical win rate for this exact setup.', badge: 'Pro' },
-            { icon: '🧬', title: 'Psychology',        color: PURPLE, desc: 'Reads your comments and emotions. Finds fear, greed, revenge trading. Gives severity + action for each pattern.', badge: 'Pro' },
-            { icon: '💬', title: 'AI Chat',           color: BLUE,   desc: 'Chat with AI that has full context of your journal, emotions, playbook, and journal mood. Ask anything.', badge: 'Pro' },
-            { icon: '📊', title: 'Trade Analysis',    color: RED,    desc: 'Detailed breakdown per trade: entry quality, mistakes, system compliance, AI grade. Runs on demand.', badge: 'Pro' },
-            { icon: '📈', title: 'Analytics',         color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, Max Drawdown, grade distribution and more.', badge: 'Free' },
+            { icon: '🧠', title: 'AI Coach',      color: GREEN,  desc: 'Analyzes last 50 trades, emotion patterns, playbook compliance. Gives main mistakes + 4 concrete steps.', badge: 'Pro' },
+            { icon: '🎯', title: 'Trade Score',    color: ORANGE, desc: 'AI estimates success probability before you enter. Based on your personal historical win rate.', badge: 'Pro' },
+            { icon: '🧬', title: 'Psychology',     color: PURPLE, desc: 'Reads your comments and emotions. Finds fear, greed, revenge trading. Gives severity + action.', badge: 'Pro' },
+            { icon: '💬', title: 'AI Chat',        color: BLUE,   desc: 'Chat with AI that has full context of your journal, emotions, playbook, and mood. Ask anything.', badge: 'Pro' },
+            { icon: '📊', title: 'Trade Analysis', color: RED,    desc: 'Detailed breakdown per trade: entry quality, mistakes, system compliance, AI grade.', badge: 'Pro' },
+            { icon: '📈', title: 'Analytics',      color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, Max Drawdown and more.', badge: 'Free' },
           ].map(f => (
             <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '32px 28px', borderRadius: 22 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
@@ -385,41 +341,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          MARKETS
-      ══════════════════════════════════ */}
-      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
-          <Pill color={ORANGE}>Markets</Pill>
-          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
-            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Futures & Spot — both covered</GradientText>
-          </h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
-          {[
-            { icon: '📈', title: 'Futures', color: BLUE, features: ['Long & Short positions', 'RR auto-calculation', 'Risk % of deposit', 'Long vs Short win rate'], desc: 'Full support for leveraged futures. Track direction, entry/stop/take, risk per trade. AI analyzes both sides separately.' },
-            { icon: '🪙', title: 'Spot',    color: ORANGE, features: ['Spot buy & sell entries', 'P&L in USDT & %', 'Setup & pair analytics', 'AI insights for spot'], desc: 'Log spot buys and sells. Track P&L in USDT and %. AI Coach finds your best pairs, worst setups, discipline patterns.' },
-          ].map(item => (
-            <Glass key={item.title} accent={item.color} style={{ padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: 28 }}>
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: 36, marginBottom: 16 }}>{item.icon}</div>
-                <div style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.03em' }}>{item.title} Trading</div>
-                <div style={{ fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 20 }}>{item.desc}</div>
-                {item.features.map(f => (
-                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${item.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: item.color, flexShrink: 0 }}>✓</div>
-                    <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.65)' }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </Glass>
-          ))}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════
-          HOW IT WORKS
-      ══════════════════════════════════ */}
+      {/* HOW IT WORKS */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
           <Pill color={BLUE}>How it works</Pill>
@@ -429,9 +351,9 @@ export default function Landing() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 16 }}>
           {[
-            { num: '01', title: 'Log your trades',   desc: 'Fill in setup, direction, result, emotion, playbook rules, screenshot, comment.', color: GREEN  },
-            { num: '02', title: 'AI analyzes',        desc: 'Run AI Coach, get Trade Score, Psychology — all using your actual journal data.', color: BLUE   },
-            { num: '03', title: 'Grow as a trader',  desc: 'Follow concrete AI steps. Watch win rate and discipline improve over time.', color: ORANGE },
+            { num: '01', title: 'Log your trades',  desc: 'Fill in setup, direction, result, emotion, playbook rules, screenshot, comment.', color: GREEN  },
+            { num: '02', title: 'AI analyzes',       desc: 'Run AI Coach, get Trade Score, Psychology — all using your actual journal data.', color: BLUE   },
+            { num: '03', title: 'Grow as a trader', desc: 'Follow concrete AI steps. Watch win rate and discipline improve over time.', color: ORANGE },
           ].map((s, i) => (
             <Glass key={s.num} accent={s.color} style={{ padding: isMobile ? '28px 22px' : '44px 36px', borderRadius: 24, background: i === 1 ? `${BLUE}0d` : 'rgba(255,255,255,0.03)' }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
@@ -444,9 +366,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          TESTIMONIALS
-      ══════════════════════════════════ */}
+      {/* TESTIMONIALS */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
           <Pill color={PURPLE}>Testimonials</Pill>
@@ -472,7 +392,7 @@ export default function Landing() {
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{t.role}</div>
                     </div>
                   </div>
-                  <div style={{ color: ORANGE, fontSize: isMobile ? 12 : 14, letterSpacing: 2 }}>★★★★★</div>
+                  <div style={{ color: GOLD, fontSize: isMobile ? 12 : 14, letterSpacing: 2 }}>★★★★★</div>
                 </div>
               </div>
             </Glass>
@@ -480,12 +400,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          PRICING
-      ══════════════════════════════════ */}
+      {/* PRICING */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 900, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
-          <Pill color={ORANGE}>Pricing</Pill>
+          <Pill color={GOLD}>Pricing</Pill>
           <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
             <GradientText from="#fff" to="rgba(255,255,255,0.55)">Start for free</GradientText>
           </h2>
@@ -493,7 +411,7 @@ export default function Landing() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Glass style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 8, fontWeight: 500 }}>Free</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>Free</div>
               <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$0</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>forever</div>
               {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n', 'CSV Import (limited)'].map(f => (
@@ -502,12 +420,12 @@ export default function Landing() {
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.55)' }}>{f}</span>
                 </div>
               ))}
-              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Get started →</Link>
+              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.04)' }}>Get started →</Link>
             </div>
           </Glass>
 
           <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28, background: `${GREEN}0d` }}>
-            <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>BEST VALUE</div>
+            <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GOLD}, ${ORANGE})`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>BEST VALUE</div>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro ⚡</div>
               <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$19</div>
@@ -524,9 +442,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          FAQ
-      ══════════════════════════════════ */}
+      {/* FAQ */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 800, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
           <Pill color={BLUE}>FAQ</Pill>
@@ -537,10 +453,7 @@ export default function Landing() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {faqs.map((faq, i) => (
             <Glass key={i} style={{ padding: 0, borderRadius: 18 }}>
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{ width: '100%', padding: isMobile ? '18px 20px' : '20px 26px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, fontFamily: FONT, minHeight: 58 }}
-              >
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', padding: isMobile ? '18px 20px' : '20px 26px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, fontFamily: FONT, minHeight: 58 }}>
                 <span style={{ fontSize: isMobile ? 14 : 15, fontWeight: 600, color: openFaq === i ? '#fff' : 'rgba(255,255,255,0.8)', textAlign: 'left', lineHeight: 1.4, position: 'relative', zIndex: 1 }}>{faq.q}</span>
                 <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: openFaq === i ? `${GREEN}22` : 'rgba(255,255,255,0.06)', border: `1px solid ${openFaq === i ? GREEN + '55' : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: openFaq === i ? GREEN : 'rgba(255,255,255,0.35)', fontSize: 18, transition: 'all 0.25s', transform: openFaq === i ? 'rotate(45deg)' : 'none', position: 'relative', zIndex: 1 }}>+</div>
               </button>
@@ -552,12 +465,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════
-          FINAL CTA
-      ══════════════════════════════════ */}
+      {/* FINAL CTA */}
       <section style={{ padding: `0 ${px} ${isMobile ? '100px' : '130px'}`, maxWidth: 860, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <Glass accent={GREEN} style={{ padding: isMobile ? '48px 24px' : '80px 64px', borderRadius: 32, background: `${GREEN}0d`, textAlign: 'center' }}>
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}18 0%, transparent 70%)`, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}15 0%, transparent 70%)`, pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: isMobile ? 40 : 68, marginBottom: 16 }}>🚀</div>
             <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 14, lineHeight: 1.05 }}>
@@ -566,7 +477,7 @@ export default function Landing() {
             <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', marginBottom: 32, lineHeight: 1.6 }}>
               Join traders who are already using AI<br />to improve their results
             </p>
-            <Link href="/register" style={{ padding: isMobile ? '15px 36px' : '18px 52px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 16 : 18, fontWeight: 800, boxShadow: `0 0 60px ${GREEN}55`, display: 'inline-block', letterSpacing: '-0.01em' }}>
+            <Link href="/register" style={{ padding: isMobile ? '15px 36px' : '18px 52px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 16 : 18, fontWeight: 800, boxShadow: `0 0 60px ${GREEN}55`, display: 'inline-block' }}>
               Start for free →
             </Link>
             <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Free · No credit card · Cancel anytime</div>
