@@ -3,8 +3,8 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'TradeLog Pro — AI Trading Journal',
-  description: 'Професійний щоденник трейдера з AI-аналітикою. by dnproduction',
+  title: 'AurumTrade — AI Trading Journal',
+  description: 'Professional AI trading journal with coaching, psychology analysis and playbook tracking. by dnproduction',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
