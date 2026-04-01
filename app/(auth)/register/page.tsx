@@ -10,37 +10,64 @@ const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
 
 function Logo() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-      <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
-        <rect x="0"  y="13" width="4" height="9"  rx="2" fill="#30d158" opacity="0.4"/>
-        <rect x="5"  y="9"  width="4" height="13" rx="2" fill="#30d158" opacity="0.62"/>
-        <rect x="10" y="4"  width="4" height="18" rx="2" fill="#30d158" opacity="0.82"/>
-        <rect x="15" y="0"  width="4" height="22" rx="2" fill="#30d158"/>
-      </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: 10,
+        background: 'linear-gradient(135deg, #c9a84c 0%, #f5d77e 50%, #c9a84c 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 0 16px rgba(201,168,76,0.4)',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontFamily: NUNITO, fontSize: 16, fontWeight: 900, color: '#1a1100' }}>A</span>
+      </div>
       <div style={{ lineHeight: 1 }}>
-        <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: '1.1' }}>TradeLog</div>
-        <div style={{ fontFamily: NUNITO, fontSize: 10, fontWeight: 500, color: '#30d158', letterSpacing: '0.04em', lineHeight: '1.1' }}>Pro Edition</div>
+        <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: '1.1' }}>AurumTrade</div>
+        <div style={{ fontFamily: NUNITO, fontSize: 10, fontWeight: 500, color: '#c9a84c', letterSpacing: '0.04em', lineHeight: '1.1' }}>Pro Edition</div>
       </div>
     </div>
   )
 }
 
 export default function RegisterPage() {
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName,  setLastName]  = useState('')
+  const [email,     setEmail]     = useState('')
+  const [password,  setPassword]  = useState('')
+  const [error,     setError]     = useState('')
+  const [loading,   setLoading]   = useState(false)
   const router   = useRouter()
   const supabase = createClient()
 
   const handleRegister = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter your first and last name')
+      return
+    }
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signUp({
+
+    const username = `${firstName.trim()} ${lastName.trim()}`
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email, password,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` }
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { full_name: username },
+      }
     })
-    if (error) { setError(error.message); setLoading(false); return }
+
+    if (signUpError) { setError(signUpError.message); setLoading(false); return }
+
+    // Save username to users table
+    if (data.user) {
+      await supabase.from('users').upsert({
+        id: data.user.id,
+        email,
+        username,
+        plan: 'free',
+      })
+    }
+
     router.push('/dashboard')
   }
 
@@ -49,6 +76,20 @@ export default function RegisterPage() {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/dashboard` }
     })
+  }
+
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#fff', fontSize: 14, outline: 'none',
+    boxSizing: 'border-box' as const,
+  }
+
+  const labelStyle = {
+    fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' as const,
+    display: 'block' as const, marginBottom: 8,
+    letterSpacing: '0.04em', textTransform: 'uppercase' as const,
   }
 
   return (
@@ -62,7 +103,7 @@ export default function RegisterPage() {
       <div style={{
         position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 500, height: 500, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(48,209,88,0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
       <div style={{
@@ -90,11 +131,11 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(48,209,88,0.1)', border: '1px solid rgba(48,209,88,0.2)',
+            background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)',
             borderRadius: 100, padding: '5px 14px', marginBottom: 20,
           }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#30d158', boxShadow: '0 0 8px #30d158' }} />
-            <span style={{ fontSize: 12, color: '#30d158', fontWeight: 600 }}>Free to start</span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c9a84c', boxShadow: '0 0 8px #c9a84c' }} />
+            <span style={{ fontSize: 12, color: '#c9a84c', fontWeight: 600 }}>Free to start</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 6 }}>Create account</h1>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Start trading smarter today</p>
@@ -109,40 +150,46 @@ export default function RegisterPage() {
           }}>{error}</div>
         )}
 
+        {/* First + Last Name row */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>First Name</label>
+            <input
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              placeholder="John"
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Last Name</label>
+            <input
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+              placeholder="Smith"
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
         {/* Email */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Email
-          </label>
+          <label style={labelStyle}>Email</label>
           <input
             type="email" value={email} onChange={e => setEmail(e.target.value)}
             placeholder="you@email.com"
-            style={{
-              width: '100%', padding: '12px 14px', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#fff', fontSize: 14, outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            style={inputStyle}
           />
         </div>
 
         {/* Password */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 8, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            Password
-          </label>
+          <label style={labelStyle}>Password</label>
           <input
             type="password" value={password} onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
             onKeyDown={e => e.key === 'Enter' && handleRegister()}
-            style={{
-              width: '100%', padding: '12px 14px', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#fff', fontSize: 14, outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            style={inputStyle}
           />
         </div>
 
@@ -152,10 +199,11 @@ export default function RegisterPage() {
           disabled={loading}
           style={{
             width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-            background: '#30d158', color: '#000',
+            background: 'linear-gradient(135deg, #c9a84c 0%, #f5d77e 50%, #c9a84c 100%)',
+            color: '#1a1100',
             fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.7 : 1,
-            boxShadow: loading ? 'none' : '0 0 30px rgba(48,209,88,0.25)',
+            boxShadow: loading ? 'none' : '0 0 30px rgba(201,168,76,0.3)',
             fontFamily: FONT, transition: 'all 0.2s',
           }}
         >
@@ -193,7 +241,7 @@ export default function RegisterPage() {
         {/* Footer */}
         <p style={{ textAlign: 'center', fontSize: 14, marginTop: 24, color: 'rgba(255,255,255,0.3)' }}>
           Already have an account?{' '}
-          <Link href="/login" style={{ color: '#30d158', fontWeight: 600, textDecoration: 'none' }}>
+          <Link href="/login" style={{ color: '#c9a84c', fontWeight: 600, textDecoration: 'none' }}>
             Sign in
           </Link>
         </p>
