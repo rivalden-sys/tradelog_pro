@@ -44,9 +44,7 @@ function Glass({ children, accent, style, hover }: { children: React.ReactNode; 
         backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
         border: `1px solid ${accent ? accent + '40' : hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.1)'}`,
         borderRadius: 28,
-        boxShadow: accent
-          ? `inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), 0 0 80px ${accent}12`
-          : `inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)`,
         position: 'relative', overflow: 'hidden',
         transition: 'all 0.3s ease',
         ...style,
