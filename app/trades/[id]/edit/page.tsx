@@ -11,12 +11,12 @@ const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
 const EMOTIONS = [
-  { value: 'calm',     emoji: '😌', label_uk: 'Спокій',   label_en: 'Calm'     },
-  { value: 'fear',     emoji: '😰', label_uk: 'Страх',    label_en: 'Fear'     },
-  { value: 'greed',    emoji: '🤑', label_uk: 'Жадібність', label_en: 'Greed'  },
-  { value: 'anger',    emoji: '😤', label_uk: 'Злість',   label_en: 'Anger'    },
-  { value: 'euphoria', emoji: '🚀', label_uk: 'Ейфорія',  label_en: 'Euphoria' },
-  { value: 'revenge',  emoji: '💀', label_uk: 'Revenge',  label_en: 'Revenge'  },
+  { value: 'calm',     emoji: '😌', label_uk: 'Спокій',     label_en: 'Calm'     },
+  { value: 'fear',     emoji: '😰', label_uk: 'Страх',      label_en: 'Fear'     },
+  { value: 'greed',    emoji: '🤑', label_uk: 'Жадібність', label_en: 'Greed'    },
+  { value: 'anger',    emoji: '😤', label_uk: 'Злість',     label_en: 'Anger'    },
+  { value: 'euphoria', emoji: '🚀', label_uk: 'Ейфорія',    label_en: 'Euphoria' },
+  { value: 'revenge',  emoji: '💀', label_uk: 'Revenge',    label_en: 'Revenge'  },
 ]
 const DANGER_EMOTIONS = ['fear', 'greed', 'anger', 'euphoria', 'revenge']
 
@@ -65,6 +65,8 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
     comment: '', tradingview_url: '', entry_price: '', stop_price: '',
     take_price: '', risk_pct: '', risk_usdt: '', status: 'closed',
     emotion: '' as string,
+    mae_price: '' as string,
+    mfe_price: '' as string,
   })
 
   useEffect(() => {
@@ -97,6 +99,8 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
         risk_usdt:       String(d.risk_usdt   ?? ''),
         status:          d.status          || 'closed',
         emotion:         d.emotion         || '',
+        mae_price:       String(d.mae_price ?? ''),
+        mfe_price:       String(d.mfe_price ?? ''),
       })
       if (d.risk_usdt && !d.risk_pct) setRiskMode('usdt')
       const { data: { user } } = await supabase.auth.getUser()
@@ -166,7 +170,9 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
         risk_pct:    parseFloat(form.risk_pct)    || null,
         risk_usdt:   parseFloat(form.risk_usdt)   || null,
         status: form.status,
-        emotion: form.emotion || null,
+        emotion:    form.emotion    || null,
+        mae_price:  parseFloat(form.mae_price) || null,
+        mfe_price:  parseFloat(form.mfe_price) || null,
       }),
     })
     const json = await res.json()
@@ -351,18 +357,13 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
                 {EMOTIONS.map(em => {
                   const active = form.emotion === em.value
                   return (
-                    <button
-                      key={em.value}
-                      onClick={() => set('emotion', active ? '' : em.value)}
-                      style={{
-                        padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
-                        fontFamily: FONT, fontSize: 13, fontWeight: active ? 700 : 500,
-                        border: `1px solid ${active ? ORANGE : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
-                        background: active ? ORANGE + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-                        color: active ? ORANGE : subColor,
-                        transition: 'all 0.15s',
-                      }}
-                    >
+                    <button key={em.value} onClick={() => set('emotion', active ? '' : em.value)} style={{
+                      padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
+                      fontFamily: FONT, fontSize: 13, fontWeight: active ? 700 : 500,
+                      border: `1px solid ${active ? ORANGE : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                      background: active ? ORANGE + '22' : dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                      color: active ? ORANGE : subColor, transition: 'all 0.15s',
+                    }}>
                       {em.emoji} {locale === 'uk' ? em.label_uk : em.label_en}
                     </button>
                   )
@@ -411,6 +412,22 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               </div>
             )}
 
+            {/* MAE / MFE */}
+            {!isPlanned && (
+              <div className="form-grid-2">
+                <div>
+                  <label style={labelStyle}>MAE — мін. ціна під час угоди</label>
+                  <input type="number" step="any" placeholder="Найнижча ціна" value={form.mae_price} onChange={e => set('mae_price', e.target.value)} style={inputStyle()} />
+                  <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>Maximum Adverse Excursion</div>
+                </div>
+                <div>
+                  <label style={labelStyle}>MFE — макс. ціна під час угоди</label>
+                  <input type="number" step="any" placeholder="Найвища ціна" value={form.mfe_price} onChange={e => set('mfe_price', e.target.value)} style={inputStyle()} />
+                  <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>Maximum Favorable Excursion</div>
+                </div>
+              </div>
+            )}
+
             {/* Comment */}
             <div>
               <label style={labelStyle}>Коментар</label>
@@ -427,7 +444,6 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, position: 'relative' }}>{error}</div>
             )}
 
-            {/* Save button */}
             <button onClick={save} disabled={saving} style={{
               background: dark
                 ? (saving ? 'rgba(255,255,255,0.05)' : DARK.green)
