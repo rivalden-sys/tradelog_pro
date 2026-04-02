@@ -47,6 +47,13 @@ function filterByPeriod(trades: Trade[], period: Period): Trade[] {
   return trades.filter(t => new Date(t.date) >= cutoff)
 }
 
+function filterByMonth(trades: Trade[], year: number, month: number): Trade[] {
+  return trades.filter(t => {
+    const d = new Date(t.date)
+    return d.getFullYear() === year && d.getMonth() === month
+  })
+}
+
 function calcStats(trades: Trade[]) {
   const wins  = trades.filter(t => t.result === 'Тейк')
   const total = trades.length
@@ -226,7 +233,6 @@ export default function DashboardPage() {
   const t    = th(dark)
   const { t: tr } = useLocale()
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const GRAY   = dark ? DARK.gray   : LIGHT.gray
@@ -282,6 +288,34 @@ export default function DashboardPage() {
   const byWeekday = calcByWeekday(filtered)
   const recent    = filtered.slice(0, 10)
 
+  // Порівняння місяців
+  const now = new Date()
+  const curMonth  = now.getMonth()
+  const curYear   = now.getFullYear()
+  const prevMonth = curMonth === 0 ? 11 : curMonth - 1
+  const prevYear  = curMonth === 0 ? curYear - 1 : curYear
+  const curMonthTrades  = filterByMonth(trades, curYear, curMonth)
+  const prevMonthTrades = filterByMonth(trades, prevYear, prevMonth)
+  const curM  = calcStats(curMonthTrades)
+  const prevM = calcStats(prevMonthTrades)
+  const hasPrevMonth = prevMonthTrades.length > 0
+
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+  function Delta({ cur, prev, suffix = '', invert = false }: { cur: number; prev: number; suffix?: string; invert?: boolean }) {
+    if (prev === 0 && cur === 0) return <span style={{ fontSize: 11, color: t.sub }}>—</span>
+    const diff = cur - prev
+    const isPos = invert ? diff < 0 : diff > 0
+    const isNeg = invert ? diff > 0 : diff < 0
+    const color = isPos ? GREEN : isNeg ? RED : t.sub
+    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→'
+    return (
+      <span style={{ fontSize: 11, fontWeight: 700, color }}>
+        {arrow} {diff > 0 ? '+' : ''}{diff.toFixed(suffix === '%' ? 0 : 2)}{suffix}
+      </span>
+    )
+  }
+
   const statCards = [
     { label: tr('dashboard_trades'),    value: stats.total,                                                          color: BLUE   },
     { label: tr('dashboard_winrate'),   value: `${stats.win_rate}%`,                                                 color: stats.win_rate >= 50 ? GREEN : RED },
@@ -307,35 +341,10 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, transition: 'background 0.3s', position: 'relative' }}>
 
-      {/* Фон */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 0,
-        background: dark ? DARK.bg : LIGHT.bg,
-      }} />
-
-      {/* Noise texture */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15,
-      }} />
-
-      {/* Ambient glow */}
-      <div style={{
-        position: 'fixed', top: -200, left: '30%',
-        width: 600, height: 600, borderRadius: '50%',
-        background: dark
-          ? 'radial-gradient(circle, rgba(48,209,88,0.07) 0%, transparent 70%)'
-          : 'radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%)',
-        pointerEvents: 'none', zIndex: 0,
-      }} />
-      <div style={{
-        position: 'fixed', bottom: -200, right: '10%',
-        width: 500, height: 500, borderRadius: '50%',
-        background: dark
-          ? 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)'
-          : 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)',
-        pointerEvents: 'none', zIndex: 0,
-      }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
+      <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.07) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -200, right: '10%', width: 500, height: 500, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(10,132,255,0.05) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar />
@@ -347,31 +356,16 @@ export default function DashboardPage() {
               <div style={{ fontSize: 22, fontWeight: 800, color: t.text, letterSpacing: '-0.04em' }}>{tr('dashboard_title')}</div>
               <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>{filtered.length} {tr('dashboard_subtitle')}</div>
             </div>
-            <div style={{
-              display: 'flex', gap: 2,
-              background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.5)',
-              borderRadius: 12, padding: 3,
-              border: `1px solid ${t.border}`,
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-            }}>
+            <div style={{ display: 'flex', gap: 2, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.5)', borderRadius: 12, padding: 3, border: `1px solid ${t.border}`, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
               {PERIODS.map(p => (
                 <button key={p.value} onClick={() => setPeriod(p.value)} style={{
                   padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                  background: period === p.value
-                    ? dark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)'
-                    : 'transparent',
+                  background: period === p.value ? dark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)' : 'transparent',
                   color: period === p.value ? t.text : t.sub,
                   fontFamily: FONT, fontSize: 13, fontWeight: period === p.value ? 700 : 400,
-                  boxShadow: period === p.value
-                    ? dark
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.12)'
-                      : 'inset 0 1px 0 rgba(255,255,255,1), 0 1px 3px rgba(0,0,0,0.06)'
-                    : 'none',
+                  boxShadow: period === p.value ? dark ? 'inset 0 1px 0 rgba(255,255,255,0.12)' : 'inset 0 1px 0 rgba(255,255,255,1), 0 1px 3px rgba(0,0,0,0.06)' : 'none',
                   transition: 'all 0.15s',
-                }}>
-                  {p.label}
-                </button>
+                }}>{p.label}</button>
               ))}
             </div>
           </div>
@@ -382,16 +376,40 @@ export default function DashboardPage() {
               <div key={sc.label} style={statCard(dark)}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>{sc.label}</div>
                 <div style={{ fontSize: sc.label === tr('dashboard_bestsetup') ? 11 : 18, fontWeight: 800, color: sc.color, letterSpacing: '-0.03em', lineHeight: 1.2 }}>{sc.value}</div>
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: '45%',
-                  background: dark
-                    ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)'
-                    : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
-                  borderRadius: '16px 16px 0 0', pointerEvents: 'none',
-                }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '45%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '16px 16px 0 0', pointerEvents: 'none' }} />
               </div>
             ))}
           </div>
+
+          {/* Порівняння місяців */}
+          {hasPrevMonth && (
+            <div style={{ ...glassCard(dark), marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: t.text, letterSpacing: '-0.02em' }}>
+                  Month vs Month
+                </div>
+                <div style={{ fontSize: 12, color: t.sub }}>
+                  {MONTH_NAMES[prevMonth]} → {MONTH_NAMES[curMonth]}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, position: 'relative' }}>
+                {[
+                  { label: 'Trades', cur: curM.total, prev: prevM.total, suffix: '', fmt: (v: number) => `${v}` },
+                  { label: 'Win Rate', cur: curM.win_rate, prev: prevM.win_rate, suffix: '%', fmt: (v: number) => `${v}%` },
+                  { label: 'Total P&L', cur: curM.total_pnl, prev: prevM.total_pnl, suffix: '$', fmt: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(0)}$` },
+                  { label: 'Avg RR', cur: curM.avg_rr, prev: prevM.avg_rr, suffix: '', fmt: (v: number) => v.toFixed(2) },
+                ].map(m => (
+                  <div key={m.label} style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.5)', border: `1px solid ${t.border}`, borderRadius: 14, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{m.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: t.text, letterSpacing: '-0.03em', marginBottom: 4 }}>{m.fmt(m.cur)}</div>
+                    <div style={{ fontSize: 11, color: t.sub, marginBottom: 4 }}>prev: {m.fmt(m.prev)}</div>
+                    <Delta cur={m.cur} prev={m.prev} suffix={m.suffix} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Long vs Short */}
           {(stats.long_wr !== null || stats.short_wr !== null) && (
@@ -527,18 +545,8 @@ export default function DashboardPage() {
                         {d.pnl !== 0 ? `${isPos ? '+' : ''}${d.pnl.toFixed(0)}$` : '—'}
                       </div>
                       <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                        <div style={{
-                          width: '60%', height: barH, borderRadius: 4,
-                          background: d.count > 0
-                            ? isPos ? `linear-gradient(180deg, #4ade80, ${GREEN})` : `linear-gradient(180deg, #ff6b61, ${RED})`
-                            : dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-                          opacity: d.count > 0 ? 1 : 0.3,
-                          transition: 'height 0.4s ease',
-                          position: 'relative', overflow: 'hidden',
-                        }}>
-                          {d.count > 0 && (
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%)' }} />
-                          )}
+                        <div style={{ width: '60%', height: barH, borderRadius: 4, background: d.count > 0 ? isPos ? `linear-gradient(180deg, #4ade80, ${GREEN})` : `linear-gradient(180deg, #ff6b61, ${RED})` : dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', opacity: d.count > 0 ? 1 : 0.3, transition: 'height 0.4s ease', position: 'relative', overflow: 'hidden' }}>
+                          {d.count > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%)' }} />}
                         </div>
                       </div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: t.sub }}>{d.day}</div>
