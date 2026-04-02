@@ -147,7 +147,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       setCommentValue(json.data.comment || '')
       const supabase = createClient()
 
-      // AI sessions
       const { data: sessions } = await supabase
         .from('ai_sessions').select('*').eq('trade_id', id)
         .in('type', ['trade_review', 'trade_score'])
@@ -161,18 +160,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         if (scores.length > 0)  { try { setScoreData(JSON.parse(scores[0].response)) } catch {} }
       }
 
-      // Rule checks
       const { data: checks } = await supabase
-        .from('trade_rule_checks')
-        .select('*')
-        .eq('trade_id', id)
+        .from('trade_rule_checks').select('*').eq('trade_id', id)
       if (checks?.length) {
         setRuleChecks(checks)
         const { data: pb } = await supabase
-          .from('playbooks')
-          .select('*')
-          .eq('id', checks[0].playbook_id)
-          .single()
+          .from('playbooks').select('*').eq('id', checks[0].playbook_id).single()
         if (pb) setPlaybook(pb)
       }
 
@@ -436,6 +429,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       { label: t('trade_detail_rr'),      value: String(trade.rr) },
                       { label: t('trade_detail_pnl_usd'), value: `${trade.profit_usd >= 0 ? '+' : ''}${trade.profit_usd}$`, color: trade.profit_usd >= 0 ? GREEN : RED },
                       { label: t('trade_detail_pnl_pct'), value: `${trade.profit_pct >= 0 ? '+' : ''}${trade.profit_pct}%`, color: trade.profit_pct >= 0 ? GREEN : RED },
+                      ...((trade as any).mae_price ? [{ label: 'MAE', value: String((trade as any).mae_price), color: RED   }] : []),
+                      ...((trade as any).mfe_price ? [{ label: 'MFE', value: String((trade as any).mfe_price), color: GREEN }] : []),
                     ] : [
                       { label: t('trade_detail_rr'),      value: String(trade.rr) },
                       { label: t('trade_detail_status'),  value: t('trade_detail_planned'), color: ORANGE },
@@ -484,29 +479,18 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                         <div key={rule.id} style={{
                           display: 'flex', alignItems: 'flex-start', gap: 10,
                           padding: '10px 12px', borderRadius: 10,
-                          background: followed
-                            ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)'
-                            : dark ? 'rgba(255,69,58,0.08)'  : 'rgba(255,69,58,0.06)',
+                          background: followed ? dark ? 'rgba(48,209,88,0.08)' : 'rgba(48,209,88,0.07)' : dark ? 'rgba(255,69,58,0.08)' : 'rgba(255,69,58,0.06)',
                           border: `1px solid ${followed ? GREEN + '44' : RED + '44'}`,
                         }}>
-                          <div style={{
-                            width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                            border: `2px solid ${followed ? GREEN : RED}`,
-                            background: followed ? GREEN : 'transparent',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1, border: `2px solid ${followed ? GREEN : RED}`, background: followed ? GREEN : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {followed
                               ? <span style={{ color: '#fff', fontSize: 11, fontWeight: 800 }}>✓</span>
                               : <span style={{ color: RED, fontSize: 11, fontWeight: 800 }}>✕</span>
                             }
                           </div>
                           <div>
-                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>
-                              Правило {i + 1}
-                            </div>
-                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>
-                              {rule.text}
-                            </div>
+                            <div style={{ fontSize: 12, color: subColor, fontWeight: 600, marginBottom: 2 }}>Правило {i + 1}</div>
+                            <div style={{ fontSize: 14, color: textColor, lineHeight: 1.4 }}>{rule.text}</div>
                           </div>
                         </div>
                       )
@@ -548,10 +532,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <div style={{
                     fontSize: 14, color: trade.comment ? textColor : subColor, lineHeight: 1.7,
                     background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
-                    borderRadius: 12, padding: '14px 16px',
-                    border: `1px solid ${borderColor}`,
-                    fontStyle: trade.comment ? 'normal' : 'italic',
-                    position: 'relative',
+                    borderRadius: 12, padding: '14px 16px', border: `1px solid ${borderColor}`,
+                    fontStyle: trade.comment ? 'normal' : 'italic', position: 'relative',
                   }}>
                     {trade.comment || t('trade_detail_no_comment')}
                   </div>
