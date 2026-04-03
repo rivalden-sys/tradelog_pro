@@ -238,6 +238,7 @@ export default function SimulatorPage() {
                 color: c, fontSize: 15, fontWeight: 800,
                 fontFamily: FONT, textAlign: 'right',
                 outline: 'none', letterSpacing: '-0.02em',
+                MozAppearance: 'textfield' as any,
               }}
             />
             {unit !== '$' && unit && <span style={{ fontSize: 14, fontWeight: 700, color: c }}>{unit}</span>}
@@ -393,7 +394,7 @@ export default function SimulatorPage() {
                   {isUk ? '📊 Статистика торгівлі' : '📊 Trading Statistics'}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <Slider label={isUk ? 'Win Rate' : 'Win Rate'} value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
+                  <Slider label="Win Rate" value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
                   <Slider label={isUk ? 'Середній прибуток' : 'Average Win'} value={avgWin} min={10} max={1000} step={10} unit="$" color={GREEN} onChange={setAvgWin} />
                   <Slider label={isUk ? 'Середній збиток' : 'Average Loss'} value={avgLoss} min={10} max={1000} step={10} unit="$" color={RED} onChange={setAvgLoss} />
                   <Slider label={isUk ? 'Угод на місяць' : 'Trades per Month'} value={tradesPerMonth} min={1} max={100} color={BLUE} onChange={setTradesPerMonth} />
@@ -521,7 +522,8 @@ export default function SimulatorPage() {
         .sim-grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
         @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
         input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+        input[type=number]::-webkit-outer-spin-button { display: none; }
+        input[type=number] { -moz-appearance: textfield; }
       `}</style>
     </div>
   )
