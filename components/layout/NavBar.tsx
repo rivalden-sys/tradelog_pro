@@ -39,15 +39,16 @@ export default function NavBar() {
   }
 
   const links = [
-    { href: '/dashboard', label: t('nav_dashboard') },
-    { href: '/trades',    label: t('nav_journal')   },
-    { href: '/playbook',  label: '📋 Playbook'       },
-    { href: '/journal',   label: '📓 Journal'         },
-    { href: '/ai',        label: t('nav_ai')         },
-    { href: '/analytics', label: t('nav_analytics')  },
-    { href: '/settings',  label: t('nav_settings')   },
-    { href: '/billing',   label: t('nav_billing')    },
-  ];
+  { href: '/dashboard', label: t('nav_dashboard') },
+  { href: '/trades',    label: t('nav_journal')   },
+  { href: '/goals',     label: '🎯 Goals'          },
+  { href: '/playbook',  label: '📋 Playbook'       },
+  { href: '/journal',   label: '📓 Journal'         },
+  { href: '/ai',        label: t('nav_ai')         },
+  { href: '/analytics', label: t('nav_analytics')  },
+  { href: '/settings',  label: t('nav_settings')   },
+  { href: '/billing',   label: t('nav_billing')    },
+]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
