@@ -117,7 +117,7 @@ export default function GoalsPage() {
   )
 
   const bg      = dark ? DARK.bg      : LIGHT.bg
-  const surface = dark ? DARK.surface : LIGHT.surface
+  const surface = dark ? '#1c1c1e'    : '#ffffff'
   const text    = dark ? DARK.text    : LIGHT.text
   const sub     = dark ? DARK.sub     : LIGHT.sub
   const border  = dark ? DARK.border  : 'rgba(0,0,0,0.08)'
