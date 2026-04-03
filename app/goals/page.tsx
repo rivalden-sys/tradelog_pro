@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import { DARK, LIGHT } from '@/lib/colors'
+import NavBar from '@/components/layout/NavBar'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const GREEN  = '#30d158'
@@ -30,10 +31,10 @@ interface GoalProgress {
 }
 
 const GOAL_META: Record<GoalType, { label: string; labelUk: string; unit: string; color: string; icon: string; description: string; descriptionUk: string }> = {
-  win_rate:    { label: 'Win Rate',         labelUk: 'Win Rate',           unit: '%',  color: GREEN,  icon: '🎯', description: 'Percentage of winning trades', descriptionUk: 'Відсоток прибуткових угод' },
-  trade_count: { label: 'Trades',           labelUk: 'Угоди',              unit: '',   color: BLUE,   icon: '📊', description: 'Number of closed trades',       descriptionUk: 'Кількість закритих угод' },
-  total_pnl:   { label: 'Total P&L',        labelUk: 'Загальний P&L',      unit: '$',  color: PURPLE, icon: '💰', description: 'Total profit in USD',           descriptionUk: 'Загальний прибуток у USD' },
-  max_losses:  { label: 'Max Losing Streak',labelUk: 'Макс. серія збитків',unit: '',   color: ORANGE, icon: '🛡️', description: 'Max consecutive losing trades',  descriptionUk: 'Макс. збиткових угод поспіль' },
+  win_rate:    { label: 'Win Rate',          labelUk: 'Win Rate',            unit: '%', color: GREEN,  icon: '🎯', description: 'Percentage of winning trades', descriptionUk: 'Відсоток прибуткових угод' },
+  trade_count: { label: 'Trades',            labelUk: 'Угоди',               unit: '',  color: BLUE,   icon: '📊', description: 'Number of closed trades',      descriptionUk: 'Кількість закритих угод' },
+  total_pnl:   { label: 'Total P&L',         labelUk: 'Загальний P&L',       unit: '$', color: PURPLE, icon: '💰', description: 'Total profit in USD',          descriptionUk: 'Загальний прибуток у USD' },
+  max_losses:  { label: 'Max Losing Streak', labelUk: 'Макс. серія збитків', unit: '',  color: ORANGE, icon: '🛡️', description: 'Max consecutive losing trades', descriptionUk: 'Макс. збиткових угод поспіль' },
 }
 
 function getWeekRange() {
@@ -116,23 +117,23 @@ export default function GoalsPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const bg      = dark ? DARK.bg      : LIGHT.bg
-  const surface = dark ? '#1c1c1e'    : '#ffffff'
-  const text    = dark ? DARK.text    : LIGHT.text
-  const sub     = dark ? DARK.sub     : LIGHT.sub
-  const border  = dark ? DARK.border  : 'rgba(0,0,0,0.08)'
+  const bg      = dark ? DARK.bg   : LIGHT.bg
+  const surface = dark ? '#1c1c1e' : '#ffffff'
+  const text    = dark ? DARK.text : LIGHT.text
+  const sub     = dark ? DARK.sub  : LIGHT.sub
+  const border  = dark ? DARK.border : 'rgba(0,0,0,0.08)'
 
-  const [goals,        setGoals]        = useState<Goal[]>([])
-  const [weekTrades,   setWeekTrades]   = useState<any[]>([])
-  const [monthTrades,  setMonthTrades]  = useState<any[]>([])
-  const [allTrades,    setAllTrades]    = useState<any[]>([])
-  const [loading,      setLoading]      = useState(true)
-  const [showForm,     setShowForm]     = useState(false)
-  const [formType,     setFormType]     = useState<GoalType>('win_rate')
-  const [formPeriod,   setFormPeriod]   = useState<Period>('weekly')
-  const [formTarget,   setFormTarget]   = useState('')
-  const [saving,       setSaving]       = useState(false)
-  const [editGoal,     setEditGoal]     = useState<Goal | null>(null)
+  const [goals,       setGoals]       = useState<Goal[]>([])
+  const [weekTrades,  setWeekTrades]  = useState<any[]>([])
+  const [monthTrades, setMonthTrades] = useState<any[]>([])
+  const [allTrades,   setAllTrades]   = useState<any[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [showForm,    setShowForm]    = useState(false)
+  const [formType,    setFormType]    = useState<GoalType>('win_rate')
+  const [formPeriod,  setFormPeriod]  = useState<Period>('weekly')
+  const [formTarget,  setFormTarget]  = useState('')
+  const [saving,      setSaving]      = useState(false)
+  const [editGoal,    setEditGoal]    = useState<Goal | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -197,8 +198,7 @@ export default function GoalsPage() {
     setShowForm(true)
   }
 
-  const streak = calcStreak(allTrades)
-
+  const streak     = calcStreak(allTrades)
   const weekGoals  = goals.filter(g => g.period === 'weekly')
   const monthGoals = goals.filter(g => g.period === 'monthly')
 
@@ -227,12 +227,12 @@ export default function GoalsPage() {
     const color  = meta.color
 
     const formatCurrent = () => {
-      if (goal.type === 'win_rate') return `${prog.current}%`
+      if (goal.type === 'win_rate')  return `${prog.current}%`
       if (goal.type === 'total_pnl') return `$${prog.current}`
       return String(prog.current)
     }
     const formatTarget = () => {
-      if (goal.type === 'win_rate') return `${goal.target}%`
+      if (goal.type === 'win_rate')  return `${goal.target}%`
       if (goal.type === 'total_pnl') return `$${goal.target}`
       return String(goal.target)
     }
@@ -241,10 +241,8 @@ export default function GoalsPage() {
       <div style={{
         background: surface,
         border: `1px solid ${prog.done ? GREEN + '55' : border}`,
-        borderRadius: 16,
-        padding: '20px 22px',
-        position: 'relative',
-        transition: 'border-color 0.3s',
+        borderRadius: 16, padding: '20px 22px',
+        position: 'relative', transition: 'border-color 0.3s',
         boxShadow: prog.done ? `0 0 20px ${GREEN}18` : 'none',
       }}>
         {prog.done && (
@@ -279,7 +277,7 @@ export default function GoalsPage() {
     )
   }
 
-  function Section({ title, goals, period }: { title: string; goals: Goal[]; period: Period }) {
+  function Section({ title, goals }: { title: string; goals: Goal[]; period: Period }) {
     return (
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -307,13 +305,17 @@ export default function GoalsPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: sub, fontSize: 15 }}>{isUk ? 'Завантаження...' : 'Loading...'}</div>
+    <div style={{ minHeight: '100vh', background: bg }}>
+      <NavBar />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: sub, fontSize: 15 }}>
+        {isUk ? 'Завантаження...' : 'Loading...'}
+      </div>
     </div>
   )
 
   return (
     <div style={{ minHeight: '100vh', background: bg, fontFamily: FONT }}>
+      <NavBar />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 20px' }}>
 
         {/* Header */}
@@ -330,8 +332,8 @@ export default function GoalsPage() {
         <div style={{
           ...card({ marginBottom: 40 }),
           background: dark
-            ? `linear-gradient(135deg, rgba(255,159,10,0.12) 0%, rgba(255,159,10,0.04) 100%)`
-            : `linear-gradient(135deg, rgba(255,159,10,0.08) 0%, rgba(255,159,10,0.02) 100%)`,
+            ? 'linear-gradient(135deg, rgba(255,159,10,0.12) 0%, rgba(255,159,10,0.04) 100%)'
+            : 'linear-gradient(135deg, rgba(255,159,10,0.08) 0%, rgba(255,159,10,0.02) 100%)',
           border: `1px solid ${ORANGE}44`,
           display: 'flex', alignItems: 'center', gap: 28,
         }}>
@@ -344,7 +346,9 @@ export default function GoalsPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontSize: 48, fontWeight: 800, color: ORANGE, letterSpacing: '-0.03em' }}>{streak}</span>
-              <span style={{ fontSize: 18, color: sub }}>{isUk ? (streak === 1 ? 'день' : streak < 5 ? 'дні' : 'днів') : streak === 1 ? 'day' : 'days'}</span>
+              <span style={{ fontSize: 18, color: sub }}>
+                {isUk ? (streak === 1 ? 'день' : streak < 5 ? 'дні' : 'днів') : streak === 1 ? 'day' : 'days'}
+              </span>
             </div>
             <div style={{ fontSize: 14, color: sub, marginTop: 4 }}>
               {streak === 0
@@ -385,8 +389,7 @@ export default function GoalsPage() {
           position: 'fixed', inset: 0, zIndex: 200,
           background: 'rgba(0,0,0,0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-          backdropFilter: 'blur(4px)',
+          padding: 20, backdropFilter: 'blur(4px)',
         }} onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditGoal(null) } }}>
           <div style={{
             background: surface, borderRadius: 20,
@@ -456,8 +459,7 @@ export default function GoalsPage() {
                   width: '100%', padding: '11px 14px', borderRadius: 12,
                   background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
                   border: `1px solid ${border}`, color: text,
-                  fontSize: 16, fontFamily: FONT, boxSizing: 'border-box',
-                  outline: 'none',
+                  fontSize: 16, fontFamily: FONT, boxSizing: 'border-box', outline: 'none',
                 }}
               />
               {formType === 'max_losses' && (
