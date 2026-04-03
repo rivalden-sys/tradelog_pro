@@ -158,47 +158,61 @@ export default function SimulatorPage() {
     textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block',
   }
 
-  // Кастомний слайдер з підтримкою touch і trackpad
   function Slider({ label, value, min, max, step = 1, unit = '', onChange, color }: {
     label: string; value: number; min: number; max: number; step?: number
     unit?: string; onChange: (v: number) => void; color?: string
   }) {
-    const trackRef = useRef<HTMLDivElement>(null)
-    const isDragging = useRef(false)
+    const trackRef  = useRef<HTMLDivElement>(null)
+    const activeRef = useRef(false)
+    const [inputVal, setInputVal] = useState(String(value))
+
+    useEffect(() => { setInputVal(String(value)) }, [value])
 
     const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step))
 
-    const getValueFromX = (clientX: number) => {
+    const getVal = (clientX: number) => {
       if (!trackRef.current) return value
       const rect = trackRef.current.getBoundingClientRect()
-      const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      return clamp(min + pct * (max - min))
+      return clamp(min + Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * (max - min))
     }
 
-    // Mouse events
     const onMouseDown = (e: React.MouseEvent) => {
-      isDragging.current = true
-      onChange(getValueFromX(e.clientX))
-      const onMove = (ev: MouseEvent) => { if (isDragging.current) onChange(getValueFromX(ev.clientX)) }
-      const onUp   = () => { isDragging.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+      e.preventDefault()
+      activeRef.current = true
+      onChange(getVal(e.clientX))
+      const onMove = (ev: MouseEvent) => { if (activeRef.current) onChange(getVal(ev.clientX)) }
+      const onUp   = () => { activeRef.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     }
 
-    // Touch events
     const onTouchStart = (e: React.TouchEvent) => {
       e.preventDefault()
-      onChange(getValueFromX(e.touches[0].clientX))
-    }
-    const onTouchMove = (e: React.TouchEvent) => {
-      e.preventDefault()
-      onChange(getValueFromX(e.touches[0].clientX))
+      activeRef.current = true
+      onChange(getVal(e.touches[0].clientX))
+      const onMove = (ev: TouchEvent) => { ev.preventDefault(); if (activeRef.current) onChange(getVal(ev.touches[0].clientX)) }
+      const onEnd  = () => { activeRef.current = false; window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd) }
+      window.addEventListener('touchmove', onMove, { passive: false })
+      window.addEventListener('touchend', onEnd)
     }
 
-    // Trackpad/wheel
     const onWheel = (e: React.WheelEvent) => {
       e.preventDefault()
       onChange(clamp(value + (e.deltaY > 0 ? -step : step)))
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value)
+
+    const handleInputBlur = () => {
+      const num = parseFloat(inputVal)
+      if (!isNaN(num)) onChange(clamp(num))
+      else setInputVal(String(value))
+    }
+
+    const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter')     (e.target as HTMLInputElement).blur()
+      if (e.key === 'ArrowUp')   { e.preventDefault(); onChange(clamp(value + step)) }
+      if (e.key === 'ArrowDown') { e.preventDefault(); onChange(clamp(value - step)) }
     }
 
     const pct = ((value - min) / (max - min)) * 100
@@ -206,41 +220,45 @@ export default function SimulatorPage() {
 
     return (
       <div style={{ marginBottom: 22 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={sliderLabelStyle}>{label}</span>
-          <span style={{ fontSize: 17, fontWeight: 800, color: c, letterSpacing: '-0.02em' }}>
-            {unit === '$' ? `$${value}` : `${value}${unit}`}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {unit === '$' && <span style={{ fontSize: 14, fontWeight: 700, color: c }}>$</span>}
+            <input
+              type="number"
+              value={inputVal}
+              min={min} max={max} step={step}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleInputKey}
+              style={{
+                width: 76, padding: '5px 8px', borderRadius: 8,
+                border: `1px solid ${c}55`,
+                background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
+                color: c, fontSize: 15, fontWeight: 800,
+                fontFamily: FONT, textAlign: 'right',
+                outline: 'none', letterSpacing: '-0.02em',
+              }}
+            />
+            {unit !== '$' && unit && <span style={{ fontSize: 14, fontWeight: 700, color: c }}>{unit}</span>}
+          </div>
         </div>
 
-        {/* Custom track */}
         <div
           ref={trackRef}
           onMouseDown={onMouseDown}
           onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
           onWheel={onWheel}
           style={{
-            position: 'relative', height: 44, cursor: 'pointer',
+            position: 'relative', height: 44,
             display: 'flex', alignItems: 'center',
-            touchAction: 'none', userSelect: 'none',
+            cursor: 'pointer', touchAction: 'none', userSelect: 'none',
           }}
         >
-          {/* Track background */}
+          <div style={{ position: 'absolute', left: 0, right: 0, height: 5, borderRadius: 99, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+          <div style={{ position: 'absolute', left: 0, width: `${pct}%`, height: 5, borderRadius: 99, background: c }} />
           <div style={{
-            position: 'absolute', left: 0, right: 0, height: 5, borderRadius: 99,
-            background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-          }} />
-          {/* Track fill */}
-          <div style={{
-            position: 'absolute', left: 0, width: `${pct}%`, height: 5, borderRadius: 99,
-            background: c,
-          }} />
-          {/* Thumb */}
-          <div style={{
-            position: 'absolute',
-            left: `${pct}%`,
-            transform: 'translateX(-50%)',
+            position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
             width: 28, height: 28, borderRadius: '50%',
             background: c,
             border: `3px solid ${dark ? '#1c1c1e' : '#ffffff'}`,
@@ -280,15 +298,13 @@ export default function SimulatorPage() {
     const allValues = result.paths.flat()
     const minV = Math.min(...allValues, 0)
     const maxV = Math.max(...allValues, startBalance * 1.1)
-    const xSteps = months
-    const xScale = (i: number) => padding.left + (i / xSteps) * chartW
+    const xScale = (i: number) => padding.left + (i / months) * chartW
     const yScale = (v: number) => padding.top + chartH - ((v - minV) / (maxV - minV)) * chartH
     const pathColor = dark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.12)'
     const gridColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
     const axisColor = dark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
-    const yTicks = 4
-    const yLabels = Array.from({ length: yTicks + 1 }, (_, i) => {
-      const v = minV + ((maxV - minV) / yTicks) * i
+    const yLabels = Array.from({ length: 5 }, (_, i) => {
+      const v = minV + ((maxV - minV) / 4) * i
       return { v, y: yScale(v) }
     })
     const medianPath = Array.from({ length: months + 1 }, (_, i) => {
@@ -324,7 +340,7 @@ export default function SimulatorPage() {
     )
   }
 
-  const expValue    = Math.round((winRate / 100) * avgWin - ((100 - winRate) / 100) * avgLoss)
+  const expValue     = Math.round((winRate / 100) * avgWin - ((100 - winRate) / 100) * avgLoss)
   const isPositiveEV = expValue > 0
 
   return (
@@ -338,7 +354,6 @@ export default function SimulatorPage() {
         <NavBar />
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
 
-          {/* Header */}
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>
               📈 Performance Simulator
@@ -348,7 +363,6 @@ export default function SimulatorPage() {
             </div>
           </div>
 
-          {/* Real stats banner */}
           {!loadingStats && realWinRate !== null && (
             <div style={{ ...glassCard(BLUE), marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               {glare}
@@ -371,7 +385,6 @@ export default function SimulatorPage() {
 
           <div className="sim-grid">
 
-            {/* Left — controls */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               <div style={glassCard()}>
@@ -418,7 +431,6 @@ export default function SimulatorPage() {
               </div>
             </div>
 
-            {/* Right — results */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               <div style={glassCard()}>
@@ -508,6 +520,8 @@ export default function SimulatorPage() {
       <style>{`
         .sim-grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
         @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { opacity: 1; }
       `}</style>
     </div>
   )
