@@ -122,22 +122,26 @@ export default function SimulatorPage() {
     load()
   }, [])
 
+  // Дебаунс симуляції — запускається через 300мс після останньої зміни
   useEffect(() => {
     if (loadingStats) return
-    const { paths, final, ruinCount } = runMonteCarlo(
-      winRate, avgWin, avgLoss, tradesPerMonth, months, simulations, startBalance
-    )
-    const step = Math.max(1, Math.floor(paths.length / 30))
-    const sampledPaths = paths.filter((_, i) => i % step === 0).slice(0, 30)
-    setResult({
-      p10: Math.round(percentile(final, 10)),
-      p25: Math.round(percentile(final, 25)),
-      p50: Math.round(percentile(final, 50)),
-      p75: Math.round(percentile(final, 75)),
-      p90: Math.round(percentile(final, 90)),
-      ruinPct: Math.round((ruinCount / simulations) * 100),
-      paths: sampledPaths,
-    })
+    const timer = setTimeout(() => {
+      const { paths, final, ruinCount } = runMonteCarlo(
+        winRate, avgWin, avgLoss, tradesPerMonth, months, simulations, startBalance
+      )
+      const step = Math.max(1, Math.floor(paths.length / 30))
+      const sampledPaths = paths.filter((_, i) => i % step === 0).slice(0, 30)
+      setResult({
+        p10: Math.round(percentile(final, 10)),
+        p25: Math.round(percentile(final, 25)),
+        p50: Math.round(percentile(final, 50)),
+        p75: Math.round(percentile(final, 75)),
+        p90: Math.round(percentile(final, 90)),
+        ruinPct: Math.round((ruinCount / simulations) * 100),
+        paths: sampledPaths,
+      })
+    }, 300)
+    return () => clearTimeout(timer)
   }, [winRate, avgWin, avgLoss, tradesPerMonth, months, startBalance, loadingStats])
 
   const glassCard = (accent?: string): React.CSSProperties => ({
@@ -153,7 +157,6 @@ export default function SimulatorPage() {
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
   )
 
-  // iOS-style степпер
   function Stepper({ label, value, min, max, step = 1, unit = '', onChange, color }: {
     label: string; value: number; min: number; max: number; step?: number
     unit?: string; onChange: (v: number) => void; color?: string
@@ -161,21 +164,9 @@ export default function SimulatorPage() {
     const [inputVal, setInputVal] = useState(String(value))
     useEffect(() => { setInputVal(String(value)) }, [value])
 
-    const clamp  = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step))
-    const dec    = () => onChange(clamp(value - step))
-    const inc    = () => onChange(clamp(value + step))
-
-    // Long press для швидкого збільшення
-    const intervalRef = useState<ReturnType<typeof setInterval> | null>(null)
-
-    const startPress = (dir: 1 | -1) => {
-      onChange(clamp(value + dir * step))
-      const iv = setInterval(() => onChange(clamp(value + dir * step)), 120)
-      intervalRef[1](iv)
-    }
-    const stopPress = () => {
-      if (intervalRef[0]) { clearInterval(intervalRef[0]); intervalRef[1](null) }
-    }
+    const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step))
+    const dec   = () => onChange(clamp(value - step))
+    const inc   = () => onChange(clamp(value + step))
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value)
     const handleInputBlur   = () => {
@@ -190,17 +181,16 @@ export default function SimulatorPage() {
     }
 
     const c = color || BLUE
+
     const btnStyle: React.CSSProperties = {
-      width: 48, height: 48, borderRadius: 14, border: 'none',
+      width: 52, height: 52, borderRadius: 14, border: 'none',
       background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-      color: c, fontSize: 22, fontWeight: 700,
+      color: c, fontSize: 26, fontWeight: 400,
       cursor: 'pointer', fontFamily: FONT,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexShrink: 0, userSelect: 'none', WebkitUserSelect: 'none',
-      transition: 'background 0.1s',
+      transition: 'background 0.1s', touchAction: 'manipulation',
     }
-
-    const displayVal = unit === '$' ? `$${value}` : `${value}${unit}`
 
     return (
       <div style={{ marginBottom: 20 }}>
@@ -208,19 +198,8 @@ export default function SimulatorPage() {
           {label}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Кнопка − */}
-          <button
-            style={btnStyle}
-            onClick={dec}
-            onMouseDown={() => startPress(-1)}
-            onMouseUp={stopPress}
-            onMouseLeave={stopPress}
-            onTouchStart={e => { e.preventDefault(); startPress(-1) }}
-            onTouchEnd={stopPress}
-            disabled={value <= min}
-          >−</button>
+          <button style={btnStyle} onClick={dec} disabled={value <= min}>−</button>
 
-          {/* Значення + інпут */}
           <div style={{
             flex: 1, textAlign: 'center',
             background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
@@ -235,7 +214,7 @@ export default function SimulatorPage() {
               onKeyDown={handleInputKey}
               style={{
                 width: '100%', background: 'transparent', border: 'none',
-                color: c, fontSize: 22, fontWeight: 900,
+                color: c, fontSize: 24, fontWeight: 900,
                 fontFamily: FONT, textAlign: 'center',
                 outline: 'none', letterSpacing: '-0.02em', padding: 0,
               }}
@@ -245,20 +224,9 @@ export default function SimulatorPage() {
             </div>
           </div>
 
-          {/* Кнопка + */}
-          <button
-            style={btnStyle}
-            onClick={inc}
-            onMouseDown={() => startPress(1)}
-            onMouseUp={stopPress}
-            onMouseLeave={stopPress}
-            onTouchStart={e => { e.preventDefault(); startPress(1) }}
-            onTouchEnd={stopPress}
-            disabled={value >= max}
-          >+</button>
+          <button style={btnStyle} onClick={inc} disabled={value >= max}>+</button>
         </div>
 
-        {/* Мін/макс підказка */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${min}` : `${min}${unit}`}</span>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${max}` : `${max}${unit}`}</span>
