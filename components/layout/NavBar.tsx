@@ -39,28 +39,25 @@ export default function NavBar() {
   }
 
   const links = [
-  { href: '/dashboard',   label: t('nav_dashboard') },
-  { href: '/trades',      label: t('nav_journal')   },
-  { href: '/goals',       label: '🎯 Goals'          },
-  { href: '/simulator',   label: '📈 Simulator'      },
-  { href: '/playbook',    label: '📋 Playbook'       },
-  { href: '/journal',     label: '📓 Journal'         },
-  { href: '/ai',          label: t('nav_ai')         },
-  { href: '/analytics',   label: t('nav_analytics')  },
-  { href: '/settings',    label: t('nav_settings')   },
-  { href: '/billing',     label: t('nav_billing')    },
-]
+    { href: '/dashboard', label: t('nav_dashboard') },
+    { href: '/trades',    label: t('nav_journal')   },
+    { href: '/goals',     label: '🎯 Goals'          },
+    { href: '/simulator', label: '📈 Simulator'      },
+    { href: '/playbook',  label: '📋 Playbook'       },
+    { href: '/journal',   label: '📓 Journal'        },
+    { href: '/ai',        label: t('nav_ai')         },
+    { href: '/analytics', label: t('nav_analytics')  },
+    { href: '/settings',  label: t('nav_settings')   },
+    { href: '/billing',   label: t('nav_billing')    },
+  ]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
-  const textColor  = dark ? DARK.text   : LIGHT.text
-  const subColor   = dark ? DARK.sub    : LIGHT.sub
-  const borderTop  = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)'
-  const borderBot  = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
-
-  const navBg = dark
-    ? 'rgba(10,10,11,0.7)'
-    : 'rgba(255,255,255,0.6)'
+  const textColor = dark ? DARK.text : LIGHT.text
+  const subColor  = dark ? DARK.sub  : LIGHT.sub
+  const borderTop = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)'
+  const borderBot = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
+  const navBg     = dark ? 'rgba(10,10,11,0.7)' : 'rgba(255,255,255,0.6)'
 
   const Logo = () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
@@ -84,16 +81,12 @@ export default function NavBar() {
     <button onClick={onClick} style={{
       background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
       border: dark ? `1px solid ${DARK.border}` : `1px solid rgba(0,0,0,0.07)`,
-      borderRadius: 9,
-      width: 32, height: 32,
+      borderRadius: 9, width: 32, height: 32,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       cursor: 'pointer', fontSize: 13, fontWeight: 700,
       color: textColor, fontFamily: FONT,
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      boxShadow: dark
-        ? 'inset 0 1px 0 rgba(255,255,255,0.1)'
-        : 'inset 0 1px 0 rgba(255,255,255,0.8)',
+      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+      boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.8)',
       transition: 'all 0.15s',
     }}>{children}</button>
   )
@@ -109,21 +102,14 @@ export default function NavBar() {
       <nav style={{
         fontFamily: FONT,
         background: navBg,
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         borderBottom: `1px solid ${borderBot}`,
         boxShadow: dark
           ? `inset 0 1px 0 ${borderTop}, inset 0 -1px 0 rgba(255,255,255,0.02)`
           : `inset 0 1px 0 ${borderTop}, inset 0 -1px 0 rgba(0,0,0,0.02)`,
-        padding: '0 20px',
-        height: 54,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        gap: 16,
+        padding: '0 20px', height: 54,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 100, gap: 16,
       }}>
 
         <Logo />
@@ -134,13 +120,14 @@ export default function NavBar() {
             background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
             borderRadius: 11, padding: 3,
             border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.05)',
+            overflowX: 'auto',
           }}>
             {links.map(({ href, label }) => (
               <Link key={href} href={href} className="nav-link" style={{
-                padding: '5px 13px', borderRadius: 8, fontSize: 13,
+                padding: '5px 11px', borderRadius: 8, fontSize: 12,
                 fontWeight: isActive(href) ? 600 : 400,
                 color: isActive(href) ? textColor : subColor,
-                textDecoration: 'none',
+                textDecoration: 'none', whiteSpace: 'nowrap',
                 background: isActive(href)
                   ? dark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)'
                   : 'transparent',
@@ -166,9 +153,7 @@ export default function NavBar() {
               borderRadius: 9, padding: '5px 12px', height: 32,
               cursor: 'pointer', fontFamily: FONT,
               backdropFilter: 'blur(10px)',
-              boxShadow: dark
-                ? 'inset 0 1px 0 rgba(255,255,255,0.08)'
-                : 'inset 0 1px 0 rgba(255,255,255,0.8)',
+              boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.8)',
               transition: 'all 0.15s',
             }}>{t('nav_logout')}</button>
           </div>
@@ -196,15 +181,16 @@ export default function NavBar() {
           position: 'fixed',
           top: 54, left: 0, right: 0,
           zIndex: 99,
-          background: dark ? 'rgba(10,10,11,0.85)' : 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          background: dark ? 'rgba(10,10,11,0.95)' : 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
           borderBottom: `1px solid ${borderBot}`,
           boxShadow: dark
             ? 'inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.4)'
             : 'inset 0 -1px 0 rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)',
           padding: '8px 12px 16px',
           boxSizing: 'border-box',
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 54px)',
         }}>
           {links.map(({ href, label }) => (
             <Link key={href} href={href} onClick={() => setMenuOpen(false)} style={{
@@ -239,7 +225,7 @@ export default function NavBar() {
               flex: 1, padding: '11px 8px', borderRadius: 12,
               background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
               border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.07)',
-              fontSize: 14, cursor: 'pointer', fontFamily: FONT,
+              fontSize: 14, cursor: 'pointer', fontFamily: FONT, color: textColor,
               boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
             }}>{dark ? '☀️ Light' : '🌙 Dark'}</button>
 
