@@ -172,59 +172,36 @@ function CustomTooltip({ active, payload, dark }: any) {
 function glassCard(dark: boolean): React.CSSProperties {
   if (!dark) return {
     background: 'rgba(255,255,255,0.55)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
     borderRadius: 20, padding: '22px 24px',
     border: `1px solid ${LIGHT.border}`,
-    boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.9),
-      inset 0 -1px 0 rgba(0,0,0,0.03),
-      inset 1px 0 0 rgba(255,255,255,0.7),
-      inset -1px 0 0 rgba(255,255,255,0.5)
-    `,
+    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.03), inset 1px 0 0 rgba(255,255,255,0.7), inset -1px 0 0 rgba(255,255,255,0.5)`,
   }
   return {
     background: 'rgba(255,255,255,0.015)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
+    backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 20, padding: '22px 24px',
     border: `1px solid ${DARK.border}`,
-    boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.14),
-      inset 0 -1px 0 rgba(255,255,255,0.03),
-      inset 1px 0 0 rgba(255,255,255,0.06),
-      inset -1px 0 0 rgba(255,255,255,0.02)
-    `,
+    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(255,255,255,0.03), inset 1px 0 0 rgba(255,255,255,0.06), inset -1px 0 0 rgba(255,255,255,0.02)`,
   }
 }
 
 function statCard(dark: boolean): React.CSSProperties {
   if (!dark) return {
     background: 'rgba(255,255,255,0.6)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
     borderRadius: 16, padding: '16px 18px',
     border: `1px solid ${LIGHT.border}`,
-    boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.95),
-      inset 0 -1px 0 rgba(0,0,0,0.02)
-    `,
+    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.02)`,
     position: 'relative', overflow: 'hidden',
   }
   return {
     background: 'rgba(255,255,255,0.02)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
+    backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
     borderRadius: 16, padding: '16px 18px',
     border: `1px solid ${DARK.border}`,
-    boxShadow: `
-      inset 0 1px 0 rgba(255,255,255,0.16),
-      inset 0 -1px 0 rgba(255,255,255,0.02),
-      inset 1px 0 0 rgba(255,255,255,0.06),
-      inset -1px 0 0 rgba(255,255,255,0.02)
-    `,
-    position: 'relative', overflow: 'hidden',
-    transition: 'transform 0.2s',
+    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.02), inset 1px 0 0 rgba(255,255,255,0.06), inset -1px 0 0 rgba(255,255,255,0.02)`,
+    position: 'relative', overflow: 'hidden', transition: 'transform 0.2s',
   }
 }
 
@@ -288,7 +265,6 @@ export default function DashboardPage() {
   const byWeekday = calcByWeekday(filtered)
   const recent    = filtered.slice(0, 10)
 
-  // Порівняння місяців
   const now = new Date()
   const curMonth  = now.getMonth()
   const curYear   = now.getFullYear()
@@ -381,24 +357,20 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Порівняння місяців */}
+          {/* Month vs Month */}
           {hasPrevMonth && (
             <div style={{ ...glassCard(dark), marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: t.text, letterSpacing: '-0.02em' }}>
-                  Month vs Month
-                </div>
-                <div style={{ fontSize: 12, color: t.sub }}>
-                  {MONTH_NAMES[prevMonth]} → {MONTH_NAMES[curMonth]}
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: t.text, letterSpacing: '-0.02em' }}>Month vs Month</div>
+                <div style={{ fontSize: 12, color: t.sub }}>{MONTH_NAMES[prevMonth]} → {MONTH_NAMES[curMonth]}</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, position: 'relative' }}>
+              <div className="month-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, position: 'relative' }}>
                 {[
-                  { label: 'Trades', cur: curM.total, prev: prevM.total, suffix: '', fmt: (v: number) => `${v}` },
-                  { label: 'Win Rate', cur: curM.win_rate, prev: prevM.win_rate, suffix: '%', fmt: (v: number) => `${v}%` },
+                  { label: 'Trades',    cur: curM.total,     prev: prevM.total,     suffix: '',  fmt: (v: number) => `${v}` },
+                  { label: 'Win Rate',  cur: curM.win_rate,  prev: prevM.win_rate,  suffix: '%', fmt: (v: number) => `${v}%` },
                   { label: 'Total P&L', cur: curM.total_pnl, prev: prevM.total_pnl, suffix: '$', fmt: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(0)}$` },
-                  { label: 'Avg RR', cur: curM.avg_rr, prev: prevM.avg_rr, suffix: '', fmt: (v: number) => v.toFixed(2) },
+                  { label: 'Avg RR',    cur: curM.avg_rr,    prev: prevM.avg_rr,    suffix: '',  fmt: (v: number) => v.toFixed(2) },
                 ].map(m => (
                   <div key={m.label} style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.5)', border: `1px solid ${t.border}`, borderRadius: 14, padding: '14px 16px' }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: t.sub, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{m.label}</div>
@@ -628,6 +600,7 @@ export default function DashboardPage() {
           .dashboard-container { padding: 16px 12px !important; }
           .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
           .chart-grid-2 { grid-template-columns: 1fr; }
+          .month-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 480px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
