@@ -422,7 +422,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={balance}>
                     <XAxis dataKey="date" tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={46} />
+                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={46} domain={['auto', 'auto']} />
                     <Tooltip content={<CustomTooltip dark={dark} />} />
                     <Line type="monotone" dataKey="pnl" stroke={stats.total_pnl >= 0 ? GREEN : RED} strokeWidth={2.5} dot={false} />
                   </LineChart>
@@ -468,7 +468,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={160}>
                   <BarChart data={byPair} barSize={22}>
                     <XAxis dataKey="pair" tick={{ fontSize: 9, fill: t.sub }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} />
+                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} domain={['auto', 'auto']} />
                     <Tooltip content={<CustomTooltip dark={dark} />} />
                     <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
                       {byPair.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
@@ -486,7 +486,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={160}>
                   <BarChart data={bySetup} barSize={22}>
                     <XAxis dataKey="setup" tick={{ fontSize: 9, fill: t.sub }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} />
+                    <YAxis tick={{ fontSize: 10, fill: t.sub }} axisLine={false} tickLine={false} width={42} domain={['auto', 'auto']} />
                     <Tooltip content={<CustomTooltip dark={dark} />} />
                     <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
                       {bySetup.map((row, i) => <Cell key={i} fill={row.pnl >= 0 ? GREEN : RED} />)}
