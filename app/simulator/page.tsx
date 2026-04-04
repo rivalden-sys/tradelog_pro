@@ -202,13 +202,11 @@ export default function SimulatorPage() {
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value)
-
-    const handleInputBlur = () => {
+    const handleInputBlur   = () => {
       const num = parseFloat(inputVal)
       if (!isNaN(num)) onChange(clamp(num))
       else setInputVal(String(value))
     }
-
     const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter')     (e.target as HTMLInputElement).blur()
       if (e.key === 'ArrowUp')   { e.preventDefault(); onChange(clamp(value + step)) }
@@ -219,11 +217,15 @@ export default function SimulatorPage() {
     const c   = color || BLUE
 
     return (
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <span style={sliderLabelStyle}>{label}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {unit === '$' && <span style={{ fontSize: 14, fontWeight: 700, color: c }}>$</span>}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 2,
+            background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            border: `1px solid ${c}44`, borderRadius: 12, padding: '6px 12px',
+          }}>
+            {unit === '$' && <span style={{ fontSize: 16, fontWeight: 700, color: c }}>$</span>}
             <input
               type="number"
               value={inputVal}
@@ -232,16 +234,14 @@ export default function SimulatorPage() {
               onBlur={handleInputBlur}
               onKeyDown={handleInputKey}
               style={{
-                width: 76, padding: '5px 8px', borderRadius: 8,
-                border: `1px solid ${c}55`,
-                background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)',
-                color: c, fontSize: 15, fontWeight: 800,
-                fontFamily: FONT, textAlign: 'right',
-                outline: 'none', letterSpacing: '-0.02em',
-                MozAppearance: 'textfield' as any,
+                width: value >= 10000 ? 72 : value >= 1000 ? 56 : 44,
+                background: 'transparent', border: 'none',
+                color: c, fontSize: 18, fontWeight: 800,
+                fontFamily: FONT, textAlign: 'center',
+                outline: 'none', letterSpacing: '-0.02em', padding: 0,
               }}
             />
-            {unit !== '$' && unit && <span style={{ fontSize: 14, fontWeight: 700, color: c }}>{unit}</span>}
+            {unit !== '$' && unit && <span style={{ fontSize: 16, fontWeight: 700, color: c }}>{unit}</span>}
           </div>
         </div>
 
@@ -251,19 +251,19 @@ export default function SimulatorPage() {
           onTouchStart={onTouchStart}
           onWheel={onWheel}
           style={{
-            position: 'relative', height: 44,
+            position: 'relative', height: 48,
             display: 'flex', alignItems: 'center',
             cursor: 'pointer', touchAction: 'none', userSelect: 'none',
           }}
         >
-          <div style={{ position: 'absolute', left: 0, right: 0, height: 5, borderRadius: 99, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-          <div style={{ position: 'absolute', left: 0, width: `${pct}%`, height: 5, borderRadius: 99, background: c }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, height: 6, borderRadius: 99, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+          <div style={{ position: 'absolute', left: 0, width: `${pct}%`, height: 6, borderRadius: 99, background: c }} />
           <div style={{
             position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
-            width: 28, height: 28, borderRadius: '50%',
+            width: 30, height: 30, borderRadius: '50%',
             background: c,
             border: `3px solid ${dark ? '#1c1c1e' : '#ffffff'}`,
-            boxShadow: `0 2px 10px ${c}66`,
+            boxShadow: `0 2px 12px ${c}77`,
             pointerEvents: 'none',
           }} />
         </div>
@@ -280,11 +280,11 @@ export default function SimulatorPage() {
     return (
       <div style={{
         background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)',
-        border: `1px solid ${color}33`, borderRadius: 14, padding: '14px 16px', textAlign: 'center',
+        border: `1px solid ${color}33`, borderRadius: 14, padding: '12px 8px', textAlign: 'center',
         boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
       }}>
-        <div style={{ fontSize: 11, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{label}</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: '-0.03em' }}>{value}</div>
+        <div style={{ fontSize: 10, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 6, lineHeight: 1.3 }}>{label}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color, letterSpacing: '-0.03em' }}>{value}</div>
         {sub && <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>{sub}</div>}
       </div>
     )
@@ -365,21 +365,16 @@ export default function SimulatorPage() {
           </div>
 
           {!loadingStats && realWinRate !== null && (
-            <div style={{ ...glassCard(BLUE), marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ ...glassCard(BLUE), marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               {glare}
               <div style={{ fontSize: 20, flexShrink: 0 }}>📊</div>
-              <div style={{ flex: 1, position: 'relative' }}>
+              <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textColor, marginBottom: 2 }}>
-                  {isUk ? 'Параметри завантажені з твоїх реальних угод' : 'Parameters loaded from your real trades'}
+                  {isUk ? 'Параметри з твоїх реальних угод' : 'Loaded from your real trades'}
                 </div>
-                <div style={{ fontSize: 12, color: subColor }}>
-                  {isUk
-                    ? `Win Rate ${realWinRate}% · Avg Win $${realAvgWin} · Avg Loss $${realAvgLoss} · ${realTradesPerMonth} угод/міс`
-                    : `Win Rate ${realWinRate}% · Avg Win $${realAvgWin} · Avg Loss $${realAvgLoss} · ${realTradesPerMonth} trades/mo`}
+                <div style={{ fontSize: 12, color: subColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  WR {realWinRate}% · Win ${realAvgWin} · Loss ${realAvgLoss} · {realTradesPerMonth}/mo
                 </div>
-              </div>
-              <div style={{ fontSize: 11, color: BLUE, fontWeight: 600, flexShrink: 0, position: 'relative' }}>
-                {isUk ? 'Змінюй слайдери нижче' : 'Adjust sliders below'}
               </div>
             </div>
           )}
@@ -387,7 +382,6 @@ export default function SimulatorPage() {
           <div className="sim-grid">
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
               <div style={glassCard()}>
                 {glare}
                 <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative' }}>
@@ -395,9 +389,9 @@ export default function SimulatorPage() {
                 </div>
                 <div style={{ position: 'relative' }}>
                   <Slider label="Win Rate" value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
-                  <Slider label={isUk ? 'Середній прибуток' : 'Average Win'} value={avgWin} min={10} max={1000} step={10} unit="$" color={GREEN} onChange={setAvgWin} />
-                  <Slider label={isUk ? 'Середній збиток' : 'Average Loss'} value={avgLoss} min={10} max={1000} step={10} unit="$" color={RED} onChange={setAvgLoss} />
-                  <Slider label={isUk ? 'Угод на місяць' : 'Trades per Month'} value={tradesPerMonth} min={1} max={100} color={BLUE} onChange={setTradesPerMonth} />
+                  <Slider label={isUk ? 'Середній прибуток' : 'Avg Win'} value={avgWin} min={10} max={1000} step={10} unit="$" color={GREEN} onChange={setAvgWin} />
+                  <Slider label={isUk ? 'Середній збиток' : 'Avg Loss'} value={avgLoss} min={10} max={1000} step={10} unit="$" color={RED} onChange={setAvgLoss} />
+                  <Slider label={isUk ? 'Угод на місяць' : 'Trades/Month'} value={tradesPerMonth} min={1} max={100} color={BLUE} onChange={setTradesPerMonth} />
                 </div>
               </div>
 
@@ -407,10 +401,9 @@ export default function SimulatorPage() {
                   {isUk ? '⚙️ Параметри симуляції' : '⚙️ Simulation Parameters'}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <Slider label={isUk ? 'Стартовий баланс' : 'Starting Balance'} value={startBalance} min={100} max={100000} step={100} unit="$" color={PURPLE} onChange={setStartBalance} />
-                  <Slider label={isUk ? 'Горизонт (місяців)' : 'Horizon (months)'} value={months} min={1} max={24} color={ORANGE} onChange={setMonths} />
+                  <Slider label={isUk ? 'Стартовий баланс' : 'Start Balance'} value={startBalance} min={100} max={100000} step={100} unit="$" color={PURPLE} onChange={setStartBalance} />
+                  <Slider label={isUk ? 'Горизонт (міс.)' : 'Horizon (mo.)'} value={months} min={1} max={24} color={ORANGE} onChange={setMonths} />
                 </div>
-
                 <div style={{
                   marginTop: 4, padding: '14px 16px', borderRadius: 14,
                   background: isPositiveEV ? GREEN + '15' : RED + '15',
@@ -418,7 +411,7 @@ export default function SimulatorPage() {
                   position: 'relative',
                 }}>
                   <div style={{ fontSize: 11, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                    {isUk ? 'Очікувана цінність (EV) на угоду' : 'Expected Value (EV) per trade'}
+                    {isUk ? 'EV на угоду' : 'EV per trade'}
                   </div>
                   <div style={{ fontSize: 22, fontWeight: 900, color: isPositiveEV ? GREEN : RED, letterSpacing: '-0.03em' }}>
                     {isPositiveEV ? '+' : ''}{expValue}$
@@ -426,7 +419,7 @@ export default function SimulatorPage() {
                   <div style={{ fontSize: 12, color: subColor, marginTop: 4 }}>
                     {isPositiveEV
                       ? (isUk ? '✅ Позитивне математичне очікування' : '✅ Positive expected value')
-                      : (isUk ? '❌ Негативне математичне очікування — система збиткова' : '❌ Negative expected value — system is losing')}
+                      : (isUk ? '❌ Негативне очікування — система збиткова' : '❌ Negative expected value — losing system')}
                   </div>
                 </div>
               </div>
@@ -436,17 +429,18 @@ export default function SimulatorPage() {
 
               <div style={glassCard()}>
                 {glare}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative', flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>
-                    {isUk ? `Прогноз на ${months} міс. (${simulations} симуляцій)` : `${months}-month forecast (${simulations} simulations)`}
+                    {isUk ? `Прогноз на ${months} міс.` : `${months}-month forecast`}
+                    <span style={{ fontSize: 11, color: subColor, marginLeft: 6 }}>({simulations} {isUk ? 'симуляцій' : 'simulations'})</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <div style={{ width: 20, height: 2, background: GREEN, borderRadius: 1 }} />
+                      <div style={{ width: 16, height: 2, background: GREEN, borderRadius: 1 }} />
                       <span style={{ fontSize: 11, color: subColor }}>Median</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <div style={{ width: 20, height: 2, background: dark ? 'rgba(10,132,255,0.4)' : 'rgba(10,132,255,0.3)', borderRadius: 1 }} />
+                      <div style={{ width: 16, height: 2, background: dark ? 'rgba(10,132,255,0.4)' : 'rgba(10,132,255,0.3)', borderRadius: 1 }} />
                       <span style={{ fontSize: 11, color: subColor }}>{isUk ? 'Сценарії' : 'Scenarios'}</span>
                     </div>
                   </div>
@@ -458,9 +452,9 @@ export default function SimulatorPage() {
                 <div style={glassCard()}>
                   {glare}
                   <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>
-                    {isUk ? `📊 Результати після ${months} місяців` : `📊 Results after ${months} months`}
+                    {isUk ? `📊 Результати після ${months} міс.` : `📊 Results after ${months} months`}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, position: 'relative' }}>
+                  <div className="stat-badges" style={{ position: 'relative' }}>
                     <StatBadge label={isUk ? 'Гірший 10%' : 'Worst 10%'} value={`$${result.p10}`} color={RED}    sub={`${Math.round((result.p10 / startBalance - 1) * 100)}%`} />
                     <StatBadge label={isUk ? 'Гірший 25%' : 'Bad 25%'}   value={`$${result.p25}`} color={ORANGE} sub={`${Math.round((result.p25 / startBalance - 1) * 100)}%`} />
                     <StatBadge label="Median"                             value={`$${result.p50}`} color={BLUE}   sub={`${Math.round((result.p50 / startBalance - 1) * 100)}%`} />
@@ -521,6 +515,8 @@ export default function SimulatorPage() {
       <style>{`
         .sim-grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
         @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
+        .stat-badges { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 0; }
+        @media (max-width: 600px) { .stat-badges { grid-template-columns: repeat(3, 1fr); } }
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { display: none; }
         input[type=number] { -moz-appearance: textfield; }
