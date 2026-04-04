@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
@@ -153,52 +153,28 @@ export default function SimulatorPage() {
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30%', background: dark ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, transparent 100%)', borderRadius: '20px 20px 0 0', pointerEvents: 'none' }} />
   )
 
-  const sliderLabelStyle: React.CSSProperties = {
-    fontSize: 12, color: subColor, fontWeight: 600,
-    textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block',
-  }
-
-  function Slider({ label, value, min, max, step = 1, unit = '', onChange, color }: {
+  // iOS-style степпер
+  function Stepper({ label, value, min, max, step = 1, unit = '', onChange, color }: {
     label: string; value: number; min: number; max: number; step?: number
     unit?: string; onChange: (v: number) => void; color?: string
   }) {
-    const trackRef  = useRef<HTMLDivElement>(null)
-    const activeRef = useRef(false)
     const [inputVal, setInputVal] = useState(String(value))
-
     useEffect(() => { setInputVal(String(value)) }, [value])
 
-    const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step))
+    const clamp  = (v: number) => Math.min(max, Math.max(min, Math.round(v / step) * step))
+    const dec    = () => onChange(clamp(value - step))
+    const inc    = () => onChange(clamp(value + step))
 
-    const getVal = (clientX: number) => {
-      if (!trackRef.current) return value
-      const rect = trackRef.current.getBoundingClientRect()
-      return clamp(min + Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * (max - min))
+    // Long press для швидкого збільшення
+    const intervalRef = useState<ReturnType<typeof setInterval> | null>(null)
+
+    const startPress = (dir: 1 | -1) => {
+      onChange(clamp(value + dir * step))
+      const iv = setInterval(() => onChange(v => clamp(v + dir * step)), 120)
+      intervalRef[1](iv)
     }
-
-    const onMouseDown = (e: React.MouseEvent) => {
-      e.preventDefault()
-      activeRef.current = true
-      onChange(getVal(e.clientX))
-      const onMove = (ev: MouseEvent) => { if (activeRef.current) onChange(getVal(ev.clientX)) }
-      const onUp   = () => { activeRef.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    }
-
-    const onTouchStart = (e: React.TouchEvent) => {
-      e.preventDefault()
-      activeRef.current = true
-      onChange(getVal(e.touches[0].clientX))
-      const onMove = (ev: TouchEvent) => { ev.preventDefault(); if (activeRef.current) onChange(getVal(ev.touches[0].clientX)) }
-      const onEnd  = () => { activeRef.current = false; window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd) }
-      window.addEventListener('touchmove', onMove, { passive: false })
-      window.addEventListener('touchend', onEnd)
-    }
-
-    const onWheel = (e: React.WheelEvent) => {
-      e.preventDefault()
-      onChange(clamp(value + (e.deltaY > 0 ? -step : step)))
+    const stopPress = () => {
+      if (intervalRef[0]) { clearInterval(intervalRef[0]); intervalRef[1](null) }
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value)
@@ -209,66 +185,81 @@ export default function SimulatorPage() {
     }
     const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter')     (e.target as HTMLInputElement).blur()
-      if (e.key === 'ArrowUp')   { e.preventDefault(); onChange(clamp(value + step)) }
-      if (e.key === 'ArrowDown') { e.preventDefault(); onChange(clamp(value - step)) }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); inc() }
+      if (e.key === 'ArrowDown') { e.preventDefault(); dec() }
     }
 
-    const pct = ((value - min) / (max - min)) * 100
-    const c   = color || BLUE
+    const c = color || BLUE
+    const btnStyle: React.CSSProperties = {
+      width: 48, height: 48, borderRadius: 14, border: 'none',
+      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+      color: c, fontSize: 22, fontWeight: 700,
+      cursor: 'pointer', fontFamily: FONT,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, userSelect: 'none', WebkitUserSelect: 'none',
+      transition: 'background 0.1s',
+    }
+
+    const displayVal = unit === '$' ? `$${value}` : `${value}${unit}`
 
     return (
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={sliderLabelStyle}>{label}</span>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
+          {label}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Кнопка − */}
+          <button
+            style={btnStyle}
+            onClick={dec}
+            onMouseDown={() => startPress(-1)}
+            onMouseUp={stopPress}
+            onMouseLeave={stopPress}
+            onTouchStart={e => { e.preventDefault(); startPress(-1) }}
+            onTouchEnd={stopPress}
+            disabled={value <= min}
+          >−</button>
+
+          {/* Значення + інпут */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 2,
-            background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-            border: `1px solid ${c}44`, borderRadius: 12, padding: '6px 12px',
+            flex: 1, textAlign: 'center',
+            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            border: `1.5px solid ${c}44`,
+            borderRadius: 14, padding: '10px 8px',
           }}>
-            {unit === '$' && <span style={{ fontSize: 16, fontWeight: 700, color: c }}>$</span>}
             <input
               type="number"
               value={inputVal}
-              min={min} max={max} step={step}
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               onKeyDown={handleInputKey}
               style={{
-                width: value >= 10000 ? 72 : value >= 1000 ? 56 : 44,
-                background: 'transparent', border: 'none',
-                color: c, fontSize: 18, fontWeight: 800,
+                width: '100%', background: 'transparent', border: 'none',
+                color: c, fontSize: 22, fontWeight: 900,
                 fontFamily: FONT, textAlign: 'center',
                 outline: 'none', letterSpacing: '-0.02em', padding: 0,
               }}
             />
-            {unit !== '$' && unit && <span style={{ fontSize: 16, fontWeight: 700, color: c }}>{unit}</span>}
+            <div style={{ fontSize: 11, color: subColor, marginTop: 2 }}>
+              {unit === '$' ? 'USD' : unit === '%' ? 'percent' : isUk ? 'шт.' : 'trades'}
+            </div>
           </div>
+
+          {/* Кнопка + */}
+          <button
+            style={btnStyle}
+            onClick={inc}
+            onMouseDown={() => startPress(1)}
+            onMouseUp={stopPress}
+            onMouseLeave={stopPress}
+            onTouchStart={e => { e.preventDefault(); startPress(1) }}
+            onTouchEnd={stopPress}
+            disabled={value >= max}
+          >+</button>
         </div>
 
-        <div
-          ref={trackRef}
-          onMouseDown={onMouseDown}
-          onTouchStart={onTouchStart}
-          onWheel={onWheel}
-          style={{
-            position: 'relative', height: 48,
-            display: 'flex', alignItems: 'center',
-            cursor: 'pointer', touchAction: 'none', userSelect: 'none',
-          }}
-        >
-          <div style={{ position: 'absolute', left: 0, right: 0, height: 6, borderRadius: 99, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-          <div style={{ position: 'absolute', left: 0, width: `${pct}%`, height: 6, borderRadius: 99, background: c }} />
-          <div style={{
-            position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
-            width: 30, height: 30, borderRadius: '50%',
-            background: c,
-            border: `3px solid ${dark ? '#1c1c1e' : '#ffffff'}`,
-            boxShadow: `0 2px 12px ${c}77`,
-            pointerEvents: 'none',
-          }} />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+        {/* Мін/макс підказка */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${min}` : `${min}${unit}`}</span>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${max}` : `${max}${unit}`}</span>
         </div>
@@ -372,7 +363,7 @@ export default function SimulatorPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: textColor, marginBottom: 2 }}>
                   {isUk ? 'Параметри з твоїх реальних угод' : 'Loaded from your real trades'}
                 </div>
-                <div style={{ fontSize: 12, color: subColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: 12, color: subColor }}>
                   WR {realWinRate}% · Win ${realAvgWin} · Loss ${realAvgLoss} · {realTradesPerMonth}/mo
                 </div>
               </div>
@@ -388,10 +379,10 @@ export default function SimulatorPage() {
                   {isUk ? '📊 Статистика торгівлі' : '📊 Trading Statistics'}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <Slider label="Win Rate" value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
-                  <Slider label={isUk ? 'Середній прибуток' : 'Avg Win'} value={avgWin} min={10} max={1000} step={10} unit="$" color={GREEN} onChange={setAvgWin} />
-                  <Slider label={isUk ? 'Середній збиток' : 'Avg Loss'} value={avgLoss} min={10} max={1000} step={10} unit="$" color={RED} onChange={setAvgLoss} />
-                  <Slider label={isUk ? 'Угод на місяць' : 'Trades/Month'} value={tradesPerMonth} min={1} max={100} color={BLUE} onChange={setTradesPerMonth} />
+                  <Stepper label="Win Rate" value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
+                  <Stepper label={isUk ? 'Середній прибуток' : 'Avg Win'} value={avgWin} min={10} max={1000} step={10} unit="$" color={GREEN} onChange={setAvgWin} />
+                  <Stepper label={isUk ? 'Середній збиток' : 'Avg Loss'} value={avgLoss} min={10} max={1000} step={10} unit="$" color={RED} onChange={setAvgLoss} />
+                  <Stepper label={isUk ? 'Угод на місяць' : 'Trades/Month'} value={tradesPerMonth} min={1} max={100} color={BLUE} onChange={setTradesPerMonth} />
                 </div>
               </div>
 
@@ -401,11 +392,12 @@ export default function SimulatorPage() {
                   {isUk ? '⚙️ Параметри симуляції' : '⚙️ Simulation Parameters'}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <Slider label={isUk ? 'Стартовий баланс' : 'Start Balance'} value={startBalance} min={100} max={100000} step={100} unit="$" color={PURPLE} onChange={setStartBalance} />
-                  <Slider label={isUk ? 'Горизонт (міс.)' : 'Horizon (mo.)'} value={months} min={1} max={24} color={ORANGE} onChange={setMonths} />
+                  <Stepper label={isUk ? 'Стартовий баланс' : 'Start Balance'} value={startBalance} min={100} max={100000} step={100} unit="$" color={PURPLE} onChange={setStartBalance} />
+                  <Stepper label={isUk ? 'Горизонт (міс.)' : 'Horizon (mo.)'} value={months} min={1} max={24} color={ORANGE} onChange={setMonths} />
                 </div>
+
                 <div style={{
-                  marginTop: 4, padding: '14px 16px', borderRadius: 14,
+                  marginTop: 8, padding: '14px 16px', borderRadius: 14,
                   background: isPositiveEV ? GREEN + '15' : RED + '15',
                   border: `1px solid ${isPositiveEV ? GREEN : RED}33`,
                   position: 'relative',
@@ -432,7 +424,7 @@ export default function SimulatorPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative', flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>
                     {isUk ? `Прогноз на ${months} міс.` : `${months}-month forecast`}
-                    <span style={{ fontSize: 11, color: subColor, marginLeft: 6 }}>({simulations} {isUk ? 'симуляцій' : 'simulations'})</span>
+                    <span style={{ fontSize: 11, color: subColor, marginLeft: 6 }}>({simulations} {isUk ? 'симуляцій' : 'sims'})</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
