@@ -170,7 +170,7 @@ export default function SimulatorPage() {
 
     const startPress = (dir: 1 | -1) => {
       onChange(clamp(value + dir * step))
-      const iv = setInterval(() => onChange(v => clamp(v + dir * step)), 120)
+      const iv = setInterval(() => onChange(clamp(value + dir * step)), 120)
       intervalRef[1](iv)
     }
     const stopPress = () => {
