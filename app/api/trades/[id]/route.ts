@@ -12,8 +12,8 @@ const UpdateSchema = z.object({
   result:          z.enum(['Тейк', 'Стоп', 'БУ']).optional(),
   profit_usd:      z.number().optional(),
   profit_pct:      z.number().optional(),
-  tradingview_url: z.string().optional(),
-  comment:         z.string().optional(),
+  tradingview_url: z.string().nullable().optional(),
+  comment:         z.string().nullable().optional(),
   self_grade:      z.enum(['A', 'B', 'C', 'D']).optional(),
   status:          z.enum(['planned', 'closed']).optional(),
   entry_price:     z.number().optional(),
@@ -21,7 +21,10 @@ const UpdateSchema = z.object({
   take_price:      z.number().optional(),
   risk_usdt:       z.number().optional(),
   risk_pct:        z.number().optional(),
-  emotion:         z.enum(['calm', 'fear', 'greed', 'anger', 'euphoria', 'revenge']).optional().nullable(),
+  emotion:         z.enum(['calm', 'fear', 'greed', 'anger', 'euphoria', 'revenge']).nullable().optional(),
+  mae_price:       z.number().nullable().optional(),
+  mfe_price:       z.number().nullable().optional(),
+  screenshot_url:  z.string().nullable().optional(),
 })
 
 type Params = Promise<{ id: string }>
@@ -32,7 +35,6 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
-
     const trade = await getTradeById(id, user.id)
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
@@ -46,13 +48,11 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
-
     const body = await request.json()
     const parsed = UpdateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.message, code: 'VALIDATION_ERROR' }, { status: 400 })
+      return NextResponse.json({ success: false, error: parsed.error.issues, code: 'VALIDATION_ERROR' }, { status: 400 })
     }
-
     const trade = await updateTrade(id, user.id, parsed.data as any)
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
@@ -66,7 +66,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Params 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
-
     await deleteTrade(id, user.id)
     return NextResponse.json({ success: true, data: { deleted: true } })
   } catch (error) {
