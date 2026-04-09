@@ -177,7 +177,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
     })
     const json = await res.json()
     if (json.success) router.push(`/trades/${tradeId}`)
-    else { setError(json.error || 'Помилка збереження'); setSaving(false) }
+    else { setError(Array.isArray(json.error) ? json.error.map((e: any) => e.message).join(', ') : json.error || 'Помилка збереження'); setSaving(false) }
   }
 
   const inputStyle = (): React.CSSProperties => ({
