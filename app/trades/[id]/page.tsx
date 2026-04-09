@@ -132,6 +132,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [closeGrade,     setCloseGrade]     = useState<'A'|'B'|'C'|'D'>('A')
   const [closeSaving,    setCloseSaving]    = useState(false)
   const [closeError,     setCloseError]     = useState('')
+  const [closeFieldErrors, setCloseFieldErrors] = useState<{ profitUsd?: boolean; profitPct?: boolean }>({})
   const [tradeId,        setTradeId]        = useState<string>('')
   const [ruleChecks,     setRuleChecks]     = useState<any[]>([])
   const [playbook,       setPlaybook]       = useState<any>(null)
@@ -190,6 +191,19 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   const closeTrade = async () => {
     if (!tradeId) return
+
+    // Валідація — P&L обов'язковий для Тейк і Стоп
+    if (closeResult !== 'БУ') {
+      const errors: { profitUsd?: boolean; profitPct?: boolean } = {}
+      if (!closeProfitUsd.trim()) errors.profitUsd = true
+      if (!closeProfitPct.trim()) errors.profitPct = true
+      if (Object.keys(errors).length > 0) {
+        setCloseFieldErrors(errors)
+        return
+      }
+    }
+    setCloseFieldErrors({})
+
     setCloseSaving(true); setCloseError('')
     try {
       const res = await fetch(`/api/trades/${tradeId}`, {
@@ -198,7 +212,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           status: 'closed', result: closeResult,
           profit_usd: parseFloat(closeProfitUsd) || 0,
           profit_pct: parseFloat(closeProfitPct) || 0,
-          comment: closeComment || trade?.comment,
+          comment: closeComment || trade?.comment || '',
           self_grade: closeGrade,
         }),
       })
@@ -264,15 +278,20 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     whiteSpace: 'nowrap' as const,
   })
 
-  const inputStyle: React.CSSProperties = {
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
     width: '100%', padding: '10px 14px', borderRadius: 12,
-    border: `1px solid ${borderColor}`,
-    background: dark ? DARK.inputBg : LIGHT.inputBg,
+    border: `1px solid ${hasError ? RED : borderColor}`,
+    background: hasError
+      ? dark ? `${RED}15` : `${RED}08`
+      : dark ? DARK.inputBg : LIGHT.inputBg,
     color: textColor, fontSize: 14, fontFamily: FONT,
     outline: 'none', boxSizing: 'border-box',
     backdropFilter: 'blur(10px)',
-    boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-  }
+    boxShadow: hasError
+      ? `0 0 0 3px ${RED}22`
+      : dark ? 'inset 0 1px 0 rgba(255,255,255,0.06)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+  })
 
   const toggleBtn = (active: boolean, color: string): React.CSSProperties => ({
     padding: '8px 18px', borderRadius: 10,
@@ -286,6 +305,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const labelStyle: React.CSSProperties = {
     fontSize: 12, color: subColor, fontWeight: 600,
     marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em',
+  }
+
+  const errorLabelStyle: React.CSSProperties = {
+    fontSize: 11, color: RED, fontWeight: 600, marginTop: 5,
   }
 
   if (loading) return (
@@ -360,26 +383,50 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={{ ...glassCard(GREEN), marginBottom: 20 }}>
               {glare}
               <div style={{ fontSize: 15, fontWeight: 800, color: textColor, marginBottom: 20, position: 'relative' }}>{t('trade_close_title')}</div>
+
+              {/* Result */}
               <div style={{ marginBottom: 16, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_result')}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {(['Тейк', 'Стоп', 'БУ'] as const).map(r => (
-                    <button key={r} onClick={() => setCloseResult(r)} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
+                    <button key={r} onClick={() => { setCloseResult(r); setCloseFieldErrors({}) }} style={toggleBtn(closeResult === r, r === 'Тейк' ? GREEN : r === 'Стоп' ? RED : GRAY)}>
                       {r === 'Тейк' ? t('new_trade_take') : r === 'Стоп' ? t('new_trade_stop') : t('new_trade_bu')}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* P&L */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16, position: 'relative' }}>
                 <div>
-                  <div style={labelStyle}>{t('new_trade_profit_usd')}</div>
-                  <input type="number" placeholder="150.00" value={closeProfitUsd} onChange={e => setCloseProfitUsd(e.target.value)} style={inputStyle} />
+                  <div style={{ ...labelStyle, color: closeFieldErrors.profitUsd ? RED : subColor }}>
+                    {t('new_trade_profit_usd')}{closeResult !== 'БУ' ? ' *' : ''}
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="150.00"
+                    value={closeProfitUsd}
+                    onChange={e => { setCloseProfitUsd(e.target.value); setCloseFieldErrors(prev => ({ ...prev, profitUsd: false })) }}
+                    style={inputStyle(closeFieldErrors.profitUsd)}
+                  />
+                  {closeFieldErrors.profitUsd && <div style={errorLabelStyle}>Обов'язкове поле</div>}
                 </div>
                 <div>
-                  <div style={labelStyle}>{t('new_trade_profit_pct')}</div>
-                  <input type="number" placeholder="1.5" value={closeProfitPct} onChange={e => setCloseProfitPct(e.target.value)} style={inputStyle} />
+                  <div style={{ ...labelStyle, color: closeFieldErrors.profitPct ? RED : subColor }}>
+                    {t('new_trade_profit_pct')}{closeResult !== 'БУ' ? ' *' : ''}
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="1.5"
+                    value={closeProfitPct}
+                    onChange={e => { setCloseProfitPct(e.target.value); setCloseFieldErrors(prev => ({ ...prev, profitPct: false })) }}
+                    style={inputStyle(closeFieldErrors.profitPct)}
+                  />
+                  {closeFieldErrors.profitPct && <div style={errorLabelStyle}>Обов'язкове поле</div>}
                 </div>
               </div>
+
+              {/* Grade */}
               <div style={{ marginBottom: 16, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_grade')}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -388,16 +435,19 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               </div>
+
+              {/* Comment */}
               <div style={{ marginBottom: 20, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_comment')}</div>
-                <textarea placeholder={t('trade_close_comment_ph')} value={closeComment} onChange={e => setCloseComment(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                <textarea placeholder={t('trade_close_comment_ph')} value={closeComment} onChange={e => setCloseComment(e.target.value)} rows={3} style={{ ...inputStyle(), resize: 'vertical' }} />
               </div>
+
               {closeError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12, position: 'relative' }}>{closeError}</div>}
               <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
                 <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
                   {closeSaving ? t('trade_close_saving') : t('trade_close_save')}
                 </button>
-                <button onClick={() => setShowCloseForm(false)} style={{
+                <button onClick={() => { setShowCloseForm(false); setCloseFieldErrors({}) }} style={{
                   padding: '9px 18px', borderRadius: 12,
                   border: `1px solid ${borderColor}`,
                   background: 'transparent', color: subColor,
