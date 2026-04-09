@@ -7,20 +7,20 @@ const UpdateSchema = z.object({
   date:            z.string().min(1).optional(),
   pair:            z.string().min(1).optional(),
   setup:           z.string().min(1).optional(),
-  rr:              z.number().positive().optional(),
+  rr:              z.number().nullable().optional(),
   direction:       z.enum(['Long', 'Short']).optional(),
   result:          z.enum(['Тейк', 'Стоп', 'БУ']).optional(),
-  profit_usd:      z.number().optional(),
-  profit_pct:      z.number().optional(),
+  profit_usd:      z.number().nullable().optional(),
+  profit_pct:      z.number().nullable().optional(),
   tradingview_url: z.string().nullable().optional(),
   comment:         z.string().nullable().optional(),
   self_grade:      z.enum(['A', 'B', 'C', 'D']).optional(),
   status:          z.enum(['planned', 'closed']).optional(),
-  entry_price:     z.number().optional(),
-  stop_price:      z.number().optional(),
-  take_price:      z.number().optional(),
-  risk_usdt:       z.number().optional(),
-  risk_pct:        z.number().optional(),
+  entry_price:     z.number().nullable().optional(),
+  stop_price:      z.number().nullable().optional(),
+  take_price:      z.number().nullable().optional(),
+  risk_usdt:       z.number().nullable().optional(),
+  risk_pct:        z.number().nullable().optional(),
   emotion:         z.enum(['calm', 'fear', 'greed', 'anger', 'euphoria', 'revenge']).nullable().optional(),
   mae_price:       z.number().nullable().optional(),
   mfe_price:       z.number().nullable().optional(),
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     const body = await request.json()
     const parsed = UpdateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.issues, code: 'VALIDATION_ERROR' }, { status: 400 })
+      return NextResponse.json({ success: false, error: parsed.error.issues.map((i: any) => i.message).join(', '), code: 'VALIDATION_ERROR' }, { status: 400 })
     }
     const trade = await updateTrade(id, user.id, parsed.data as any)
     return NextResponse.json({ success: true, data: trade })
