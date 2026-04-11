@@ -66,6 +66,25 @@ export async function DELETE(request: NextRequest, { params }: { params: Params 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
+
+    // Отримуємо угоду перед видаленням щоб дістати screenshot_url
+    const trade = await getTradeById(id, user.id)
+
+    // Якщо є скріншот — видаляємо з Storage
+    if (trade?.screenshot_url) {
+      try {
+        // Витягуємо path з URL: .../storage/v1/object/public/screenshots/USER_ID/FILENAME
+        const url = new URL(trade.screenshot_url)
+        const pathParts = url.pathname.split('/storage/v1/object/public/screenshots/')
+        if (pathParts.length === 2) {
+          const filePath = pathParts[1] // наприклад: "user-id/filename.png"
+          await supabase.storage.from('screenshots').remove([filePath])
+        }
+      } catch {
+        // Не блокуємо видалення угоди якщо Storage cleanup не вдався
+      }
+    }
+
     await deleteTrade(id, user.id)
     return NextResponse.json({ success: true, data: { deleted: true } })
   } catch (error) {
