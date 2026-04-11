@@ -55,6 +55,7 @@ export default function SettingsPage() {
   const [pwSaving,      setPwSaving]      = useState(false)
   const [pwSaved,       setPwSaved]       = useState(false)
   const [pwError,       setPwError]       = useState('')
+  const [copied,        setCopied]        = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -108,6 +109,8 @@ export default function SettingsPage() {
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  const publicProfileUrl = `https://aurumtrade.vercel.app/u/${email.split('@')[0]}`
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -318,9 +321,51 @@ export default function SettingsPage() {
                   <span style={{ fontSize: 14, color: textColor, fontWeight: 500 }}>{row.value}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                 <span style={{ fontSize: 14, color: subColor }}>{tr('settings_subscription')}</span>
                 <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
+              </div>
+
+              {/* Public Profile */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                <div>
+                  <span style={{ fontSize: 14, color: subColor }}>🌐 Public Profile</span>
+                  <div style={{ fontSize: 11, color: subColor, opacity: 0.6, marginTop: 2 }}>
+                    aurumtrade.vercel.app/u/{email.split('@')[0]}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  
+                    href={publicProfileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                      color: subColor,
+                      border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
+                      borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: FONT, textDecoration: 'none',
+                    }}
+                  >
+                    👁 View
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(publicProfileUrl)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    }}
+                    style={{
+                      background: copied ? (dark ? `${DARK.green}22` : LIGHT.greenBg) : dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                      color: copied ? GREEN : subColor,
+                      border: `1px solid ${copied ? GREEN + '44' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
+                      borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: FONT, transition: 'all 0.2s',
+                    }}
+                  >
+                    {copied ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
