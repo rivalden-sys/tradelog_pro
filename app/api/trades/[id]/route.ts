@@ -73,12 +73,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Params 
     // Якщо є скріншот — видаляємо з Storage
     if (trade?.screenshot_url) {
       try {
-        // Витягуємо path з URL: .../storage/v1/object/public/screenshots/USER_ID/FILENAME
         const url = new URL(trade.screenshot_url)
-        const pathParts = url.pathname.split('/storage/v1/object/public/screenshots/')
+        const pathParts = url.pathname.split('/storage/v1/object/public/trade-screenshots/')
         if (pathParts.length === 2) {
-          const filePath = pathParts[1] // наприклад: "user-id/filename.png"
-          await supabase.storage.from('screenshots').remove([filePath])
+          const filePath = pathParts[1]
+          await supabase.storage.from('trade-screenshots').remove([filePath])
         }
       } catch {
         // Не блокуємо видалення угоди якщо Storage cleanup не вдався
