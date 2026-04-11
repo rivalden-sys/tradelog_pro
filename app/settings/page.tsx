@@ -40,6 +40,7 @@ export default function SettingsPage() {
 
   const [email,         setEmail]         = useState('')
   const [username,      setUsername]      = useState('')
+  const [usernameError, setUsernameError] = useState('')
   const [loading,       setLoading]       = useState(true)
   const [saving,        setSaving]        = useState(false)
   const [saved,         setSaved]         = useState(false)
@@ -63,18 +64,34 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setEmail(user.email || '')
-      setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
-      const { data: profile } = await supabase.from('users').select('balance').eq('id', user.id).single()
+      const { data: profile } = await supabase.from('users').select('balance, username').eq('id', user.id).single()
       if (profile?.balance) setBalance(String(profile.balance))
+      if (profile?.username) setUsername(profile.username)
+      else setUsername(user.user_metadata?.username || user.email?.split('@')[0] || '')
       setLoading(false)
     }
     load()
   }, [])
 
   const saveProfile = async () => {
+    setUsernameError('')
+    const trimmed = username.trim()
+    if (!trimmed) { setUsernameError('Username cannot be empty'); return }
+    if (trimmed.length < 3) { setUsernameError('Minimum 3 characters'); return }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) { setUsernameError('Only letters, numbers and underscore'); return }
     setSaving(true)
     const supabase = createClient()
-    await supabase.auth.updateUser({ data: { username } })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { error } = await supabase.from('users').update({ username: trimmed }).eq('id', user.id)
+      if (error) {
+        if (error.code === '23505') setUsernameError('This username is already taken')
+        else setUsernameError(error.message)
+        setSaving(false)
+        return
+      }
+      await supabase.auth.updateUser({ data: { username: trimmed } })
+    }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -110,7 +127,7 @@ export default function SettingsPage() {
     router.push('/login')
   }
 
-  const publicProfileUrl = `https://aurumtrade.vercel.app/u/${email.split('@')[0]}`
+  const publicProfileUrl = `https://aurumtrade.vercel.app/u/${username || email.split('@')[0]}`
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -201,7 +218,18 @@ export default function SettingsPage() {
               </div>
               <div>
                 <label style={labelStyle}>{tr('settings_username')}</label>
-                <input value={username} onChange={e => setUsername(e.target.value)} placeholder={tr('settings_username_ph')} style={inputStyle} />
+                <input
+                  value={username}
+                  onChange={e => { setUsername(e.target.value); setUsernameError('') }}
+                  placeholder={tr('settings_username_ph')}
+                  style={{ ...inputStyle, border: `1px solid ${usernameError ? RED + '66' : dark ? DARK.border : 'rgba(0,0,0,0.1)'}` }}
+                />
+                {usernameError && (
+                  <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>{usernameError}</div>
+                )}
+                <div style={{ fontSize: 11, color: subColor, marginTop: 4, opacity: 0.7 }}>
+                  aurumtrade.vercel.app/u/{username || '...'}
+                </div>
               </div>
               <button onClick={saveProfile} disabled={saving} style={glossyBtn('green', saved ? 'saved' : saving ? 'saving' : 'normal')}>
                 {saved ? tr('settings_saved') : saving ? tr('settings_saving') : tr('settings_save')}
@@ -322,7 +350,7 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                 <div>
                   <div style={{ fontSize: 14, color: subColor }}>Public Profile</div>
-                  <div style={{ fontSize: 11, color: subColor, opacity: 0.6, marginTop: 2 }}>aurumtrade.vercel.app/u/{email.split('@')[0]}</div>
+                  <div style={{ fontSize: 11, color: subColor, opacity: 0.6, marginTop: 2 }}>aurumtrade.vercel.app/u/{username || email.split('@')[0]}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <a href={publicProfileUrl} target="_blank" rel="noreferrer" style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: subColor, border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.08)'}`, borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, textDecoration: 'none', display: 'inline-block' }}>{'↗ View'}</a>
