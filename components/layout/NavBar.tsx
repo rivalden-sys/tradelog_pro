@@ -52,6 +52,7 @@ export default function NavBar() {
   ]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const isAuthPage = pathname === '/login' || pathname === '/register'
 
   const textColor = dark ? DARK.text : LIGHT.text
   const subColor  = dark ? DARK.sub  : LIGHT.sub
@@ -60,21 +61,23 @@ export default function NavBar() {
   const navBg     = dark ? 'rgba(10,10,11,0.7)' : 'rgba(255,255,255,0.6)'
 
   const Logo = () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
-      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-        <rect x="0" y="0" width="28" height="28" rx="8" fill="rgba(48,209,88,0.12)" />
-        <rect x="0" y="0" width="28" height="28" rx="8" stroke="rgba(48,209,88,0.35)" strokeWidth="1" />
-        <path d="M14 6L20.5 22H17.8L16.2 18H11.8L10.2 22H7.5L14 6Z" fill="#30d158" />
-        <path d="M12.7 15.5H15.3L14 11.5L12.7 15.5Z" fill={dark ? '#0a0a0b' : '#f2f2f7'} />
-        <circle cx="14" cy="6" r="1.5" fill="#f5c842" />
-      </svg>
-      <div style={{ lineHeight: 1 }}>
-        <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: textColor, letterSpacing: '-0.03em', lineHeight: '1.1' }}>
-          Aurum<span style={{ color: '#30d158' }}>Trade</span>
+    <Link href={isAuthPage ? '/' : '/dashboard'} style={{ textDecoration: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+          <rect x="0" y="0" width="28" height="28" rx="8" fill="rgba(48,209,88,0.12)" />
+          <rect x="0" y="0" width="28" height="28" rx="8" stroke="rgba(48,209,88,0.35)" strokeWidth="1" />
+          <path d="M14 6L20.5 22H17.8L16.2 18H11.8L10.2 22H7.5L14 6Z" fill="#30d158" />
+          <path d="M12.7 15.5H15.3L14 11.5L12.7 15.5Z" fill={dark ? '#0a0a0b' : '#f2f2f7'} />
+          <circle cx="14" cy="6" r="1.5" fill="#f5c842" />
+        </svg>
+        <div style={{ lineHeight: 1 }}>
+          <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: textColor, letterSpacing: '-0.03em', lineHeight: '1.1' }}>
+            Aurum<span style={{ color: '#30d158' }}>Trade</span>
+          </div>
+          <div style={{ fontFamily: NUNITO, fontSize: 9, fontWeight: 600, color: 'rgba(245,200,66,0.8)', letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
         </div>
-        <div style={{ fontFamily: NUNITO, fontSize: 9, fontWeight: 600, color: 'rgba(245,200,66,0.8)', letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
       </div>
-    </div>
+    </Link>
   )
 
   const iconBtn = (onClick: () => void, children: React.ReactNode) => (
