@@ -97,7 +97,7 @@ export default function Landing() {
     { q: 'Is there a mobile version?',        a: 'AurumTrade is fully responsive and works great on any device — phone, tablet, or desktop.' },
     { q: 'Can I cancel my subscription?',     a: 'Absolutely. Cancel anytime from your billing settings — no questions asked, no hidden fees.' },
     { q: 'What markets does it support?',     a: 'Futures and Spot trading. Long and Short positions. Any trading pair — crypto, forex, stocks.' },
-    { q: 'How does the AI know my patterns?', a: 'AI reads your actual trade history — setup, result, emotion, playbook compliance, journal mood — and finds patterns specific to your trading.' },
+    { q: 'How does the AI know my patterns?', a: 'AI reads your actual trade history — setup, result, emotion, playbook compliance, journal mood — and finds patterns specific to your trading, not generic advice.' },
     { q: 'Can I try it before paying?',       a: 'Yes! The Free plan includes up to 20 trades with basic analytics. No credit card required.' },
     { q: 'What is CSV Import?',               a: 'Upload your trades directly from Bybit, Binance, OKX, Bitget, MEXC and more. Trades are parsed and added automatically — no manual entry needed.' },
     { q: 'What is Performance Simulator?',    a: 'Monte Carlo simulation that projects your current stats into the future. See where you\'ll be in 3-6 months if you keep trading the same way.' },
@@ -111,6 +111,7 @@ export default function Landing() {
         html { scroll-behavior: smooth; }
         ::selection { background: ${GREEN}44; }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
       `}</style>
 
       {/* Sticky mobile CTA */}
@@ -349,31 +350,150 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* AI FEATURES */}
+      {/* AI SECTION — REDESIGNED */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
-          <Pill color={GREEN}>AI Features</Pill>
-          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
-            <GradientText from="#fff" to="rgba(255,255,255,0.55)">AI that reads<br />your journal</GradientText>
+          <Pill color={PURPLE}>AI Intelligence</Pill>
+          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, marginBottom: 16 }}>
+            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Not just AI.</GradientText>
+            <br />
+            <GradientText from={PURPLE} to={BLUE}>Your personal trading analyst.</GradientText>
           </h2>
+          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.35)', maxWidth: 600, margin: '0 auto', lineHeight: 1.7 }}>
+            Other journals show you charts. AurumTrade tells you exactly why you're losing — and what to fix.
+          </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 20 }}>
-          {[
-            { icon: '🧠', title: 'AI Coach',      color: GREEN,  desc: 'Analyzes last 50 trades, emotion patterns, playbook compliance. Gives main mistakes + 4 concrete steps.', badge: 'Pro' },
-            { icon: '🎯', title: 'Trade Score',    color: ORANGE, desc: 'AI estimates success probability before you enter. Based on your personal historical win rate.', badge: 'Pro' },
-            { icon: '🧬', title: 'Psychology',     color: PURPLE, desc: 'Reads your comments and emotions. Finds fear, greed, revenge trading. Gives severity + action.', badge: 'Pro' },
-            { icon: '💬', title: 'AI Chat',        color: BLUE,   desc: 'Chat with AI that has full context of your journal, emotions, playbook, and mood. Ask anything.', badge: 'Pro' },
-            { icon: '📊', title: 'Trade Analysis', color: RED,    desc: 'Detailed breakdown per trade: entry quality, mistakes, system compliance, AI grade.', badge: 'Pro' },
-            { icon: '📈', title: 'Analytics',      color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, MAE/MFE analysis, Max Drawdown and more.', badge: 'Free' },
-          ].map(f => (
-            <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '32px 28px', borderRadius: 22 }}>
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: f.badge === 'Pro' ? PURPLE : GREEN, background: f.badge === 'Pro' ? `${PURPLE}20` : `${GREEN}20`, border: `1px solid ${f.badge === 'Pro' ? PURPLE : GREEN}35`, borderRadius: 20, padding: '3px 10px' }}>{f.badge}</span>
+
+        {/* AI Insights showcase */}
+        <Glass accent={PURPLE} style={{ padding: isMobile ? '28px 22px' : '48px 48px', borderRadius: 28, marginBottom: isMobile ? 12 : 20, background: `${PURPLE}08` }}>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🤖</div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>What your AI coach actually finds</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Real insights from real journal data — not generic advice</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 10 : 14 }}>
+              {[
+                {
+                  icon: '😌',
+                  label: 'Psychology Analysis found:',
+                  insight: 'Your win rate when calm: 71%. When feeling revenge: 22%. You\'ve lost $340 on revenge trades this month.',
+                  color: PURPLE,
+                  tag: 'Psychology',
+                },
+                {
+                  icon: '📋',
+                  label: 'AI Coach found:',
+                  insight: 'You follow your CHoCH+BOS playbook 68% of the time. The 32% when you break rules has a 29% win rate vs 71% when you follow them.',
+                  color: GREEN,
+                  tag: 'Coach',
+                },
+                {
+                  icon: '📊',
+                  label: 'Trade Score detected:',
+                  insight: 'Your BOS setup on Mondays has 38% win rate (12 trades). On Wednesdays–Thursdays: 67%. You\'re taking low-probability trades early in the week.',
+                  color: ORANGE,
+                  tag: 'Trade Score',
+                },
+                {
+                  icon: '🔍',
+                  label: 'Trade Review revealed:',
+                  insight: 'You grade yourself B when AI grades you D on 23% of trades. Your entries after a loss are on average 40% lower quality than your normal entries.',
+                  color: BLUE,
+                  tag: 'Trade Review',
+                },
+              ].map((item, i) => (
+                <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${item.color}30`, borderRadius: 18, padding: isMobile ? '18px' : '22px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 20 }}>{item.icon}</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{item.label}</span>
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}30`, borderRadius: 20, padding: '2px 10px' }}>{item.tag}</span>
+                  </div>
+                  <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, fontWeight: 500 }}>
+                    "{item.insight}"
+                  </div>
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{f.title}</div>
-                <div style={{ fontSize: isMobile ? 12 : 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{f.desc}</div>
+              ))}
+            </div>
+            <div style={{ marginTop: 20, padding: '16px 20px', background: `${GREEN}10`, border: `1px solid ${GREEN}25`, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 20 }}>💡</div>
+              <div style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+                <span style={{ color: GREEN, fontWeight: 700 }}>Every insight is based on your actual data.</span>{' '}
+                The more trades you log, the sharper the analysis. AI reads your setups, emotions, playbook compliance, journal mood, and trade history — all in one place.
+              </div>
+            </div>
+          </div>
+        </Glass>
+
+        {/* 5 AI modules */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 16, marginBottom: isMobile ? 10 : 16 }}>
+          {[
+            {
+              icon: '🧠',
+              title: 'AI Coach',
+              color: GREEN,
+              desc: 'Full journal analysis: setup performance, emotion patterns, playbook discipline, risk management. Returns 9 specific insights + 4 action steps.',
+              stats: 'Analyzes last 50 trades',
+            },
+            {
+              icon: '🎯',
+              title: 'Trade Score',
+              color: ORANGE,
+              desc: 'Pre-trade probability score based on your personal historical win rate. Detects tilt risk, emotion impact, and unfavorable conditions.',
+              stats: 'Scores 0–100 with confidence level',
+            },
+            {
+              icon: '🧬',
+              title: 'Psychology',
+              color: PURPLE,
+              desc: 'Identifies cognitive biases — loss aversion, revenge trading, overconfidence. Measures after-loss behavior and self-assessment accuracy.',
+              stats: 'Severity: critical / high / medium / low',
+            },
+          ].map(f => (
+            <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '28px 24px', borderRadius: 22 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
+                </div>
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>{f.title}</div>
+                <div style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.65, marginBottom: 14 }}>{f.desc}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: f.color, background: `${f.color}12`, border: `1px solid ${f.color}25`, borderRadius: 8, padding: '5px 10px', display: 'inline-block' }}>{f.stats}</div>
+              </div>
+            </Glass>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 16 }}>
+          {[
+            {
+              icon: '💬',
+              title: 'AI Chat',
+              color: BLUE,
+              desc: 'Chat with AI that has full context of your journal — 50 trades, emotions, playbook compliance, mood history. Ask anything specific about your trading.',
+              stats: '50 messages/hour',
+            },
+            {
+              icon: '📊',
+              title: 'Trade Review',
+              color: RED,
+              desc: 'Per-trade deep analysis: entry quality, execution score 0–100, AI grade vs your self-grade, setup historical context, and one key lesson per trade.',
+              stats: 'Execution score + AI grade vs self-grade',
+            },
+          ].map(f => (
+            <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '28px 24px', borderRadius: 22 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
+                </div>
+                <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>{f.title}</div>
+                <div style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.65, marginBottom: 14 }}>{f.desc}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: f.color, background: `${f.color}12`, border: `1px solid ${f.color}25`, borderRadius: 8, padding: '5px 10px', display: 'inline-block' }}>{f.stats}</div>
               </div>
             </Glass>
           ))}
@@ -545,6 +665,8 @@ export default function Landing() {
         <div style={{ display: 'flex', gap: isMobile ? 16 : 24, alignItems: 'center', flexWrap: 'wrap' }}>
           <Link href="/login"    style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Log in</Link>
           <Link href="/register" style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Register</Link>
+          <Link href="/privacy"  style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Privacy</Link>
+          <Link href="/terms"    style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Terms</Link>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>by dnproduction · 2026</div>
         </div>
       </footer>
