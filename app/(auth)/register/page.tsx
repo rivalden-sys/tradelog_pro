@@ -74,9 +74,9 @@ export default function RegisterPage() {
 
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` }
-    })
+    provider: 'google',
+    options: { redirectTo: 'https://aurumtrade.vercel.app/dashboard' },
+   })
   }
 
   const inputStyle = {
