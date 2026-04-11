@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 type Params = Promise<{ username: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   try {
     const { username } = await params
-    const supabase = await createClient()
 
-    // Знайти юзера по username (частина email до @)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     const { data: users } = await supabase
       .from('users')
       .select('id, email, plan')
@@ -21,7 +24,6 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 
     const user = users[0]
 
-    // Отримати закриті угоди
     const { data: trades } = await supabase
       .from('trades')
       .select('result, profit_usd, profit_pct, pair, setup, direction, rr, date')
@@ -36,17 +38,15 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       })
     }
 
-    const wins   = trades.filter(t => t.result === 'Тейк').length
+    const wins    = trades.filter(t => t.result === 'Тейк').length
     const winRate = Math.round((wins / trades.length) * 100)
     const totalPnl = trades.reduce((sum, t) => sum + (t.profit_usd || 0), 0)
-    const avgRR = trades.reduce((sum, t) => sum + (t.rr || 0), 0) / trades.length
+    const avgRR   = trades.reduce((sum, t) => sum + (t.rr || 0), 0) / trades.length
 
-    // Топ пари
     const pairCount: Record<string, number> = {}
     trades.forEach(t => { pairCount[t.pair] = (pairCount[t.pair] || 0) + 1 })
     const topPairs = Object.entries(pairCount).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([pair, count]) => ({ pair, count }))
 
-    // Топ сетапи
     const setupCount: Record<string, { count: number; wins: number }> = {}
     trades.forEach(t => {
       if (!setupCount[t.setup]) setupCount[t.setup] = { count: 0, wins: 0 }
