@@ -23,9 +23,9 @@ function useDark() {
 }
 
 export default function SettingsPage() {
-  const dark        = useDark()
-  const { t: tr }   = useLocale()
-  const router      = useRouter()
+  const dark      = useDark()
+  const { t: tr } = useLocale()
+  const router    = useRouter()
 
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
@@ -133,7 +133,7 @@ export default function SettingsPage() {
     const bgMap = {
       green:  { dark: DARK.green,  light: BTN.green  },
       blue:   { dark: DARK.blue,   light: BTN.blue   },
-      orange: { dark: DARK.orange, light: BTN.orange  },
+      orange: { dark: DARK.orange, light: BTN.orange },
     }
     return {
       background: isSaving
@@ -176,7 +176,6 @@ export default function SettingsPage() {
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: FONT, position: 'relative' }}>
-
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: dark ? DARK.bg : LIGHT.bg }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: noiseSvg, opacity: dark ? 0.35 : 0.15 }} />
       <div style={{ position: 'fixed', top: -200, left: '30%', width: 600, height: 600, borderRadius: '50%', background: dark ? 'radial-gradient(circle, rgba(48,209,88,0.06) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(10,132,255,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
@@ -217,9 +216,7 @@ export default function SettingsPage() {
               <div style={{ fontSize: 16, fontWeight: 700, color: textColor }}>{tr('settings_deposit_title')}</div>
               <span style={{ background: dark ? DARK.orange + '22' : LIGHT.orangeBg, color: ORANGE, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>USDT</span>
             </div>
-            <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>
-              {tr('settings_deposit_sub')}
-            </div>
+            <div style={{ fontSize: 13, color: subColor, marginBottom: 20, position: 'relative' }}>{tr('settings_deposit_sub')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end', position: 'relative' }}>
               <div>
                 <label style={labelStyle}>{tr('settings_deposit_label')}</label>
@@ -228,10 +225,7 @@ export default function SettingsPage() {
                   <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 600, color: subColor }}>USDT</span>
                 </div>
               </div>
-              <button onClick={saveBalance} disabled={balanceSaving} style={{
-                ...glossyBtn('orange', balanceSaved ? 'saved' : balanceSaving ? 'saving' : 'normal'),
-                padding: '10px 20px', whiteSpace: 'nowrap',
-              }}>
+              <button onClick={saveBalance} disabled={balanceSaving} style={{ ...glossyBtn('orange', balanceSaved ? 'saved' : balanceSaving ? 'saving' : 'normal'), padding: '10px 20px', whiteSpace: 'nowrap' }}>
                 {balanceSaved ? tr('settings_deposit_saved') : balanceSaving ? tr('settings_deposit_saving') : tr('settings_deposit_save')}
               </button>
             </div>
@@ -325,45 +319,15 @@ export default function SettingsPage() {
                 <span style={{ fontSize: 14, color: subColor }}>{tr('settings_subscription')}</span>
                 <a href="/billing" style={{ fontSize: 14, color: BLUE, textDecoration: 'none', fontWeight: 600 }}>{tr('settings_manage')}</a>
               </div>
-
-              {/* Public Profile */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                 <div>
-                  <span style={{ fontSize: 14, color: subColor }}>🌐 Public Profile</span>
-                  <div style={{ fontSize: 11, color: subColor, opacity: 0.6, marginTop: 2 }}>
-                    aurumtrade.vercel.app/u/{email.split('@')[0]}
-                  </div>
+                  <div style={{ fontSize: 14, color: subColor }}>Public Profile</div>
+                  <div style={{ fontSize: 11, color: subColor, opacity: 0.6, marginTop: 2 }}>aurumtrade.vercel.app/u/{email.split('@')[0]}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  
-                    href={publicProfileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                      color: subColor,
-                      border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
-                      borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600,
-                      cursor: 'pointer', fontFamily: FONT, textDecoration: 'none',
-                    }}
-                  >
-                    View
-                  </a>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(publicProfileUrl)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }}
-                    style={{
-                      background: copied ? (dark ? `${DARK.green}22` : LIGHT.greenBg) : dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                      color: copied ? GREEN : subColor,
-                      border: `1px solid ${copied ? GREEN + '44' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
-                      borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600,
-                      cursor: 'pointer', fontFamily: FONT, transition: 'all 0.2s',
-                    }}
-                  >
-                    {copied ? '✓ Copied!' : '📋 Copy'}
+                  <a href={publicProfileUrl} target="_blank" rel="noreferrer" style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: subColor, border: `1px solid ${dark ? DARK.border : 'rgba(0,0,0,0.08)'}`, borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, textDecoration: 'none', display: 'inline-block' }}>{'↗ View'}</a>
+                  <button onClick={() => { navigator.clipboard.writeText(publicProfileUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }} style={{ background: copied ? (dark ? `${DARK.green}22` : LIGHT.greenBg) : dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: copied ? GREEN : subColor, border: `1px solid ${copied ? GREEN + '44' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`, borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, transition: 'all 0.2s' }}>
+                    {copied ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -376,11 +340,7 @@ export default function SettingsPage() {
             <div style={{ fontSize: 16, fontWeight: 700, color: RED, marginBottom: 6, position: 'relative' }}>{tr('settings_danger')}</div>
             <div style={{ fontSize: 13, color: subColor, marginBottom: 16, position: 'relative' }}>{tr('settings_danger_sub')}</div>
             {!deleteConfirm ? (
-              <button onClick={() => setDeleteConfirm(true)} style={{
-                background: dark ? `${DARK.red}15` : LIGHT.redBg, color: RED,
-                border: `1px solid ${RED}44`, borderRadius: 12, padding: '10px 20px',
-                fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, position: 'relative',
-              }}>{tr('settings_logout')}</button>
+              <button onClick={() => setDeleteConfirm(true)} style={{ background: dark ? `${DARK.red}15` : LIGHT.redBg, color: RED, border: `1px solid ${RED}44`, borderRadius: 12, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, position: 'relative' }}>{tr('settings_logout')}</button>
             ) : (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
                 <span style={{ fontSize: 13, color: subColor }}>{tr('settings_confirm')}</span>
