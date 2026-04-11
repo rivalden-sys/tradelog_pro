@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -196,9 +197,9 @@ export default function ResetPasswordPage() {
         background: 'radial-gradient(circle, rgba(48,209,88,0.08) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
-      <div style={{ position: 'absolute', top: 24, left: 48 }}>
-        <Logo />
-      </div>
+      <Link href="/" style={{ position: 'absolute', top: 24, left: 48, textDecoration: 'none' }}>
+       <Logo />
+      </Link>
       <Suspense fallback={
         <div style={{ width: 420, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '40px 36px', textAlign: 'center' }}>
           <div style={{ fontSize: 24, marginBottom: 16 }}>⏳</div>
