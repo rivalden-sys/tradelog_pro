@@ -52,7 +52,7 @@ export default function RegisterPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email, password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: 'https://aurumtrade.vercel.app/dashboard',
         data: { full_name: username },
       }
     })
