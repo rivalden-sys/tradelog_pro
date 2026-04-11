@@ -44,7 +44,7 @@ function Glass({ children, accent, style, hover }: { children: React.ReactNode; 
         backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
         border: `1px solid ${accent ? accent + '40' : hovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.1)'}`,
         borderRadius: 28,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)`,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(255,255,255,0.03)',
         position: 'relative', overflow: 'hidden',
         transition: 'all 0.3s ease',
         ...style,
@@ -100,6 +100,7 @@ export default function Landing() {
     { q: 'How does the AI know my patterns?', a: 'AI reads your actual trade history — setup, result, emotion, playbook compliance, journal mood — and finds patterns specific to your trading.' },
     { q: 'Can I try it before paying?',       a: 'Yes! The Free plan includes up to 20 trades with basic analytics. No credit card required.' },
     { q: 'What is CSV Import?',               a: 'Upload your trades directly from Bybit, Binance, OKX, Bitget, MEXC and more. Trades are parsed and added automatically — no manual entry needed.' },
+    { q: 'What is Performance Simulator?',    a: 'Monte Carlo simulation that projects your current stats into the future. See where you\'ll be in 3-6 months if you keep trading the same way.' },
   ]
 
   return (
@@ -140,7 +141,7 @@ export default function Landing() {
             <GradientText from={GREEN} to="#2ecc71">Grow faster.</GradientText>
           </h1>
           <p style={{ fontSize: isMobile ? 16 : 21, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 600, margin: '0 auto 40px' }}>
-            An AI trading journal with coaching, psychology analysis, playbook rules, emotion tracking and daily notes. Stop repeating the same mistakes.
+            An AI trading journal with coaching, psychology analysis, playbook rules, emotion tracking, goals, simulator and daily notes. Stop repeating the same mistakes.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
             <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55` }}>Start for free →</Link>
@@ -231,7 +232,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 8, padding: '7px 10px' }}>
-                  📈 Following rules gives +37% win rate
+                  Following rules gives +37% win rate
                 </div>
               </div>
             </div>
@@ -276,7 +277,8 @@ export default function Landing() {
           </div>
         </div>
 
-        <Glass accent={ORANGE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28 }}>
+        {/* CSV Import */}
+        <Glass accent={ORANGE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28, marginBottom: isMobile ? 12 : 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <div>
               <div style={{ fontSize: 36, marginBottom: 16 }}>📥</div>
@@ -306,6 +308,45 @@ export default function Landing() {
             </div>
           </div>
         </Glass>
+
+        {/* Goals & Streak + Performance Simulator */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
+          <Glass accent={GREEN} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 28, marginBottom: 12 }}>🎯</div>
+              <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Goals & Streak</div>
+              <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
+                Set weekly and monthly goals — win rate, trade count, P&L. Track your streak of active trading days.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {['Weekly & monthly goals', 'Win rate / P&L / trade count targets', 'Streak counter with trophy at 7 days', 'Auto-progress from real trades'].map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>{'✓'}</div>
+                    <span style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Glass>
+
+          <Glass accent={PURPLE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 28, marginBottom: 12 }}>📈</div>
+              <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Performance Simulator</div>
+              <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
+                Monte Carlo simulation based on your real stats. See where you'll be in 3-6 months if you keep trading the same way.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {['200 Monte Carlo scenarios', 'P10 / P50 / P90 outcomes', 'Ruin probability calculator', 'EV calculator'].map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${PURPLE}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: PURPLE, flexShrink: 0, fontWeight: 800 }}>{'✓'}</div>
+                    <span style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Glass>
+        </div>
       </section>
 
       {/* AI FEATURES */}
@@ -323,7 +364,7 @@ export default function Landing() {
             { icon: '🧬', title: 'Psychology',     color: PURPLE, desc: 'Reads your comments and emotions. Finds fear, greed, revenge trading. Gives severity + action.', badge: 'Pro' },
             { icon: '💬', title: 'AI Chat',        color: BLUE,   desc: 'Chat with AI that has full context of your journal, emotions, playbook, and mood. Ask anything.', badge: 'Pro' },
             { icon: '📊', title: 'Trade Analysis', color: RED,    desc: 'Detailed breakdown per trade: entry quality, mistakes, system compliance, AI grade.', badge: 'Pro' },
-            { icon: '📈', title: 'Analytics',      color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, Max Drawdown and more.', badge: 'Free' },
+            { icon: '📈', title: 'Analytics',      color: GREEN,  desc: 'Win rate by setup & pair, P&L by weekday, Long vs Short, MAE/MFE analysis, Max Drawdown and more.', badge: 'Free' },
           ].map(f => (
             <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '32px 28px', borderRadius: 22 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
@@ -425,10 +466,25 @@ export default function Landing() {
           <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28, background: `${GREEN}0d` }}>
             <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GOLD}, ${ORANGE})`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>BEST VALUE</div>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro ⚡</div>
+              <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro</div>
               <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$19</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>per month</div>
-              {['Unlimited trades', 'CSV Import (all exchanges)', 'Playbook + compliance', 'Emotion tracking', 'Daily Journal', 'AI Coach', 'AI Trade Score', 'AI Psychology Analysis', 'AI Chat', 'Analysis history'].map(f => (
+              {[
+                'Unlimited trades',
+                'CSV Import (all exchanges)',
+                'Playbook + compliance',
+                'Emotion tracking',
+                'Daily Journal',
+                'Goals & Streak',
+                'Performance Simulator',
+                'Trade screenshots',
+                'Public profile',
+                'AI Coach',
+                'AI Trade Score',
+                'AI Psychology Analysis',
+                'AI Chat',
+                'Analysis history',
+              ].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
