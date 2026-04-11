@@ -61,9 +61,9 @@ export default function ForgotPasswordPage() {
       }} />
 
       {/* Logo */}
-      <div style={{ position: 'absolute', top: 24, left: 48 }}>
-        <Logo />
-      </div>
+      <Link href="/" style={{ position: 'absolute', top: 24, left: 48, textDecoration: 'none' }}>
+       <Logo />
+      </Link>
 
       {/* Card */}
       <div style={{
