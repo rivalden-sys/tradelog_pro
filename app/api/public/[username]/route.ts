@@ -6,7 +6,6 @@ type Params = Promise<{ username: string }>
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   try {
     const { username } = await params
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,8 +13,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 
     const { data: users } = await supabase
       .from('users')
-      .select('id, email, plan')
-      .ilike('email', `${username}@%`)
+      .select('id, email, plan, username')
+      .eq('username', username)
       .limit(1)
 
     if (!users?.length) {
@@ -34,14 +33,14 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     if (!trades?.length) {
       return NextResponse.json({
         success: true,
-        data: { username, plan: user.plan, totalTrades: 0, winRate: 0, totalPnl: 0, avgRR: 0, topPairs: [], topSetups: [], recentTrades: [] }
+        data: { username: user.username || username, plan: user.plan, totalTrades: 0, winRate: 0, totalPnl: 0, avgRR: 0, topPairs: [], topSetups: [], recentTrades: [] }
       })
     }
 
-    const wins    = trades.filter(t => t.result === 'Тейк').length
-    const winRate = Math.round((wins / trades.length) * 100)
+    const wins     = trades.filter(t => t.result === 'Тейк').length
+    const winRate  = Math.round((wins / trades.length) * 100)
     const totalPnl = trades.reduce((sum, t) => sum + (t.profit_usd || 0), 0)
-    const avgRR   = trades.reduce((sum, t) => sum + (t.rr || 0), 0) / trades.length
+    const avgRR    = trades.reduce((sum, t) => sum + (t.rr || 0), 0) / trades.length
 
     const pairCount: Record<string, number> = {}
     trades.forEach(t => { pairCount[t.pair] = (pairCount[t.pair] || 0) + 1 })
@@ -61,7 +60,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     return NextResponse.json({
       success: true,
       data: {
-        username,
+        username: user.username || username,
         plan: user.plan,
         totalTrades: trades.length,
         winRate,
