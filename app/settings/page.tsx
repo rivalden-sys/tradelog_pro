@@ -347,7 +347,7 @@ export default function SettingsPage() {
                       cursor: 'pointer', fontFamily: FONT, textDecoration: 'none',
                     }}
                   >
-                    👁 View
+                    View
                   </a>
                   <button
                     onClick={() => {
