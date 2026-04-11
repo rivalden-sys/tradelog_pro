@@ -111,9 +111,9 @@ export default function RegisterPage() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{ position: 'absolute', top: 24, left: 48 }}>
-        <Logo />
-      </div>
+      <Link href="/" style={{ position: 'absolute', top: 24, left: 48, textDecoration: 'none' }}>
+       <Logo />
+      </Link>
 
       <div style={{
         width: 420, position: 'relative', zIndex: 1,
