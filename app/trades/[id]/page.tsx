@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from '@/hooks/useLocale'
 import { createClient } from '@/lib/supabase/client'
@@ -82,6 +82,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const dark = useDark()
   const { t, locale } = useLocale()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
@@ -136,6 +137,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [tradeId,        setTradeId]        = useState<string>('')
   const [ruleChecks,     setRuleChecks]     = useState<any[]>([])
   const [playbook,       setPlaybook]       = useState<any>(null)
+  const [screenshotUrl,      setScreenshotUrl]      = useState<string>('')
+  const [screenshotUploading, setScreenshotUploading] = useState(false)
+  const [screenshotError,    setScreenshotError]    = useState('')
+  const [dragOver,           setDragOver]           = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -146,6 +151,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       if (!json.success) { setLoading(false); return }
       setTrade(json.data)
       setCommentValue(json.data.comment || '')
+      if (json.data.screenshot_url) setScreenshotUrl(json.data.screenshot_url)
       const supabase = createClient()
 
       const { data: sessions } = await supabase
@@ -175,6 +181,35 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     load()
   }, [params])
 
+  const uploadScreenshot = async (file: File) => {
+    if (!tradeId) return
+    const allowed = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowed.includes(file.type)) { setScreenshotError('Only JPG, PNG, WEBP allowed'); return }
+    if (file.size > 2 * 1024 * 1024) { setScreenshotError('Max file size is 2MB'); return }
+    setScreenshotUploading(true); setScreenshotError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res  = await fetch(`/api/trades/${tradeId}/upload`, { method: 'POST', body: formData })
+      const json = await res.json()
+      if (json.success) setScreenshotUrl(json.url)
+      else setScreenshotError(json.error || 'Upload failed')
+    } catch { setScreenshotError('Network error') }
+    setScreenshotUploading(false)
+  }
+
+  const deleteScreenshot = async () => {
+    if (!tradeId) return
+    setScreenshotUploading(true); setScreenshotError('')
+    try {
+      const res  = await fetch(`/api/trades/${tradeId}/upload`, { method: 'DELETE' })
+      const json = await res.json()
+      if (json.success) setScreenshotUrl('')
+      else setScreenshotError(json.error || 'Delete failed')
+    } catch { setScreenshotError('Network error') }
+    setScreenshotUploading(false)
+  }
+
   const saveComment = async () => {
     if (!tradeId) return
     setCommentSaving(true)
@@ -191,19 +226,13 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   const closeTrade = async () => {
     if (!tradeId) return
-
-    // Валідація — P&L обов'язковий для Тейк і Стоп
     if (closeResult !== 'БУ') {
       const errors: { profitUsd?: boolean; profitPct?: boolean } = {}
       if (!closeProfitUsd.trim()) errors.profitUsd = true
       if (!closeProfitPct.trim()) errors.profitPct = true
-      if (Object.keys(errors).length > 0) {
-        setCloseFieldErrors(errors)
-        return
-      }
+      if (Object.keys(errors).length > 0) { setCloseFieldErrors(errors); return }
     }
     setCloseFieldErrors({})
-
     setCloseSaving(true); setCloseError('')
     try {
       const res = await fetch(`/api/trades/${tradeId}`, {
@@ -383,8 +412,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <div style={{ ...glassCard(GREEN), marginBottom: 20 }}>
               {glare}
               <div style={{ fontSize: 15, fontWeight: 800, color: textColor, marginBottom: 20, position: 'relative' }}>{t('trade_close_title')}</div>
-
-              {/* Result */}
               <div style={{ marginBottom: 16, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_result')}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -395,38 +422,26 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               </div>
-
-              {/* P&L */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16, position: 'relative' }}>
                 <div>
                   <div style={{ ...labelStyle, color: closeFieldErrors.profitUsd ? RED : subColor }}>
                     {t('new_trade_profit_usd')}{closeResult !== 'БУ' ? ' *' : ''}
                   </div>
-                  <input
-                    type="number"
-                    placeholder="150.00"
-                    value={closeProfitUsd}
+                  <input type="number" placeholder="150.00" value={closeProfitUsd}
                     onChange={e => { setCloseProfitUsd(e.target.value); setCloseFieldErrors(prev => ({ ...prev, profitUsd: false })) }}
-                    style={inputStyle(closeFieldErrors.profitUsd)}
-                  />
+                    style={inputStyle(closeFieldErrors.profitUsd)} />
                   {closeFieldErrors.profitUsd && <div style={errorLabelStyle}>Обов'язкове поле</div>}
                 </div>
                 <div>
                   <div style={{ ...labelStyle, color: closeFieldErrors.profitPct ? RED : subColor }}>
                     {t('new_trade_profit_pct')}{closeResult !== 'БУ' ? ' *' : ''}
                   </div>
-                  <input
-                    type="number"
-                    placeholder="1.5"
-                    value={closeProfitPct}
+                  <input type="number" placeholder="1.5" value={closeProfitPct}
                     onChange={e => { setCloseProfitPct(e.target.value); setCloseFieldErrors(prev => ({ ...prev, profitPct: false })) }}
-                    style={inputStyle(closeFieldErrors.profitPct)}
-                  />
+                    style={inputStyle(closeFieldErrors.profitPct)} />
                   {closeFieldErrors.profitPct && <div style={errorLabelStyle}>Обов'язкове поле</div>}
                 </div>
               </div>
-
-              {/* Grade */}
               <div style={{ marginBottom: 16, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_grade')}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -435,23 +450,18 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               </div>
-
-              {/* Comment */}
               <div style={{ marginBottom: 20, position: 'relative' }}>
                 <div style={labelStyle}>{t('trade_close_comment')}</div>
                 <textarea placeholder={t('trade_close_comment_ph')} value={closeComment} onChange={e => setCloseComment(e.target.value)} rows={3} style={{ ...inputStyle(), resize: 'vertical' }} />
               </div>
-
               {closeError && <div style={{ padding: '10px 14px', borderRadius: 10, background: `${RED}12`, color: RED, fontSize: 13, marginBottom: 12, position: 'relative' }}>{closeError}</div>}
               <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
                 <button onClick={closeTrade} disabled={closeSaving} style={btnStyle(GREEN, '#000', closeSaving)}>
                   {closeSaving ? t('trade_close_saving') : t('trade_close_save')}
                 </button>
                 <button onClick={() => { setShowCloseForm(false); setCloseFieldErrors({}) }} style={{
-                  padding: '9px 18px', borderRadius: 12,
-                  border: `1px solid ${borderColor}`,
-                  background: 'transparent', color: subColor,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                  padding: '9px 18px', borderRadius: 12, border: `1px solid ${borderColor}`,
+                  background: 'transparent', color: subColor, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
                 }}>{t('trade_close_cancel')}</button>
               </div>
             </div>
@@ -590,6 +600,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 )}
               </div>
 
+              {/* TradingView */}
               {trade.tradingview_url && (
                 <div style={glassCard()}>
                   {glare}
@@ -599,6 +610,57 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   </a>
                 </div>
               )}
+
+              {/* Screenshot */}
+              <div style={glassCard()}>
+                {glare}
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 12, position: 'relative' }}>📸 Screenshot</div>
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadScreenshot(f) }} />
+
+                {screenshotUrl ? (
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={screenshotUrl} alt="Trade screenshot"
+                      onClick={() => window.open(screenshotUrl, '_blank')}
+                      style={{ width: '100%', borderRadius: 12, cursor: 'pointer', border: `1px solid ${borderColor}`, display: 'block' }}
+                    />
+                    <button onClick={deleteScreenshot} disabled={screenshotUploading} style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: 'rgba(255,69,58,0.85)', color: '#fff',
+                      border: 'none', borderRadius: 8, padding: '5px 10px',
+                      fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                    }}>
+                      {screenshotUploading ? '...' : '🗑 Delete'}
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) uploadScreenshot(f) }}
+                    style={{
+                      border: `2px dashed ${dragOver ? BLUE : borderColor}`,
+                      borderRadius: 12, padding: '32px 20px', textAlign: 'center',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                      background: dragOver ? (dark ? 'rgba(10,132,255,0.08)' : 'rgba(10,132,255,0.05)') : 'transparent',
+                    }}
+                  >
+                    {screenshotUploading ? (
+                      <div style={{ color: subColor, fontSize: 13 }}>⏳ Uploading...</div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                        <div style={{ fontSize: 13, color: subColor, marginBottom: 4 }}>Click or drag to upload</div>
+                        <div style={{ fontSize: 11, color: subColor, opacity: 0.6 }}>JPG, PNG, WEBP · max 2MB</div>
+                      </>
+                    )}
+                  </div>
+                )}
+                {screenshotError && <div style={{ marginTop: 8, fontSize: 12, color: RED, fontWeight: 600 }}>{screenshotError}</div>}
+              </div>
+
             </div>
 
             {/* Right column */}
