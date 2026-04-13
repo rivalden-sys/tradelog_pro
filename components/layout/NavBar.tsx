@@ -70,11 +70,8 @@ export default function NavBar() {
           <path d="M12.7 15.5H15.3L14 11.5L12.7 15.5Z" fill={dark ? '#0a0a0b' : '#f2f2f7'} />
           <circle cx="14" cy="6" r="1.5" fill="#f5c842" />
         </svg>
-        <div style={{ lineHeight: 1 }}>
-          <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: textColor, letterSpacing: '-0.03em', lineHeight: '1.1' }}>
-            Aurum<span style={{ color: '#30d158' }}>Trade</span>
-          </div>
-          <div style={{ fontFamily: NUNITO, fontSize: 9, fontWeight: 600, color: 'rgba(245,200,66,0.8)', letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
+        <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: textColor, letterSpacing: '-0.03em' }}>
+          Aurum<span style={{ color: '#30d158' }}>Trade</span>
         </div>
       </div>
     </Link>
