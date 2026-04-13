@@ -136,7 +136,7 @@ export default function Landing() {
           <h1 style={{ fontSize: isMobile ? 36 : 72, fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: 24 }}>
             <GradientText from="#ffffff" to="rgba(255,255,255,0.65)">You know your rules.</GradientText>
             <br />
-            <GradientText from={GREEN} to="#2ecc71">You just break them under pressure.</GradientText>
+            <GradientText from={GREEN} to="#2ecc71">You break them.</GradientText>
           </h1>
           <p style={{ fontSize: isMobile ? 16 : 20, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 560, margin: '0 auto 40px' }}>
             AurumTrade finds exactly when, why, and how — so you can stop.
