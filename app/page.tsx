@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
@@ -27,7 +27,6 @@ function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
         <div style={{ fontFamily: NUNITO, fontSize: 16 * scale, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: '1.1' }}>
           Aurum<span style={{ color: GREEN }}>Trade</span>
         </div>
-        <div style={{ fontFamily: NUNITO, fontSize: 9 * scale, fontWeight: 600, color: `${GOLD}cc`, letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
       </div>
     </div>
   )
@@ -74,268 +73,6 @@ function GradientText({ children, from, to, style }: { children: React.ReactNode
   )
 }
 
-// ─── AI DIALOG COMPONENT ───────────────────────────────────────────────────
-
-type Message = { type: 'ai' | 'user'; text: string }
-type Profile = 'reactor' | 'saboteur' | 'hunter' | 'guardian' | 'disciplined'
-
-const DIALOG_CONTENT = {
-  en: {
-    pill: 'Try it now',
-    heading: 'Let AI read you before you register',
-    sub: 'Answer 4 questions. See what AurumTrade would find in your journal.',
-    questions: [
-      "Before you register — let me show you what I'd find in your journal.\n\nWhat's your approximate win rate?",
-      "What's your biggest struggle right now?",
-      "How do you usually feel when trading?",
-      "How many trades do you take per week?",
-    ],
-    options: [
-      ['Under 40%', '40–55%', '55–70%', '70%+'],
-      ['Revenge trades', 'Breaking my rules', 'Cutting winners early', 'Overtrading'],
-      ['Calm', 'Frustrated / Angry', 'Greedy / FOMO', 'Anxious / Fearful'],
-      ['1–5 trades', '6–15 trades', '16+ trades'],
-    ],
-    thinking: 'Analyzing your profile...',
-    cta: 'Get your full analysis — Start free →',
-    profiles: {
-      reactor:     { name: 'The Reactor',       count: '847' },
-      saboteur:    { name: 'The Saboteur',       count: '612' },
-      hunter:      { name: 'The Hunter',         count: '934' },
-      guardian:    { name: 'The Guardian',       count: '521' },
-      disciplined: { name: 'The Disciplined',    count: '389' },
-    },
-    results: {
-      reactor:     { i1: "Your win rate isn't a strategy problem — it's execution. After a loss, your next trade is 60% more likely to lose too.", i2: "Frustrated traders with revenge patterns give back $180–$340/month on average. Your real win rate on planned trades is likely 15–20% higher.", improve: '+14% win rate in 30 days' },
-      saboteur:    { i1: "You have a working system — but you break it under pressure. Traders who violate their rules have 29% WR vs 71% when they follow them.", i2: "Anxious traders overtighten stops and exit winners early. You're leaving $200–$400/month on the table by not trusting your own system.", improve: '+11% win rate in 30 days' },
-      hunter:      { i1: "Overtrading with FOMO is the #1 account killer. Traders taking 16+ trades/week on greed have 34% WR vs 61% on selective entries.", i2: "Your best trades are your first 3–5 of the week. Everything after is noise — costing you $250/month on average.", improve: '+18% win rate in 30 days' },
-      guardian:    { i1: "Cutting winners early is a fear response. Traders with your pattern achieve only 60% of their potential RR — the rest stays on the table.", i2: "Your system likely has a real edge. AI would find that your average actual RR is 40% below your planned RR.", improve: '+9% effective RR in 30 days' },
-      disciplined: { i1: "With 55–70%+ win rate you already have an edge. Now it's about scaling and protecting it — not rebuilding.", i2: "Top performers plateau when they stop reviewing. AI would find 2–3 specific setups where you're leaving money without knowing it.", improve: '+6% profit factor in 30 days' },
-    },
-  },
-  uk: {
-    pill: 'Спробуй зараз',
-    heading: 'Нехай AI прочитає тебе до реєстрації',
-    sub: 'Відповідай на 4 питання. Побач що AurumTrade знайшов би у твоєму журналі.',
-    questions: [
-      "До реєстрації — дозволь показати що я б знайшов у твоєму журналі.\n\nЯкий твій приблизний win rate?",
-      "Яка твоя головна проблема зараз?",
-      "Яку емоцію відчуваєш найчастіше під час торгівлі?",
-      "Скільки угод ти робиш на тиждень?",
-    ],
-    options: [
-      ['Менше 40%', '40–55%', '55–70%', '70%+'],
-      ['Revenge trades', 'Порушую правила', 'Закриваю прибуток рано', 'Overtrade'],
-      ['Спокій', 'Злість / Роздратування', 'Жадібність / FOMO', 'Страх / Тривога'],
-      ['1–5 угод', '6–15 угод', '16+ угод'],
-    ],
-    thinking: 'Аналізую твій профіль...',
-    cta: 'Отримати повний аналіз — Почати безкоштовно →',
-    profiles: {
-      reactor:     { name: 'Реактор',            count: '847' },
-      saboteur:    { name: 'Саботажник',          count: '612' },
-      hunter:      { name: 'Мисливець',           count: '934' },
-      guardian:    { name: 'Перестрахувальник',   count: '521' },
-      disciplined: { name: 'Дисциплінований',     count: '389' },
-    },
-    results: {
-      reactor:     { i1: "Win rate — це не проблема стратегії, це виконання. Після збитку твоя наступна угода на 60% частіше програшна.", i2: "Трейдери з revenge патерном віддають $180–$340 на місяць. Твій реальний win rate на запланованих угодах на 15–20% вищий.", improve: '+14% win rate за 30 днів' },
-      saboteur:    { i1: "У тебе є робоча система — але ти ламаєш її під тиском. Трейдери що порушують правила мають 29% WR vs 71% коли дотримуються.", i2: "Тривожні трейдери закривають прибуток рано і ставлять стопи занадто близько. Ти залишаєш $200–$400 на місяць.", improve: '+11% win rate за 30 днів' },
-      hunter:      { i1: "Overtrade на жадібності — головний вбивця депозиту. Трейдери що беруть 16+ угод через FOMO мають 34% WR vs 61% на вибіркових входах.", i2: "Твої найкращі угоди — перші 3–5 на тиждень. Все інше — шум що коштує $250 на місяць.", improve: '+18% win rate за 30 днів' },
-      guardian:    { i1: "Ранній вихід з прибутку — реакція страху. Трейдери з твоїм патерном реалізують лише 60% потенційного RR.", i2: "Твоя система має реальний edge. AI знайде що твій реальний RR на 40% нижче запланованого.", improve: '+9% ефективний RR за 30 днів' },
-      disciplined: { i1: "З win rate 55–70%+ у тебе вже є edge. Тепер задача — масштабувати і захистити, а не перебудовувати.", i2: "Топ трейдери зупиняються в рості коли перестають аналізувати. AI знайде 2–3 сетапи де ти залишаєш гроші не знаючи.", improve: '+6% profit factor за 30 днів' },
-    },
-  },
-}
-
-function getProfile(wr: number, struggle: number, emotion: number): Profile {
-  if (emotion === 1 && struggle === 0) return 'reactor'
-  if (emotion === 3 && struggle === 1) return 'saboteur'
-  if (emotion === 2 && struggle === 3) return 'hunter'
-  if (emotion === 0 && wr >= 2)        return 'disciplined'
-  if (struggle === 2)                  return 'guardian'
-  if (struggle === 0 || emotion === 1) return 'reactor'
-  if (struggle === 1 || emotion === 3) return 'saboteur'
-  return 'hunter'
-}
-
-function AIDialog({ isMobile }: { isMobile: boolean }) {
-  const [lang, setLang]       = useState<'en' | 'uk'>('en')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [options, setOptions]   = useState<string[]>([])
-  const [step, setStep]         = useState(0)
-  const [typing, setTyping]     = useState(false)
-  const [answers, setAnswers]   = useState<number[]>([])
-  const [done, setDone]         = useState(false)
-  const [result, setResult]     = useState<any>(null)
-  const [profile, setProfile]   = useState<Profile | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const c = DIALOG_CONTENT[lang]
-
-  useEffect(() => {
-    setMessages([]); setOptions([]); setStep(0)
-    setAnswers([]); setDone(false); setResult(null); setProfile(null)
-    setTyping(true)
-    setTimeout(() => {
-      setTyping(false)
-      setMessages([{ type: 'ai', text: DIALOG_CONTENT[lang].questions[0] }])
-      setOptions(DIALOG_CONTENT[lang].options[0])
-    }, 800)
-  }, [lang])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, typing, result])
-
-  const handleOption = (idx: number, label: string) => {
-    const newAnswers = [...answers, idx]
-    setAnswers(newAnswers)
-    setOptions([])
-    setMessages(prev => [...prev, { type: 'user', text: label }])
-    const nextStep = step + 1
-
-    if (nextStep < 4) {
-      setTyping(true)
-      setTimeout(() => {
-        setTyping(false)
-        setMessages(prev => [...prev, { type: 'ai', text: c.questions[nextStep] }])
-        setOptions(c.options[nextStep])
-        setStep(nextStep)
-      }, 700)
-    } else {
-      setTyping(true)
-      setTimeout(() => {
-        setTyping(false)
-        setMessages(prev => [...prev, { type: 'ai', text: c.thinking }])
-        const p = getProfile(newAnswers[0], newAnswers[1], newAnswers[2])
-        setProfile(p)
-        setResult(c.results[p])
-        setTimeout(() => setDone(true), 600)
-      }, 1200)
-    }
-  }
-
-  const progressColors = [GREEN, ORANGE, PURPLE, BLUE]
-
-  return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      {/* Lang toggle */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 12 }}>
-        {(['en','uk'] as const).map(l => (
-          <button key={l} onClick={() => setLang(l)} style={{ background: lang === l ? 'rgba(255,255,255,0.08)' : 'transparent', border: `1px solid ${lang === l ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 700, color: lang === l ? '#fff' : 'rgba(255,255,255,0.35)', cursor: 'pointer', fontFamily: FONT, letterSpacing: '0.04em' }}>
-            {l.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      {/* Chat window */}
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, overflow: 'hidden' }}>
-        {/* Header */}
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${PURPLE}25`, border: `1px solid ${PURPLE}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🤖</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>AurumTrade AI</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
-              {lang === 'en' ? '60-second trader analysis' : 'Аналіз трейдера за 60 секунд'}
-            </div>
-          </div>
-          {/* Progress dots */}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
-            {[0,1,2,3].map(i => (
-              <div key={i} style={{ width: 28, height: 3, borderRadius: 2, background: i < step + (done ? 1 : 0) ? progressColors[i] : 'rgba(255,255,255,0.1)', transition: 'background 0.4s' }} />
-            ))}
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div style={{ padding: '20px 18px', minHeight: 200, maxHeight: isMobile ? 320 : 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {messages.map((m, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: m.type === 'user' ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-start' }}>
-              {m.type === 'ai' && (
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, marginTop: 2 }}>🤖</div>
-              )}
-              <div style={{
-                maxWidth: '85%', padding: '10px 14px', fontSize: 14, lineHeight: 1.55, fontFamily: FONT,
-                borderRadius: m.type === 'ai' ? '4px 18px 18px 18px' : '18px 4px 18px 18px',
-                background: m.type === 'ai' ? 'rgba(255,255,255,0.06)' : `${PURPLE}25`,
-                border: `1px solid ${m.type === 'ai' ? 'rgba(255,255,255,0.08)' : PURPLE + '40'}`,
-                color: m.type === 'ai' ? 'rgba(255,255,255,0.85)' : '#fff',
-                whiteSpace: 'pre-line',
-              }}>
-                {m.text}
-              </div>
-            </div>
-          ))}
-
-          {/* Typing indicator */}
-          {typing && (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>🤖</div>
-              <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px 18px 18px 18px', display: 'flex', gap: 5, alignItems: 'center' }}>
-                {[0,1,2].map(i => (
-                  <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.4)', animation: `typingDot 1.2s ${i * 0.2}s infinite` }} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Result card */}
-          {done && profile && result && (
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${GREEN}30`, borderRadius: 18, padding: '20px', marginTop: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{c.profiles[profile].name}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{c.profiles[profile].count} traders</div>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 16 }}>
-                {lang === 'en' ? 'with this exact profile in AurumTrade' : 'з точно таким же профілем в AurumTrade'}
-              </div>
-              {[result.i1, result.i2].map((ins: string, i: number) => (
-                <div key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 10, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: 12, borderLeft: `2px solid ${i === 0 ? GREEN : ORANGE}` }}>
-                  {ins}
-                </div>
-              ))}
-              <div style={{ marginTop: 14, padding: '10px 14px', background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{lang === 'en' ? 'Average improvement:' : 'Середнє покращення:'}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: GREEN }}>{result.improve}</div>
-              </div>
-              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 14, padding: '13px', borderRadius: 14, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 14, fontWeight: 800, boxShadow: `0 0 30px ${GREEN}44`, fontFamily: FONT }}>
-                {c.cta}
-              </Link>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Options */}
-        {options.length > 0 && (
-          <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {options.map((opt, i) => (
-              <button key={i} onClick={() => handleOption(i, opt)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '11px 16px', fontSize: 14, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', textAlign: 'left', fontFamily: FONT, transition: 'all 0.2s' }}
-                onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)' }}
-                onMouseLeave={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <style>{`
-        @keyframes typingDot {
-          0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
-          40% { opacity: 1; transform: scale(1.2); }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-// ─── MAIN LANDING ──────────────────────────────────────────────────────────
-
 export default function Landing() {
   const [scrolled,   setScrolled]   = useState(false)
   const [isMobile,   setIsMobile]   = useState(false)
@@ -373,7 +110,6 @@ export default function Landing() {
         html { scroll-behavior: smooth; }
         ::selection { background: ${GREEN}44; }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-        @keyframes typingDot { 0%,80%,100%{opacity:0.3;transform:scale(1)} 40%{opacity:1;transform:scale(1.2)} }
       `}</style>
 
       {isMobile && showSticky && (
@@ -397,19 +133,20 @@ export default function Landing() {
       <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: isMobile ? '110px 20px 80px' : '130px 24px 100px', zIndex: 1 }}>
         <div style={{ textAlign: 'center', maxWidth: 860, width: '100%' }}>
           <Pill color={GREEN}>AI-powered trading journal</Pill>
-          <h1 style={{ fontSize: isMobile ? 42 : 80, fontWeight: 900, lineHeight: 1.02, letterSpacing: '-0.05em', marginBottom: 24 }}>
-            <GradientText from="#ffffff" to="rgba(255,255,255,0.65)">Trade smarter.</GradientText>
+          <h1 style={{ fontSize: isMobile ? 36 : 72, fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: 24 }}>
+            <GradientText from="#ffffff" to="rgba(255,255,255,0.65)">You know your rules.</GradientText>
             <br />
-            <GradientText from={GREEN} to="#2ecc71">Grow faster.</GradientText>
+            <GradientText from={GREEN} to="#2ecc71">You just break them under pressure.</GradientText>
           </h1>
-          <p style={{ fontSize: isMobile ? 16 : 21, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 600, margin: '0 auto 40px' }}>
-            An AI trading journal with coaching, psychology analysis, playbook rules, emotion tracking, goals, simulator and daily notes. Stop repeating the same mistakes.
+          <p style={{ fontSize: isMobile ? 16 : 20, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: 560, margin: '0 auto 40px' }}>
+            AurumTrade finds exactly when, why, and how — so you can stop.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
             <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55` }}>Start for free →</Link>
             <Link href="/login"    style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 500, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Log in</Link>
           </div>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>Free up to 20 trades · No credit card required</p>
+
           <div style={{ marginTop: isMobile ? 48 : 72, animation: 'float 6s ease-in-out infinite' }}>
             <Glass style={{ padding: isMobile ? '16px' : '24px', borderRadius: 24, maxWidth: 720, margin: '0 auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 8 : 10, marginBottom: 12, position: 'relative', zIndex: 1 }}>
@@ -436,43 +173,32 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* STATS */}
+      {/* EARLY ACCESS */}
       <section style={{ padding: `0 ${px} 80px`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? 10 : 16 }}>
-          {[
-            { value: '12,430+', label: 'Trades logged',         color: GREEN  },
-            { value: '57%',     label: 'Avg win rate',          color: BLUE   },
-            { value: '84k',     label: 'AI insights generated', color: PURPLE },
-            { value: '2,300+',  label: 'Active traders',        color: ORANGE },
-          ].map(s => (
-            <Glass key={s.label} accent={s.color} style={{ padding: isMobile ? '20px 16px' : '30px 26px', textAlign: 'center', borderRadius: 22 }}>
-              <div style={{ fontSize: isMobile ? 28 : 38, fontWeight: 900, letterSpacing: '-0.04em', color: s.color, marginBottom: 6, position: 'relative', zIndex: 1 }}>{s.value}</div>
-              <div style={{ fontSize: isMobile ? 11 : 13, color: 'rgba(255,255,255,0.35)', position: 'relative', zIndex: 1, fontWeight: 500 }}>{s.label}</div>
-            </Glass>
-          ))}
-        </div>
-      </section>
-
-      {/* AI DIALOG SECTION */}
-      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 60 }}>
-          <Pill color={PURPLE}>Try it now</Pill>
-          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, marginBottom: 16 }}>
-            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Let AI read you</GradientText>
-            <br />
-            <GradientText from={PURPLE} to={BLUE}>before you register</GradientText>
-          </h2>
-          <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.35)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
-            Answer 4 questions. See what AurumTrade would find in your journal.
-          </p>
-        </div>
-        <AIDialog isMobile={isMobile} />
+        <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '40px 48px', borderRadius: 24, background: `${GREEN}08`, textAlign: 'center' }}>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${GREEN}18`, border: `1px solid ${GREEN}35`, borderRadius: 100, padding: '6px 18px', marginBottom: 16 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: 'pulse 2s infinite' }} />
+              <span style={{ fontSize: 12, color: GREEN, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Early Access</span>
+            </div>
+            <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', marginBottom: 10 }}>
+              Limited spots · Be among the first 100 traders
+            </div>
+            <div style={{ fontSize: isMobile ? 13 : 16, color: 'rgba(255,255,255,0.4)', marginBottom: 28, lineHeight: 1.6 }}>
+              Get full Pro access while we're in early access.<br />Shape the product. Talk directly to the founder.
+            </div>
+            <Link href="/register" style={{ display: 'inline-block', padding: isMobile ? '13px 28px' : '15px 40px', borderRadius: 14, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 14 : 16, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}44` }}>
+              Claim your spot →
+            </Link>
+          </div>
+          <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
+        </Glass>
       </section>
 
       {/* KILLER FEATURES */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
-          <Pill color={PURPLE}>What's new</Pill>
+          <Pill color={PURPLE}>What's inside</Pill>
           <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05 }}>
             <GradientText from="#fff" to="rgba(255,255,255,0.55)">Features your competitors<br />don't have</GradientText>
           </h2>
@@ -534,6 +260,7 @@ export default function Landing() {
                 </div>
               </div>
             </Glass>
+
             <Glass accent={BLUE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>📓</div>
@@ -602,6 +329,7 @@ export default function Landing() {
               </div>
             </div>
           </Glass>
+
           <Glass accent={PURPLE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: 28, marginBottom: 12 }}>📈</div>
@@ -739,40 +467,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
-          <Pill color={PURPLE}>Testimonials</Pill>
-          <h2 style={{ fontSize: isMobile ? 30 : 54, fontWeight: 900, letterSpacing: '-0.05em' }}>
-            <GradientText from="#fff" to="rgba(255,255,255,0.55)">Traders love it</GradientText>
-          </h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: isMobile ? 10 : 20 }}>
-          {[
-            { name: 'Alex M.',  role: 'Crypto Futures Trader', text: 'After 2 weeks with AI Coach I realized I was overtrading on weekends. Win rate jumped from 44% to 61%.', avatar: 'AM', color: BLUE   },
-            { name: 'Sarah K.', role: 'Swing Trader',           text: 'The Psychology Analysis is scary accurate. It caught my revenge trading before I even noticed it myself.', avatar: 'SK', color: PURPLE },
-            { name: 'Denis N.', role: 'Day Trader',             text: 'Trade Score saved me from 3 bad entries last week. AI told me my setup has 38% win rate on Mondays.', avatar: 'DN', color: GREEN  },
-            { name: 'Maria T.', role: 'Spot Trader',            text: 'Finally a journal that works for spot too. The Playbook feature is exactly what I was missing.', avatar: 'MT', color: ORANGE },
-          ].map(t => (
-            <Glass key={t.name} accent={t.color} hover style={{ padding: isMobile ? '24px 20px' : '36px 32px', borderRadius: 24 }}>
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.7)', lineHeight: 1.75, marginBottom: 20 }}>"{t.text}"</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${t.color}25`, border: `1px solid ${t.color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: t.color }}>{t.avatar}</div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{t.name}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{t.role}</div>
-                    </div>
-                  </div>
-                  <div style={{ color: GOLD, fontSize: isMobile ? 12 : 14, letterSpacing: 2 }}>★★★★★</div>
-                </div>
-              </div>
-            </Glass>
-          ))}
-        </div>
-      </section>
-
       {/* PRICING */}
       <section style={{ padding: `0 ${px} ${pb}`, maxWidth: 900, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: isMobile ? 40 : 72 }}>
@@ -796,8 +490,9 @@ export default function Landing() {
               <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.04)' }}>Get started →</Link>
             </div>
           </Glass>
+
           <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 38px', borderRadius: 28, background: `${GREEN}0d` }}>
-            <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GOLD}, ${ORANGE})`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>BEST VALUE</div>
+            <div style={{ position: 'absolute', top: 18, right: 18, background: `linear-gradient(135deg, ${GOLD}, ${ORANGE})`, color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 100, zIndex: 2, letterSpacing: '0.04em' }}>EARLY ACCESS</div>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro</div>
               <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$19</div>
@@ -808,7 +503,7 @@ export default function Landing() {
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
                 </div>
               ))}
-              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 14, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}44` }}>Start Pro →</Link>
+              <Link href="/register" style={{ display: 'block', textAlign: 'center', marginTop: 28, padding: '14px', borderRadius: 14, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: 14, fontWeight: 800, boxShadow: `0 0 40px ${GREEN}44` }}>Claim your spot →</Link>
             </div>
           </Glass>
         </div>
@@ -842,17 +537,16 @@ export default function Landing() {
         <Glass accent={GREEN} style={{ padding: isMobile ? '48px 24px' : '80px 64px', borderRadius: 32, background: `${GREEN}0d`, textAlign: 'center' }}>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN}15 0%, transparent 70%)`, pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: isMobile ? 40 : 68, marginBottom: 16 }}>🚀</div>
-            <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 14, lineHeight: 1.05 }}>
-              <GradientText from="#fff" to="rgba(255,255,255,0.7)">Ready to trade smarter?</GradientText>
+            <h2 style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 14, lineHeight: 1.1 }}>
+              <GradientText from="#fff" to="rgba(255,255,255,0.7)">Your patterns are already there.</GradientText>
             </h2>
-            <p style={{ fontSize: isMobile ? 14 : 18, color: 'rgba(255,255,255,0.4)', marginBottom: 32, lineHeight: 1.6 }}>
-              Join traders who are already using AI<br />to improve their results
+            <p style={{ fontSize: isMobile ? 15 : 20, color: 'rgba(255,255,255,0.5)', marginBottom: 32, lineHeight: 1.6 }}>
+              AI just needs your journal to find them.
             </p>
             <Link href="/register" style={{ padding: isMobile ? '15px 36px' : '18px 52px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 16 : 18, fontWeight: 800, boxShadow: `0 0 60px ${GREEN}55`, display: 'inline-block' }}>
-              Start for free →
+              Claim your spot →
             </Link>
-            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Free · No credit card · Cancel anytime</div>
+            <div style={{ marginTop: 18, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Early access · Free to start · No credit card</div>
           </div>
         </Glass>
       </section>
@@ -865,7 +559,7 @@ export default function Landing() {
           <Link href="/register" style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Register</Link>
           <Link href="/privacy"  style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Privacy</Link>
           <Link href="/terms"    style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>Terms</Link>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>by dnproduction · 2026</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>© 2026 AurumTrade</div>
         </div>
       </footer>
     </main>
