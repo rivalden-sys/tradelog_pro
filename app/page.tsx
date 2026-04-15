@@ -110,6 +110,7 @@ export default function Landing() {
         html { scroll-behavior: smooth; }
         ::selection { background: ${GREEN}44; }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
       `}</style>
 
       {isMobile && showSticky && (
@@ -120,8 +121,8 @@ export default function Landing() {
         </div>
       )}
 
-      {/* NAV */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(6,6,8,0.88)' : 'transparent', backdropFilter: scrolled ? 'blur(32px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : 'none', transition: 'all 0.4s ease' }}>
+      {/* NAV — завжди прозорий, тільки blur при скролі */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(6,6,8,0.45)' : 'transparent', backdropFilter: scrolled ? 'blur(32px)' : 'none', WebkitBackdropFilter: scrolled ? 'blur(32px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none', transition: 'all 0.4s ease' }}>
         <Logo size={isMobile ? 'sm' : 'md'} />
         <div style={{ display: 'flex', gap: 6 }}>
           <Link href="/login"    style={{ padding: isMobile ? '7px 14px' : '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 500, backdropFilter: 'blur(10px)', background: 'rgba(255,255,255,0.04)' }}>Log in</Link>
@@ -145,7 +146,22 @@ export default function Landing() {
             <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55` }}>Start for free →</Link>
             <Link href="/login"    style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 500, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Log in</Link>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>Free up to 20 trades · No credit card required</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em', marginBottom: 16 }}>Free up to 20 trades · No credit card required</p>
+
+          {/* Spot + Futures badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Spot', color: BLUE },
+              { label: 'Futures', color: ORANGE },
+              { label: 'Long / Short', color: GREEN },
+              { label: 'Crypto · Forex · Stocks', color: 'rgba(255,255,255,0.3)' },
+            ].map(b => (
+              <div key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 100, padding: '4px 12px' }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: b.color }} />
+                <span style={{ fontSize: 11, color: b.color, fontWeight: 600 }}>{b.label}</span>
+              </div>
+            ))}
+          </div>
 
           <div style={{ marginTop: isMobile ? 48 : 72, animation: 'float 6s ease-in-out infinite' }}>
             <Glass style={{ padding: isMobile ? '16px' : '24px', borderRadius: 24, maxWidth: 720, margin: '0 auto' }}>
@@ -191,7 +207,6 @@ export default function Landing() {
               Claim your spot →
             </Link>
           </div>
-          <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
         </Glass>
       </section>
 
@@ -311,6 +326,60 @@ export default function Landing() {
           </div>
         </Glass>
 
+        {/* SCREENSHOTS */}
+        <Glass accent={BLUE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28, marginBottom: isMobile ? 12 : 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            <div>
+              <div style={{ fontSize: 36, marginBottom: 16 }}>📸</div>
+              <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.03em' }}>Trade Screenshots</div>
+              <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 20 }}>
+                Attach your TradingView chart directly to each trade. See exactly what you saw before entering — and learn from it.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Attach chart screenshot per trade', 'See your entry on the exact candle', 'Review setups visually over time', 'Stored securely in cloud'].map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 7, background: `${BLUE}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: BLUE, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                    <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.7)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BLUE}30`, borderRadius: 18, padding: '20px', overflow: 'hidden' }}>
+                {/* Fake chart screenshot mockup */}
+                <div style={{ background: '#0d1117', borderRadius: 12, padding: '12px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>BTCUSDT · 1H</span>
+                    <span style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>Long · +$284</span>
+                  </div>
+                  <div style={{ height: 80, display: 'flex', alignItems: 'flex-end', gap: 3, padding: '0 4px' }}>
+                    {[40,55,45,60,52,65,58,72,64,78,70,82,75,88,80,72,85,90,84,95].map((h, i) => (
+                      <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 14 ? `linear-gradient(180deg, ${GREEN}cc, ${GREEN}44)` : 'rgba(255,255,255,0.08)' }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                    <div style={{ height: 1, flex: 1, background: `${GREEN}44`, position: 'relative', top: 4 }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1, background: `${GREEN}12`, border: `1px solid ${GREEN}25`, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase' }}>Entry</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>$43,240</div>
+                  </div>
+                  <div style={{ flex: 1, background: `${RED}12`, border: `1px solid ${RED}25`, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, color: RED, fontWeight: 700, textTransform: 'uppercase' }}>Stop</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>$42,800</div>
+                  </div>
+                  <div style={{ flex: 1, background: `${BLUE}12`, border: `1px solid ${BLUE}25`, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, color: BLUE, fontWeight: 700, textTransform: 'uppercase' }}>Take</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>$44,120</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Glass>
+
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Glass accent={GREEN} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
@@ -378,7 +447,7 @@ export default function Landing() {
                 { icon: '😌', label: 'Psychology Analysis found:', insight: "Your win rate when calm: 71%. When feeling revenge: 22%. You've lost $340 on revenge trades this month.", color: PURPLE, tag: 'Psychology' },
                 { icon: '📋', label: 'AI Coach found:', insight: "You follow your CHoCH+BOS playbook 68% of the time. The 32% when you break rules has a 29% win rate vs 71% when you follow them.", color: GREEN, tag: 'Coach' },
                 { icon: '📊', label: 'Trade Score detected:', insight: "Your BOS setup on Mondays has 38% win rate (12 trades). On Wednesdays–Thursdays: 67%. You're taking low-probability trades early in the week.", color: ORANGE, tag: 'Trade Score' },
-                { icon: '🔍', label: 'Trade Review revealed:', insight: "You grade yourself B when AI grades you D on 23% of trades. Your entries after a loss are on average 40% lower quality than your normal entries.", color: BLUE, tag: 'Trade Review' },
+                { icon: '🔍', label: 'Trade Review revealed:', insight: "MAE analysis shows your stop is too tight — price dips avg $180 before taking profit. Widening stop by 20% would save 8 stopped-out trades per month.", color: BLUE, tag: 'Trade Review + MAE' },
               ].map((item, i) => (
                 <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${item.color}30`, borderRadius: 18, padding: isMobile ? '18px' : '22px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -425,7 +494,7 @@ export default function Landing() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 16 }}>
           {[
             { icon: '💬', title: 'AI Chat', color: BLUE, desc: 'Chat with AI that has full context of your journal — 50 trades, emotions, playbook compliance, mood history. Ask anything specific about your trading.', stats: '50 messages/hour' },
-            { icon: '📊', title: 'Trade Review', color: RED, desc: 'Per-trade deep analysis: entry quality, execution score 0–100, AI grade vs your self-grade, setup historical context, and one key lesson per trade.', stats: 'Execution score + AI grade vs self-grade' },
+            { icon: '📊', title: 'Trade Review + MAE/MFE', color: RED, desc: 'Per-trade deep analysis: entry quality, execution score 0–100, AI grade vs your self-grade. MAE/MFE analysis shows if your stop is too tight or your exits are too early.', stats: 'Execution score + MAE/MFE stop analysis' },
           ].map(f => (
             <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '28px 24px', borderRadius: 22 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
@@ -497,7 +566,7 @@ export default function Landing() {
               <div style={{ fontSize: 13, color: GREEN, marginBottom: 8, fontWeight: 700 }}>Pro</div>
               <div style={{ fontSize: isMobile ? 40 : 52, fontWeight: 900, letterSpacing: '-0.05em', marginBottom: 4 }}>$19</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>per month</div>
-              {['Unlimited trades','CSV Import (all exchanges)','Playbook + compliance','Emotion tracking','Daily Journal','Goals & Streak','Performance Simulator','Trade screenshots','Public profile','AI Coach','AI Trade Score','AI Psychology Analysis','AI Chat','Analysis history'].map(f => (
+              {['Unlimited trades','Spot & Futures support','CSV Import (all exchanges)','Playbook + compliance','Emotion tracking','Daily Journal','Goals & Streak','Performance Simulator','Trade screenshots','MAE / MFE analytics','Public profile','AI Coach','AI Trade Score','AI Psychology Analysis','AI Chat','Analysis history'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
