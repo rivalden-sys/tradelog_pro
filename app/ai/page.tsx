@@ -244,11 +244,19 @@ export default function AIPage() {
     transition: 'all 0.15s',
   })
 
+  const clearBtnStyle: React.CSSProperties = {
+    padding: '9px 14px', borderRadius: 12,
+    border: `1px solid ${borderColor}`,
+    background: 'transparent', color: subColor,
+    fontFamily: FONT, fontSize: 13, fontWeight: 600,
+    cursor: 'pointer', transition: 'all 0.15s',
+  }
+
   const severityMap: Record<string, { label: string; color: string; bg: string }> = {
-    high:     { label: tr('ai_high'),     color: RED,    bg: `${RED}18`    },
-    critical: { label: tr('ai_high'),     color: RED,    bg: `${RED}18`    },
-    medium:   { label: tr('ai_medium'),   color: ORANGE, bg: `${ORANGE}18` },
-    low:      { label: tr('ai_low'),      color: GREEN,  bg: `${GREEN}18`  },
+    high:     { label: tr('ai_high'),   color: RED,    bg: `${RED}18`    },
+    critical: { label: tr('ai_high'),   color: RED,    bg: `${RED}18`    },
+    medium:   { label: tr('ai_medium'), color: ORANGE, bg: `${ORANGE}18` },
+    low:      { label: tr('ai_low'),    color: GREEN,  bg: `${GREEN}18`  },
   }
 
   const historyLabel    = locale === 'uk' ? `Історія (${history.length})` : `History (${history.length})`
@@ -323,9 +331,14 @@ export default function AIPage() {
                   </div>
                   <div style={{ fontSize: 12, color: subColor, marginTop: 3, paddingLeft: 16 }}>{tr('ai_journal_sub')}</div>
                 </div>
-                <button onClick={runCoach} disabled={coachLoading} style={runBtnStyle(coachLoading)}>
-                  {coachLoading ? tr('ai_running') : tr('ai_run')}
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {coachData && (
+                    <button onClick={() => setCoachData(null)} style={clearBtnStyle}>{clearLabel}</button>
+                  )}
+                  <button onClick={runCoach} disabled={coachLoading} style={runBtnStyle(coachLoading)}>
+                    {coachLoading ? tr('ai_running') : tr('ai_run')}
+                  </button>
+                </div>
               </div>
 
               <div style={{ position: 'relative' }}>
@@ -371,9 +384,14 @@ export default function AIPage() {
                   </div>
                   <div style={{ fontSize: 12, color: subColor, marginTop: 3, paddingLeft: 16 }}>{tr('ai_psych_sub')}</div>
                 </div>
-                <button onClick={runPsych} disabled={psychLoading} style={runBtnStyle(psychLoading)}>
-                  {psychLoading ? tr('ai_running') : tr('ai_run')}
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {psychData && (
+                    <button onClick={() => setPsychData(null)} style={clearBtnStyle}>{clearLabel}</button>
+                  )}
+                  <button onClick={runPsych} disabled={psychLoading} style={runBtnStyle(psychLoading)}>
+                    {psychLoading ? tr('ai_running') : tr('ai_run')}
+                  </button>
+                </div>
               </div>
 
               <div style={{ position: 'relative' }}>
