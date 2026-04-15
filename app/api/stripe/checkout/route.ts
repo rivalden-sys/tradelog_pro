@@ -56,8 +56,8 @@ export async function POST() {
         },
       ],
       mode: 'subscription',
-      success_url: `https://tradelog-ai.vercel.app/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
-      cancel_url: `https://tradelog-ai.vercel.app/billing?canceled=true`,
+      success_url: `https://aurumtrade.vercel.app/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
+      cancel_url: `https://aurumtrade.vercel.app/billing?canceled=true`,
     });
 
     return NextResponse.json({ url: session.url });
