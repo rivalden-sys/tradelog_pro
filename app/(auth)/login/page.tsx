@@ -22,7 +22,6 @@ function Logo() {
         <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: '1.1' }}>
           Aurum<span style={{ color: '#30d158' }}>Trade</span>
         </div>
-        <div style={{ fontFamily: NUNITO, fontSize: 9, fontWeight: 600, color: 'rgba(245,200,66,0.8)', letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
       </div>
     </div>
   )
