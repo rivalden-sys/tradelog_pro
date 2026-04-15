@@ -61,13 +61,19 @@ function HistoryItem({ session, onLoad, locale, dark }: { session: any; onLoad: 
   const borderColor = dark ? DARK.border : LIGHT.border
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
   const PURPLE = dark ? DARK.purple : LIGHT.purple
+  const GREEN  = dark ? DARK.green  : LIGHT.green
   const date = new Date(session.created_at).toLocaleDateString(locale === 'uk' ? 'uk-UA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   const typeLabel: Record<string, Record<string, string>> = {
     coach:      { uk: 'Аналіз журналу', en: 'Journal Analysis' },
     psychology: { uk: 'Психологія',     en: 'Psychology' },
+    chat:       { uk: 'AI Чат',         en: 'AI Chat' },
   }
-  const typeColor: Record<string, string> = { coach: BLUE, psychology: PURPLE }
+  const typeColor: Record<string, string> = { coach: BLUE, psychology: PURPLE, chat: GREEN }
   const label = typeLabel[session.type]?.[locale] || session.type
+
+  const preview = session.type === 'chat'
+    ? (() => { try { const msgs = JSON.parse(session.response); const first = msgs.find((m: any) => m.role === 'user'); return first?.content?.slice(0, 60) + '...' || '' } catch { return '' } })()
+    : ''
 
   return (
     <div style={{
@@ -85,6 +91,7 @@ function HistoryItem({ session, onLoad, locale, dark }: { session: any; onLoad: 
           <span style={{ fontSize: 13, fontWeight: 600, color: textColor }}>{label}</span>
         </div>
         <div style={{ fontSize: 12, color: subColor, paddingLeft: 16 }}>{date}</div>
+        {preview && <div style={{ fontSize: 11, color: subColor, paddingLeft: 16, marginTop: 2, fontStyle: 'italic' }}>{preview}</div>}
       </div>
       <button
         onClick={() => { try { onLoad(JSON.parse(session.response), session.type) } catch {} }}
@@ -113,7 +120,6 @@ export default function AIPage() {
   const { t: tr, locale } = useLocale()
   const chatEndRef = useRef<HTMLDivElement>(null)
 
-  // Theme-aware кольори
   const GREEN  = dark ? DARK.green  : LIGHT.green
   const RED    = dark ? DARK.red    : LIGHT.red
   const BLUE   = dark ? DARK.blue   : LIGHT.blue
@@ -146,11 +152,17 @@ export default function AIPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: sessions } = await supabase.from('ai_sessions').select('*').eq('user_id', user.id).in('type', ['coach', 'psychology']).order('created_at', { ascending: false }).limit(20)
+      const { data: sessions } = await supabase
+        .from('ai_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('type', ['coach', 'psychology', 'chat'])
+        .order('created_at', { ascending: false })
+        .limit(20)
       setHistory(sessions || [])
     }
     load()
-  }, [coachData, psychData])
+  }, [coachData, psychData, chatMessages])
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chatMessages])
 
@@ -197,6 +209,7 @@ export default function AIPage() {
   function loadFromHistory(data: any, type: string) {
     if (type === 'coach')      setCoachData(data)
     if (type === 'psychology') setPsychData(data)
+    if (type === 'chat')       setChatMessages(Array.isArray(data) ? data : [])
     setHistoryOpen(false)
   }
 
@@ -232,9 +245,10 @@ export default function AIPage() {
   })
 
   const severityMap: Record<string, { label: string; color: string; bg: string }> = {
-    high:   { label: tr('ai_high'),   color: RED,    bg: `${RED}18`    },
-    medium: { label: tr('ai_medium'), color: ORANGE, bg: `${ORANGE}18` },
-    low:    { label: tr('ai_low'),    color: GREEN,  bg: `${GREEN}18`  },
+    high:     { label: tr('ai_high'),     color: RED,    bg: `${RED}18`    },
+    critical: { label: tr('ai_high'),     color: RED,    bg: `${RED}18`    },
+    medium:   { label: tr('ai_medium'),   color: ORANGE, bg: `${ORANGE}18` },
+    low:      { label: tr('ai_low'),      color: GREEN,  bg: `${GREEN}18`  },
   }
 
   const historyLabel    = locale === 'uk' ? `Історія (${history.length})` : `History (${history.length})`
