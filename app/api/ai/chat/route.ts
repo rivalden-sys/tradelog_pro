@@ -154,8 +154,9 @@ INSTRUCTION: When answering, always cite specific trades, dates, or statistics f
     const answer = response.choices[0]?.message?.content
     if (!answer) throw new Error('Empty AI response')
 
+    const fullHistory = [...(history || []), { role: 'user', content: message }, { role: 'assistant', content: answer }]
     await supabase.from('ai_sessions').insert({
-      user_id: user.id, type: 'chat', trade_id: null, prompt: message, response: answer,
+    user_id: user.id, type: 'chat', trade_id: null, prompt: message, response: JSON.stringify(fullHistory),
     })
 
     return NextResponse.json({ success: true, data: { answer } })
