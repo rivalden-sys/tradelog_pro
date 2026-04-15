@@ -121,8 +121,8 @@ export default function Landing() {
         </div>
       )}
 
-      {/* NAV — завжди прозорий, тільки blur при скролі */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(6,6,8,0.45)' : 'transparent', backdropFilter: scrolled ? 'blur(32px)' : 'none', WebkitBackdropFilter: scrolled ? 'blur(32px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none', transition: 'all 0.4s ease' }}>
+      {/* NAV */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(6,6,8,0.88)' : 'transparent', backdropFilter: scrolled ? 'blur(32px)' : 'none', borderBottom: scrolled ? '1px solid rgba(255,255,255,0.07)' : 'none', transition: 'all 0.4s ease' }}>
         <Logo size={isMobile ? 'sm' : 'md'} />
         <div style={{ display: 'flex', gap: 6 }}>
           <Link href="/login"    style={{ padding: isMobile ? '7px 14px' : '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 12 : 13, fontWeight: 500, backdropFilter: 'blur(10px)', background: 'rgba(255,255,255,0.04)' }}>Log in</Link>
@@ -146,22 +146,7 @@ export default function Landing() {
             <Link href="/register" style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, background: `linear-gradient(135deg, ${GREEN}, #2ecc71)`, color: '#000', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 800, boxShadow: `0 0 50px ${GREEN}55` }}>Start for free →</Link>
             <Link href="/login"    style={{ padding: isMobile ? '14px 28px' : '17px 40px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: isMobile ? 15 : 17, fontWeight: 500, background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}>Log in</Link>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em', marginBottom: 16 }}>Free up to 20 trades · No credit card required</p>
-
-          {/* Spot + Futures badge */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {[
-              { label: 'Spot', color: BLUE },
-              { label: 'Futures', color: ORANGE },
-              { label: 'Long / Short', color: GREEN },
-              { label: 'Crypto · Forex · Stocks', color: 'rgba(255,255,255,0.3)' },
-            ].map(b => (
-              <div key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 100, padding: '4px 12px' }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: b.color }} />
-                <span style={{ fontSize: 11, color: b.color, fontWeight: 600 }}>{b.label}</span>
-              </div>
-            ))}
-          </div>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.02em' }}>Free up to 20 trades · No credit card required</p>
 
           <div style={{ marginTop: isMobile ? 48 : 72, animation: 'float 6s ease-in-out infinite' }}>
             <Glass style={{ padding: isMobile ? '16px' : '24px', borderRadius: 24, maxWidth: 720, margin: '0 auto' }}>
@@ -346,7 +331,6 @@ export default function Landing() {
             </div>
             <div>
               <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BLUE}30`, borderRadius: 18, padding: '20px', overflow: 'hidden' }}>
-                {/* Fake chart screenshot mockup */}
                 <div style={{ background: '#0d1117', borderRadius: 12, padding: '12px', marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>BTCUSDT · 1H</span>
@@ -356,9 +340,6 @@ export default function Landing() {
                     {[40,55,45,60,52,65,58,72,64,78,70,82,75,88,80,72,85,90,84,95].map((h, i) => (
                       <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 14 ? `linear-gradient(180deg, ${GREEN}cc, ${GREEN}44)` : 'rgba(255,255,255,0.08)' }} />
                     ))}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                    <div style={{ height: 1, flex: 1, background: `${GREEN}44`, position: 'relative', top: 4 }} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
