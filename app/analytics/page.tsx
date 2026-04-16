@@ -43,15 +43,18 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('trades').select('*')
-        .eq('user_id', user.id).eq('status', 'closed')
-        .order('date', { ascending: true })
-      setTrades((data as Trade[]) || [])
-      setLoading(false)
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data } = await supabase
+          .from('trades').select('*')
+          .eq('user_id', user.id).eq('status', 'closed')
+          .order('date', { ascending: true })
+        setTrades((data as Trade[]) || [])
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
@@ -218,7 +221,7 @@ export default function AnalyticsPage() {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={byMonth} barSize={28}>
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: subColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: subColor }} axisLine={false} tickLine={false} width={46} />
+                    <YAxis tick={{ fontSize: 11, fill: subColor }} axisLine={false} tickLine={false} width={46} domain={['auto', 'auto']} />
                     <Tooltip
                       contentStyle={{ background: dark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.9)', border: `1px solid ${borderColor}`, borderRadius: 10, fontFamily: FONT, backdropFilter: 'blur(20px)' }}
                       formatter={(v: any) => [`${v}$`, 'P&L']}
