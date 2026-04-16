@@ -34,8 +34,8 @@ export async function checkRateLimit(userId: string, endpoint: string): Promise<
 
   if (error || !data) {
     console.error('Rate limit RPC error:', error)
-    // fail open — allow request if RPC fails
-    return { allowed: true, remaining: 1, resetAt: now + config.windowMs }
+    // fail closed — block request if RPC fails (protects against cost exhaustion)
+    return { allowed: false, remaining: 0, resetAt: now + config.windowMs }
   }
 
   const resetAt = new Date(data.window_end).getTime()
