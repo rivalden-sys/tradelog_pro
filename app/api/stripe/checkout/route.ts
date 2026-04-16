@@ -6,7 +6,7 @@ import { stripe, PLANS } from '@/lib/stripe';
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,7 +56,9 @@ export async function POST() {
         },
       ],
       mode: 'subscription',
-      success_url: `https://aurumtrade.vercel.app/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}&user_id=${user.id}`,
+      // SECURITY FIX: user_id stored in metadata, not in URL
+      metadata: { user_id: user.id },
+      success_url: `https://aurumtrade.vercel.app/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://aurumtrade.vercel.app/billing?canceled=true`,
     });
 
