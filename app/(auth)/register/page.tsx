@@ -37,6 +37,8 @@ export default function RegisterPage() {
   const router   = useRouter()
   const supabase = createClient()
 
+  const getAppUrl = () => process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+
   const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       setError('Please enter your first and last name')
@@ -50,7 +52,7 @@ export default function RegisterPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email, password,
       options: {
-        emailRedirectTo: 'https://aurumtrade.vercel.app/dashboard',
+        emailRedirectTo: `${getAppUrl()}/dashboard`,
         data: { full_name: username },
       }
     })
@@ -72,7 +74,7 @@ export default function RegisterPage() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: 'https://aurumtrade.vercel.app/dashboard' },
+      options: { redirectTo: `${getAppUrl()}/dashboard` },
     })
   }
 
