@@ -243,15 +243,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('trades').select('*')
-        .eq('user_id', user.id).eq('status', 'closed')
-        .order('date', { ascending: false })
-      setTrades(data || [])
-      setLoading(false)
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data } = await supabase
+          .from('trades').select('*')
+          .eq('user_id', user.id).eq('status', 'closed')
+          .order('date', { ascending: false })
+        setTrades(data || [])
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
