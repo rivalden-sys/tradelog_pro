@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { parseCSV, parseUniversal, ColumnMapping } from '@/lib/importParsers'
 
+const MAX_CSV_CHARS = 1_000_000 // ~1MB text
+
 async function getSupabaseUser() {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -18,19 +20,23 @@ export async function POST(req: NextRequest) {
   try {
     const { supabase, user } = await getSupabaseUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-
     const body = await req.json()
     const { csvText, mapping } = body as { csvText: string; mapping?: ColumnMapping }
-    if (!csvText) return NextResponse.json({ success: false, error: 'No CSV data' })
-
+    if (!csvText || typeof csvText !== 'string') {
+      return NextResponse.json({ success: false, error: 'No CSV data' })
+    }
+    if (csvText.length > MAX_CSV_CHARS) {
+      return NextResponse.json(
+        { success: false, code: 'PAYLOAD_TOO_LARGE', error: 'CSV payload too large (max 1MB)' },
+        { status: 413 }
+      )
+    }
     const { format, trades } = parseCSV(csvText, mapping)
     if (trades.length === 0) {
       return NextResponse.json({ success: false, error: 'No trades found. Check file format.' })
     }
-
     // FIX: preserve original count before truncation
     const totalParsed = trades.length
-
     // Перевірка ліміту Free плану
     const { data: profile } = await supabase
       .from('users').select('plan').eq('id', user.id).single()
@@ -46,7 +52,6 @@ export async function POST(req: NextRequest) {
       }
       trades.splice(canAdd)
     }
-
     const inserts = trades.map(t => ({
       user_id:     user.id,
       date:        t.date,
@@ -63,17 +68,14 @@ export async function POST(req: NextRequest) {
       comment:     t.comment,
       self_grade:  null,
     }))
-
     const { data: inserted, error } = await supabase
       .from('trades')
       .insert(inserts)
       .select('id')
-
     if (error) {
       console.error('Import DB error:', error)
       return NextResponse.json({ success: false, error: 'Import failed' })
     }
-
     return NextResponse.json({
       success:  true,
       imported: inserted?.length ?? 0,
@@ -93,11 +95,17 @@ export async function PUT(req: NextRequest) {
     // FIX: require auth on preview endpoint
     const { user } = await getSupabaseUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-
     const body = await req.json()
     const { csvText, mapping } = body as { csvText: string; mapping?: ColumnMapping }
-    if (!csvText) return NextResponse.json({ success: false, error: 'No CSV data' })
-
+    if (!csvText || typeof csvText !== 'string') {
+      return NextResponse.json({ success: false, error: 'No CSV data' })
+    }
+    if (csvText.length > MAX_CSV_CHARS) {
+      return NextResponse.json(
+        { success: false, code: 'PAYLOAD_TOO_LARGE', error: 'CSV payload too large (max 1MB)' },
+        { status: 413 }
+      )
+    }
     const { format, trades, headers, total } = parseCSV(csvText, mapping)
     return NextResponse.json({
       success: true,
