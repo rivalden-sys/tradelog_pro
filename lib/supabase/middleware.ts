@@ -50,14 +50,5 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // FIX: редірект залогіненого юзера ТІЛЬКИ з /login і /register
-  // Лендінг / має лишатись доступним для всіх
-  const authPaths = ['/login', '/register']
-  if (user && authPaths.includes(request.nextUrl.pathname)) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
   return supabaseResponse
 }
