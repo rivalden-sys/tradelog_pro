@@ -22,7 +22,6 @@ function Logo() {
         <div style={{ fontFamily: NUNITO, fontSize: 15, fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', lineHeight: '1.1' }}>
           Aurum<span style={{ color: '#30d158' }}>Trade</span>
         </div>
-        <div style={{ fontFamily: NUNITO, fontSize: 9, fontWeight: 600, color: 'rgba(245,200,66,0.8)', letterSpacing: '0.08em', lineHeight: '1.1', textTransform: 'uppercase' }}>Pro Edition</div>
       </div>
     </div>
   )
@@ -40,39 +39,36 @@ function ResetPasswordForm() {
   const supabase = createClient()
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+    // Supabase sends a PASSWORD_RECOVERY event when the recovery link is opened.
+    // We listen for it via onAuthStateChange — this is the correct approach.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
         setReady(true)
         return
       }
-
-      const hash = window.location.hash
-      if (hash && hash.includes('access_token')) {
-        const params    = new URLSearchParams(hash.substring(1))
-        const tokenHash = params.get('access_token')
-        const type      = params.get('type')
-
-        if (tokenHash && type === 'recovery') {
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: 'recovery',
-          })
-          if (!error) {
-            window.history.replaceState(null, '', window.location.pathname)
-            setReady(true)
-            return
-          } else {
-            setError(`verifyOtp error: ${error.message}`)
-            return
-          }
-        }
+      if (event === 'SIGNED_IN' && session) {
+        // Already have a valid session (e.g. page reload after recovery)
+        setReady(true)
       }
+    })
 
-      setError('Link expired or invalid. Please request a new one.')
+    // Also check if session already exists (page reload case)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
+    })
+
+    // Fallback timeout — if no event fires after 4s, show invalid link error
+    const timeout = setTimeout(() => {
+      setReady(prev => {
+        if (!prev) setError('Link expired or invalid. Please request a new one.')
+        return prev
+      })
+    }, 4000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
     }
-
-    init()
   }, [])
 
   const handleSave = async () => {
@@ -201,7 +197,7 @@ export default function ResetPasswordPage() {
         pointerEvents: 'none',
       }} />
       <Link href="/" style={{ position: 'absolute', top: 24, left: 48, textDecoration: 'none' }}>
-       <Logo />
+        <Logo />
       </Link>
       <Suspense fallback={
         <div style={{ width: 420, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '40px 36px', textAlign: 'center' }}>
