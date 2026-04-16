@@ -45,11 +45,12 @@ export default function LoginPage() {
   }
 
   const handleGoogle = async () => {
-  await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: 'https://aurumtrade.vercel.app/dashboard' },
-  })
-}
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${appUrl}/dashboard` },
+    })
+  }
 
   return (
     <main style={{
