@@ -27,7 +27,19 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const protectedPaths = ['/dashboard', '/trades', '/ai', '/analytics', '/settings']
+  const protectedPaths = [
+    '/dashboard',
+    '/trades',
+    '/ai',
+    '/analytics',
+    '/settings',
+    '/playbook',
+    '/journal',
+    '/goals',
+    '/simulator',
+    '/import',
+    '/billing',
+  ]
   const isProtected = protectedPaths.some(p =>
     request.nextUrl.pathname.startsWith(p)
   )
@@ -38,7 +50,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/')) {
+  // FIX: редірект залогіненого юзера ТІЛЬКИ з /login і /register
+  // Лендінг / має лишатись доступним для всіх
+  const authPaths = ['/login', '/register']
+  if (user && authPaths.includes(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
