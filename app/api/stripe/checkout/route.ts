@@ -2,11 +2,11 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe, PLANS } from '@/lib/stripe';
+import { getAppUrl } from '@/lib/appUrl';
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,18 +21,15 @@ export async function POST() {
         },
       }
     );
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const { data: userData } = await supabase
       .from('users')
       .select('stripe_customer_id, plan')
       .eq('id', user.id)
       .single();
-
     let customerId = userData?.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -45,7 +42,7 @@ export async function POST() {
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id);
     }
-
+    const appUrl = getAppUrl();
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -58,10 +55,9 @@ export async function POST() {
       mode: 'subscription',
       // SECURITY FIX: user_id stored in metadata, not in URL
       metadata: { user_id: user.id },
-      success_url: `https://aurumtrade.vercel.app/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://aurumtrade.vercel.app/billing?canceled=true`,
+      success_url: `${appUrl}/api/stripe/confirm?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/billing?canceled=true`,
     });
-
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Checkout error:', error);
