@@ -137,24 +137,27 @@ export default function GoalsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    const { from: wFrom, to: wTo } = getWeekRange()
-    const { from: mFrom, to: mTo } = getMonthRange()
+      const { from: wFrom, to: wTo } = getWeekRange()
+      const { from: mFrom, to: mTo } = getMonthRange()
 
-    const [goalsRes, weekRes, monthRes, allRes] = await Promise.all([
-      supabase.from('goals').select('*').eq('user_id', user.id),
-      supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).gte('date', wFrom.slice(0,10)).lte('date', wTo.slice(0,10)),
-      supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).gte('date', mFrom.slice(0,10)).lte('date', mTo.slice(0,10)),
-      supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).order('date', { ascending: false }),
-    ])
+      const [goalsRes, weekRes, monthRes, allRes] = await Promise.all([
+        supabase.from('goals').select('*').eq('user_id', user.id),
+        supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).gte('date', wFrom.slice(0,10)).lte('date', wTo.slice(0,10)),
+        supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).gte('date', mFrom.slice(0,10)).lte('date', mTo.slice(0,10)),
+        supabase.from('trades').select('date,result,profit_usd,status').eq('user_id', user.id).order('date', { ascending: false }),
+      ])
 
-    setGoals(goalsRes.data || [])
-    setWeekTrades(weekRes.data || [])
-    setMonthTrades(monthRes.data || [])
-    setAllTrades(allRes.data || [])
-    setLoading(false)
+      setGoals(goalsRes.data || [])
+      setWeekTrades(weekRes.data || [])
+      setMonthTrades(monthRes.data || [])
+      setAllTrades(allRes.data || [])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -162,19 +165,22 @@ export default function GoalsPage() {
   async function saveGoal() {
     if (!formTarget || isNaN(Number(formTarget))) return
     setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    if (editGoal) {
-      await supabase.from('goals').update({ type: formType, period: formPeriod, target: Number(formTarget) }).eq('id', editGoal.id)
-    } else {
-      await supabase.from('goals').insert({ user_id: user.id, type: formType, period: formPeriod, target: Number(formTarget) })
+      if (editGoal) {
+        await supabase.from('goals').update({ type: formType, period: formPeriod, target: Number(formTarget) }).eq('id', editGoal.id)
+      } else {
+        await supabase.from('goals').insert({ user_id: user.id, type: formType, period: formPeriod, target: Number(formTarget) })
+      }
+      setShowForm(false)
+      setEditGoal(null)
+      setFormTarget('')
+      load()
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
-    setShowForm(false)
-    setEditGoal(null)
-    setFormTarget('')
-    load()
   }
 
   async function deleteGoal(id: string) {
