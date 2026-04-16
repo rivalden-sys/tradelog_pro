@@ -23,55 +23,30 @@ export interface RateLimitResult {
 export async function checkRateLimit(userId: string, endpoint: string): Promise<RateLimitResult> {
   const config = LIMITS[endpoint] ?? { maxRequests: 10, windowMs: 60 * 60 * 1000 }
   const now = Date.now()
-  const windowEnd = new Date(now + config.windowMs).toISOString()
-
   const supabase = await createClient()
 
-  // Try to get existing record
-  const { data: existing } = await supabase
-    .from('rate_limits')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('endpoint', endpoint)
-    .single()
+  const { data, error } = await supabase.rpc('increment_rate_limit', {
+    p_user_id:   userId,
+    p_endpoint:  endpoint,
+    p_max:       config.maxRequests,
+    p_window_ms: config.windowMs,
+  })
 
-  // If no record or window expired — reset
-  if (!existing || new Date(existing.window_end).getTime() <= now) {
-    await supabase
-      .from('rate_limits')
-      .upsert({
-        user_id:    userId,
-        endpoint,
-        count:      1,
-        window_end: windowEnd,
-      }, { onConflict: 'user_id,endpoint' })
-
-    return {
-      allowed:   true,
-      remaining: config.maxRequests - 1,
-      resetAt:   now + config.windowMs,
-    }
+  if (error || !data) {
+    console.error('Rate limit RPC error:', error)
+    // fail open — allow request if RPC fails
+    return { allowed: true, remaining: 1, resetAt: now + config.windowMs }
   }
 
-  // Window active — check limit
-  if (existing.count >= config.maxRequests) {
-    return {
-      allowed:   false,
-      remaining: 0,
-      resetAt:   new Date(existing.window_end).getTime(),
-    }
-  }
+  const resetAt = new Date(data.window_end).getTime()
 
-  // Increment counter
-  await supabase
-    .from('rate_limits')
-    .update({ count: existing.count + 1 })
-    .eq('user_id', userId)
-    .eq('endpoint', endpoint)
+  if (!data.allowed) {
+    return { allowed: false, remaining: 0, resetAt }
+  }
 
   return {
     allowed:   true,
-    remaining: config.maxRequests - existing.count - 1,
-    resetAt:   new Date(existing.window_end).getTime(),
+    remaining: config.maxRequests - data.count,
+    resetAt,
   }
 }
