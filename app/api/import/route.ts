@@ -1,36 +1,39 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { parseCSV, parseUniversal, ColumnMapping } from '@/lib/importParsers'
 
+async function getSupabaseUser() {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  return { supabase, user }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => cookieStore.getAll() } }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
+    const { supabase, user } = await getSupabaseUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
     const { csvText, mapping } = body as { csvText: string; mapping?: ColumnMapping }
-
     if (!csvText) return NextResponse.json({ success: false, error: 'No CSV data' })
 
     const { format, trades } = parseCSV(csvText, mapping)
-
     if (trades.length === 0) {
       return NextResponse.json({ success: false, error: 'No trades found. Check file format.' })
     }
 
+    // FIX: preserve original count before truncation
+    const totalParsed = trades.length
+
     // Перевірка ліміту Free плану
     const { data: profile } = await supabase
       .from('users').select('plan').eq('id', user.id).single()
-
     const isFree = profile?.plan === 'free'
     if (isFree) {
       const { count } = await supabase
@@ -68,32 +71,34 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Import DB error:', error)
-      return NextResponse.json({ success: false, error: error.message })
+      return NextResponse.json({ success: false, error: 'Import failed' })
     }
 
     return NextResponse.json({
       success:  true,
       imported: inserted?.length ?? 0,
       format,
-      skipped:  trades.length - (inserted?.length ?? 0),
+      // FIX: skipped = original total minus what was actually inserted
+      skipped:  totalParsed - (inserted?.length ?? 0),
     })
-
   } catch (err: any) {
     console.error('Import POST error:', err)
-    return NextResponse.json({ success: false, error: err.message })
+    return NextResponse.json({ success: false, error: 'Internal error' })
   }
 }
 
 // PUT — preview без збереження
 export async function PUT(req: NextRequest) {
   try {
+    // FIX: require auth on preview endpoint
+    const { user } = await getSupabaseUser()
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+
     const body = await req.json()
     const { csvText, mapping } = body as { csvText: string; mapping?: ColumnMapping }
-
     if (!csvText) return NextResponse.json({ success: false, error: 'No CSV data' })
 
     const { format, trades, headers, total } = parseCSV(csvText, mapping)
-
     return NextResponse.json({
       success: true,
       format,
@@ -102,6 +107,7 @@ export async function PUT(req: NextRequest) {
       total,
     })
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message })
+    console.error('Import PUT error:', err)
+    return NextResponse.json({ success: false, error: 'Internal error' })
   }
 }
