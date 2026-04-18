@@ -38,7 +38,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     const trade = await getTradeById(id, user.id)
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
-    return NextResponse.json({ success: false, error: String(error), code: 'FETCH_ERROR' }, { status: 500 })
+    console.error('Trade GET error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'FETCH_ERROR' }, { status: 500 })
   }
 }
 
@@ -51,12 +52,13 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     const body = await request.json()
     const parsed = UpdateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.issues.map((i: any) => i.message).join(', '), code: 'VALIDATION_ERROR' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request data', code: 'VALIDATION_ERROR' }, { status: 400 })
     }
     const trade = await updateTrade(id, user.id, parsed.data as any)
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
-    return NextResponse.json({ success: false, error: String(error), code: 'UPDATE_ERROR' }, { status: 500 })
+    console.error('Trade PUT error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'UPDATE_ERROR' }, { status: 500 })
   }
 }
 
@@ -87,6 +89,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Params 
     await deleteTrade(id, user.id)
     return NextResponse.json({ success: true, data: { deleted: true } })
   } catch (error) {
-    return NextResponse.json({ success: false, error: String(error), code: 'DELETE_ERROR' }, { status: 500 })
+    console.error('Trade DELETE error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'DELETE_ERROR' }, { status: 500 })
   }
 }
