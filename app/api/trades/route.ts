@@ -42,11 +42,11 @@ export async function GET(request: NextRequest) {
       status:     searchParams.get('status')     || undefined,
       trade_type: searchParams.get('trade_type') || undefined,
     }
-
     const trades = await getTrades(user.id, filters)
     return NextResponse.json({ success: true, data: trades })
   } catch (error) {
-    return NextResponse.json({ success: false, error: String(error), code: 'FETCH_ERROR' }, { status: 500 })
+    console.error('Trades GET error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'FETCH_ERROR' }, { status: 500 })
   }
 }
 
@@ -80,12 +80,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = TradeSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.message, code: 'VALIDATION_ERROR' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request data', code: 'VALIDATION_ERROR' }, { status: 400 })
     }
 
     const trade = await createTrade(user.id, parsed.data as any)
     return NextResponse.json({ success: true, data: trade }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ success: false, error: String(error), code: 'CREATE_ERROR' }, { status: 500 })
+    console.error('Trades POST error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'CREATE_ERROR' }, { status: 500 })
   }
 }
