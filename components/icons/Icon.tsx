@@ -1,25 +1,35 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 /**
- * AurumTrade Icon System — HYBRID
- * --------------------------------------------
- * Two variants per icon:
- *   • duotone  — flat two-color (crisp at small sizes)
- *   • glass    — translucent gradients + shine (premium at large sizes)
+ * AurumTrade Icon System v3 (Final)
+ * ──────────────────────────────────────────────────────────────
+ *  Pure SVG glass plate + Phosphor Icons (MIT) glyph inside.
+ *  Self-contained — works identically on any background (dark, light,
+ *  gradient). No backdrop-filter dependency, no flicker.
  *
- * Auto-select by size:
- *   size < 32   → duotone
- *   size >= 32  → glass
+ *  Each icon is ONE <svg> that contains:
+ *    • clipped rounded square with tinted gradient
+ *    • 3 blurred radial blobs → "aurora through glass"
+ *    • top shine highlight
+ *    • white semi-transparent border
+ *    • Phosphor glyph on top in white
+ *    • CSS drop-shadow under the whole plate (theme-aware)
  *
- * Override:
- *   <Icon name="dashboard" size={20} variant="glass" />
+ *  Usage:
+ *    <Icon name="dashboard"  size={48} color="#0a84ff" />
+ *    <Icon name="ai"         size={64} color="#bf5af2" />
+ *    <Icon name="take"       size={28} color="#30d158" />
  *
- * Usage:
- *   <Icon name="dashboard" size={24} />           // duotone
- *   <Icon name="ai" size={64} />                   // glass
- *   <Icon name="take" size={20} color="#30d158" /> // duotone green
+ *  Props:
+ *    name    — one of IconName
+ *    size    — total side length in px (default 48)
+ *    color   — plate tint (default BLUE '#0a84ff')
+ *    className, style — applied to wrapper <span>
+ *
+ *  Icons are from Phosphor Icons (MIT License). Bundled inline:
+ *  no npm runtime dependency. Include LICENSE-PHOSPHOR.txt in repo.
  */
 
 export type IconName =
@@ -30,802 +40,202 @@ export type IconName =
   | 'gradeA' | 'gradeB' | 'gradeC' | 'gradeD'
   | 'upload' | 'download' | 'edit' | 'delete' | 'plus'
   | 'check' | 'warning' | 'lock' | 'user' | 'logout'
-
-export type IconVariant = 'duotone' | 'glass' | 'auto'
+  | 'camera'
 
 interface IconProps {
   name: IconName
   size?: number
   color?: string
-  variant?: IconVariant
-  mutedOpacity?: number
   className?: string
   style?: React.CSSProperties
 }
 
-// Unique ID per instance to avoid gradient collisions in same DOM
-let uidCounter = 0
-const nextUid = () => `aticon-${++uidCounter}`
+/* ════════════════════ THEME DETECTION (shared singleton) ════════════════════ */
+type Listener = (dark: boolean) => void
+const listeners = new Set<Listener>()
+let observer: MutationObserver | null = null
+let currentIsDark = false
 
+function ensureObserver() {
+  if (typeof document === 'undefined' || observer) return
+  currentIsDark = document.documentElement.classList.contains('dark')
+  observer = new MutationObserver(() => {
+    const next = document.documentElement.classList.contains('dark')
+    if (next !== currentIsDark) {
+      currentIsDark = next
+      listeners.forEach(fn => fn(next))
+    }
+  })
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  })
+}
+
+function useIsDark() {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    ensureObserver()
+    setDark(currentIsDark)
+    listeners.add(setDark)
+    return () => { listeners.delete(setDark) }
+  }, [])
+  return dark
+}
+
+/* ════════════════════ COLOR UTILITIES ════════════════════ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let h = hex.replace('#', '').trim()
+  if (h.length === 3) h = h.split('').map(c => c + c).join('')
+  const n = parseInt(h, 16) || 0
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+}
+function clamp(n: number) { return Math.max(0, Math.min(255, n)) }
+function shift(hex: string, dr: number, dg: number, db: number): string {
+  const { r, g, b } = hexToRgb(hex)
+  return `#${clamp(r + dr).toString(16).padStart(2, '0')}${clamp(g + dg).toString(16).padStart(2, '0')}${clamp(b + db).toString(16).padStart(2, '0')}`
+}
+
+/* ════════════════════ GLYPHS (Phosphor MIT regular weight) ════════════════════ */
+const GLYPHS: Record<IconName, string> = {
+  dashboard: `<path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z" />`,
+  trades: `<path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31l-56,56V200H224A8,8,0,0,1,232,208Z" />`,
+  playbook: `<path d="M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z" />`,
+  journal: `<path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />`,
+  goals: `<path d="M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32l-96,96a8,8,0,0,1-11.32-11.32l27.72-27.72a40,40,0,1,0,17.87,31.09,8,8,0,1,1,16-.9,56,56,0,1,1-22.38-41.65L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z" />`,
+  simulator: `<path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v94.37L90.73,98a8,8,0,0,1,10.07-.38l58.81,44.11L218.73,90a8,8,0,1,1,10.54,12l-64,56a8,8,0,0,1-10.07.38L96.39,114.29,40,163.63V200H224A8,8,0,0,1,232,208Z" />`,
+  analytics: `<path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z" />`,
+  ai: `<path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z" />`,
+  settings: `<path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z" />`,
+  billing: `<path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z" />`,
+  import: `<path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z" />`,
+  long: `<path d="M240,56v64a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,212.69,64H168a8,8,0,0,1,0-16h64A8,8,0,0,1,240,56Z" />`,
+  short: `<path d="M240,128v64a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h44.69L136,107.31l-34.34,34.35a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,29.66,58.34L96,124.69l34.34-34.35a8,8,0,0,1,11.32,0L224,172.69V128a8,8,0,0,1,16,0Z" />`,
+  take: `<path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />`,
+  stop: `<path d="M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />`,
+  breakeven: `<path d="M176,128a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,128Zm56,0A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />`,
+  planned: `<path d="M232,136.66A104.12,104.12,0,1,1,119.34,24,8,8,0,0,1,120.66,40,88.12,88.12,0,1,0,216,135.34,8,8,0,0,1,232,136.66ZM120,72v56a8,8,0,0,0,8,8h56a8,8,0,0,0,0-16H136V72a8,8,0,0,0-16,0Zm40-24a12,12,0,1,0-12-12A12,12,0,0,0,160,48Zm36,24a12,12,0,1,0-12-12A12,12,0,0,0,196,72Zm24,36a12,12,0,1,0-12-12A12,12,0,0,0,220,108Z" />`,
+  calm: `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z" />`,
+  fear: `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm72,0a12,12,0,1,1,12,12A12,12,0,0,1,152,108Zm32,60a8,8,0,0,1-8,8c-10,0-15.06-6.74-18.4-11.2-3-4-3.92-4.8-5.6-4.8s-2.57.76-5.6,4.8C143.06,169.26,138,176,128,176s-15.06-6.74-18.4-11.2c-3-4-3.92-4.8-5.6-4.8s-2.57.76-5.6,4.8C95.06,169.26,90,176,80,176a8,8,0,0,1,0-16c1.68,0,2.57-.76,5.6-4.8C88.94,150.74,94,144,104,144s15.06,6.74,18.4,11.2c3,4,3.92,4.8,5.6,4.8s2.57-.76,5.6-4.8c3.34-4.46,8.4-11.2,18.4-11.2s15.06,6.74,18.4,11.2c3,4,3.92,4.8,5.6,4.8A8,8,0,0,1,184,168Z" />`,
+  greed: `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-68a28,28,0,0,1-28,28h-4v8a8,8,0,0,1-16,0v-8H104a8,8,0,0,1,0-16h36a12,12,0,0,0,0-24H116a28,28,0,0,1,0-56h4V72a8,8,0,0,1,16,0v8h16a8,8,0,0,1,0,16H116a12,12,0,0,0,0,24h24A28,28,0,0,1,168,148Z" />`,
+  anger: `<path d="M92,152a12,12,0,1,1,12-12A12,12,0,0,1,92,152Zm72-24a12,12,0,1,0,12,12A12,12,0,0,0,164,128Zm68,0A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128ZM171.56,81.34,128,110.39l-43.56-29a8,8,0,1,0-8.88,13.32l48,32a8,8,0,0,0,8.88,0l48-32a8,8,0,0,0-8.88-13.32Zm-15.13,96C148,171.73,139.94,168,128,168s-20,3.73-28.43,9.34a8,8,0,0,0,8.86,13.32C114.93,186.34,120,184,128,184s13.07,2.34,19.57,6.66a8,8,0,1,0,8.86-13.32Z" />`,
+  euphoria: `<path d="M176,140a12,12,0,1,1-12-12A12,12,0,0,1,176,140ZM128,92a12,12,0,1,0-12,12A12,12,0,0,0,128,92Zm73-38A104,104,0,0,0,50.48,197.33,8,8,0,1,0,62.4,186.66a88,88,0,1,1,131.19,0,8,8,0,0,0,11.93,10.67A104,104,0,0,0,201,54ZM152,168H136c-21.74,0-48-17.84-48-40a41.33,41.33,0,0,1,.55-6.68,8,8,0,1,0-15.78-2.64A56.9,56.9,0,0,0,72,128c0,14.88,7.46,29.13,21,40.15C105.4,178.22,121.07,184,136,184h16a8,8,0,0,1,0,16H96a24,24,0,0,0,0,48,8,8,0,0,0,0-16,8,8,0,0,1,0-16h56a24,24,0,0,0,0-48Z" />`,
+  revenge: `<path d="M183.89,153.34a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68ZM216,144a88,88,0,0,1-176,0c0-27.92,11-56.47,32.66-84.85a8,8,0,0,1,11.93-.89l24.12,23.41,22-60.41a8,8,0,0,1,12.63-3.41C165.21,36,216,84.55,216,144Zm-16,0c0-46.09-35.79-85.92-58.21-106.33L119.52,98.74a8,8,0,0,1-13.09,3L80.06,76.16C64.09,99.21,56,122,56,144a72,72,0,0,0,144,0Z" />`,
+  gradeA: `<path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.27,47,25.53a8,8,0,0,0,4.2,0c1-.26,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z" /><text x="128" y="160" textAnchor="middle" fontFamily="Inter, -apple-system, sans-serif" fontSize="96" fontWeight="900" fill="currentColor">A</text>`,
+  gradeB: `<path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.27,47,25.53a8,8,0,0,0,4.2,0c1-.26,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z" /><text x="128" y="160" textAnchor="middle" fontFamily="Inter, -apple-system, sans-serif" fontSize="96" fontWeight="900" fill="currentColor">B</text>`,
+  gradeC: `<path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.27,47,25.53a8,8,0,0,0,4.2,0c1-.26,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z" /><text x="128" y="160" textAnchor="middle" fontFamily="Inter, -apple-system, sans-serif" fontSize="96" fontWeight="900" fill="currentColor">C</text>`,
+  gradeD: `<path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.27,47,25.53a8,8,0,0,0,4.2,0c1-.26,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0Z" /><text x="128" y="160" textAnchor="middle" fontFamily="Inter, -apple-system, sans-serif" fontSize="96" fontWeight="900" fill="currentColor">D</text>`,
+  camera: `<path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z" />`,
+  upload: `<path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z" />`,
+  download: `<path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z" />`,
+  edit: `<path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z" />`,
+  delete: `<path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z" />`,
+  plus: `<path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />`,
+  check: `<path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />`,
+  warning: `<path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z" />`,
+  lock: `<path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-68-56a12,12,0,1,1-12-12A12,12,0,0,1,140,152Z" />`,
+  user: `<path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z" />`,
+  logout: `<path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z" />`,
+}
+
+/* ════════════════════ MAIN COMPONENT ════════════════════ */
 export function Icon({
   name,
-  size = 24,
+  size = 48,
   color = '#0a84ff',
-  variant = 'auto',
-  mutedOpacity = 0.25,
   className,
   style,
 }: IconProps) {
-  const resolvedVariant: 'duotone' | 'glass' =
-    variant === 'auto' ? (size >= 32 ? 'glass' : 'duotone') : variant
+  const dark = useIsDark()
 
-  const uid = React.useMemo(() => nextUid(), [])
+  // Companion colors for aurora gradient
+  const comp1 = shift(color, -40, -20, +60)  // bluer/darker shift
+  const comp2 = shift(color, +60, +40, -30)  // warmer/lighter shift
 
-  const common = {
-    width: size,
-    height: size,
-    viewBox: '0 0 48 48',
-    fill: 'none',
-    xmlns: 'http://www.w3.org/2000/svg',
-    className,
-    style,
-  }
+  // Stable unique id per render — derived from color+name to minimize churn
+  const uid = React.useId().replace(/:/g, '')
 
-  if (resolvedVariant === 'duotone') {
-    return <DuotoneIcon name={name} color={color} mutedOpacity={mutedOpacity} {...common} />
-  }
-  return <GlassIcon name={name} color={color} uid={uid} {...common} />
-}
+  const glyph = GLYPHS[name] || ''
 
-/* ═══════════════════════════════════════════════════════════════ */
-/*                        DUOTONE RENDERER                         */
-/* ═══════════════════════════════════════════════════════════════ */
+  const svg = (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 256 256"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      style={{ display: 'block' }}
+    >
+      <defs>
+        <clipPath id={`clip-${uid}`}>
+          <rect x="8" y="8" width="240" height="240" rx="76" />
+        </clipPath>
+        <radialGradient id={`b1-${uid}`} cx="0.25" cy="0.2" r="0.6">
+          <stop offset="0%" stopColor={comp2} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={comp2} stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`b2-${uid}`} cx="0.85" cy="0.15" r="0.5">
+          <stop offset="0%" stopColor={comp1} stopOpacity="0.85" />
+          <stop offset="100%" stopColor={comp1} stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`b3-${uid}`} cx="0.7" cy="0.9" r="0.55">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`plate-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.25" />
+        </linearGradient>
+        <linearGradient id={`shine-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.55" />
+          <stop offset="60%" stopColor="#fff" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <filter id={`blur-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="20" />
+        </filter>
+      </defs>
 
-function DuotoneIcon({ name, color, mutedOpacity, ...svgProps }: any) {
-  const m = { fill: color, fillOpacity: mutedOpacity }
-  const f = { fill: color }
-  const sk = { stroke: '#fff', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  const skC = { stroke: color, strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+      {/* Clipped interior */}
+      <g clipPath={`url(#clip-${uid})`}>
+        {/* Base tint */}
+        <rect x="8" y="8" width="240" height="240" fill={`url(#plate-${uid})`} />
+        {/* Blurred aurora blobs */}
+        <g filter={`url(#blur-${uid})`}>
+          <rect x="0" y="0" width="256" height="256" fill={`url(#b1-${uid})`} />
+          <rect x="0" y="0" width="256" height="256" fill={`url(#b2-${uid})`} />
+          <rect x="0" y="0" width="256" height="256" fill={`url(#b3-${uid})`} />
+        </g>
+        {/* Top shine */}
+        <rect x="8" y="8" width="240" height="130" fill={`url(#shine-${uid})`} />
+        {/* Glyph on top — white */}
+        <g fill="#ffffff" dangerouslySetInnerHTML={{ __html: glyph }} />
+      </g>
 
-  switch (name) {
-    case 'dashboard':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="6" width="16" height="20" rx="4" {...m} />
-          <rect x="26" y="6" width="16" height="12" rx="4" {...m} />
-          <rect x="6" y="30" width="16" height="12" rx="4" {...m} />
-          <rect x="26" y="22" width="16" height="20" rx="4" {...f} />
-          <path d="M29 36 L32 33 L35 35 L39 29" {...sk} />
-          <circle cx="39" cy="29" r="1.4" fill="#fff" />
-        </svg>
-      )
-    case 'trades':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="10" width="36" height="28" rx="5" {...m} />
-          <path d="M11 32 L18 24 L24 28 L32 18 L38 22" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="38" cy="22" r="3" {...f} />
-          <circle cx="38" cy="22" r="1.2" fill="#fff" />
-        </svg>
-      )
-    case 'playbook':
-      return (
-        <svg {...svgProps}>
-          <path d="M8 10 Q8 7 11 7 L34 7 Q37 7 37 10 L37 38 Q37 41 34 41 L11 41 Q8 41 8 38 Z" {...m} />
-          <path d="M8 10 Q8 7 11 7 L22 7 L22 41 L11 41 Q8 41 8 38 Z" {...f} />
-          <path d="M27 15 L35 15 M27 22 L33 22 M27 29 L35 29" {...skC} />
-          <circle cx="40" cy="10" r="4" {...f} />
-          <path d="M38.5 10 L39.5 11 L41.5 9" {...sk} />
-        </svg>
-      )
-    case 'journal':
-      return (
-        <svg {...svgProps}>
-          <rect x="8" y="8" width="30" height="34" rx="4" {...m} />
-          <path d="M12 16 L30 16 M12 23 L30 23 M12 30 L24 30" {...skC} />
-          <path d="M34 6 L42 14 L30 26 L22 26 L22 18 Z" {...f} />
-          <path d="M34 6 L42 14" {...sk} />
-        </svg>
-      )
-    case 'goals':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...m} />
-          <circle cx="24" cy="24" r="5" {...f} />
-          <path d="M24 24 L40 8 M40 8 L40 14 L46 14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'simulator':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="10" width="36" height="24" rx="4" {...m} />
-          <path d="M11 28 Q18 20 24 24 T38 14" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" strokeDasharray="3 2.5" />
-          <circle cx="38" cy="14" r="3" {...f} />
-          <path d="M18 40 L30 40" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-          <rect x="21" y="34" width="6" height="6" rx="1.2" {...f} />
-        </svg>
-      )
-    case 'analytics':
-      return (
-        <svg {...svgProps}>
-          <rect x="8" y="22" width="6" height="18" rx="1.5" {...m} />
-          <rect x="18" y="14" width="6" height="26" rx="1.5" {...m} />
-          <rect x="28" y="8" width="6" height="32" rx="1.5" {...f} />
-          <rect x="38" y="18" width="4" height="22" rx="1.2" {...m} />
-          <path d="M6 42 L42 42" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-      )
-    case 'ai':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 6 L30 18 L42 18 L32 27 L36 40 L24 33 L12 40 L16 27 L6 18 L18 18 Z" {...m} />
-          <circle cx="24" cy="24" r="8" {...f} />
-          <circle cx="21" cy="22" r="1.5" fill="#fff" />
-          <circle cx="27" cy="22" r="1.5" fill="#fff" />
-          <path d="M20 27 Q24 29 28 27" {...sk} />
-        </svg>
-      )
-    case 'settings':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 4 L28 8 L34 6 L37 11 L43 12 L42 18 L46 22 L42 28 L43 34 L37 35 L34 40 L28 38 L24 42 L20 38 L14 40 L11 35 L5 34 L6 28 L2 22 L6 18 L5 12 L11 11 L14 6 L20 8 Z" {...m} />
-          <circle cx="24" cy="23" r="7" {...f} />
-          <circle cx="24" cy="23" r="2.8" fill="#fff" />
-        </svg>
-      )
-    case 'billing':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="12" width="36" height="24" rx="4" {...m} />
-          <rect x="6" y="16" width="36" height="6" {...f} />
-          <rect x="10" y="28" width="10" height="4" rx="1" fill="#fff" fillOpacity="0.9" />
-          <rect x="28" y="28" width="8" height="2" rx="1" {...f} />
-        </svg>
-      )
-    case 'import':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="26" width="36" height="16" rx="3" {...m} />
-          <path d="M24 8 L24 28 M24 28 L16 20 M24 28 L32 20" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="14" cy="34" r="1.5" {...f} />
-        </svg>
-      )
-    case 'long':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M16 28 L24 18 L32 28" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="24" cy="18" r="2.5" {...f} />
-        </svg>
-      )
-    case 'short':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M16 20 L24 30 L32 20" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="24" cy="30" r="2.5" {...f} />
-        </svg>
-      )
-    case 'take':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M18 24 L22 28 L30 20" {...sk} strokeWidth="2.4" />
-        </svg>
-      )
-    case 'stop':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M19 19 L29 29 M29 19 L19 29" {...sk} strokeWidth="2.4" />
-        </svg>
-      )
-    case 'breakeven':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M17 22 L31 22 M17 26 L31 26" {...sk} strokeWidth="2.4" />
-        </svg>
-      )
-    case 'planned':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M24 18 L24 24 L28 26" {...sk} strokeWidth="2.2" />
-        </svg>
-      )
-    case 'calm':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="17" cy="21" r="2" {...f} />
-          <circle cx="31" cy="21" r="2" {...f} />
-          <path d="M17 31 L31 31" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'fear':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="17" cy="22" r="2.5" {...f} />
-          <circle cx="31" cy="22" r="2.5" {...f} />
-          <ellipse cx="24" cy="32" rx="4" ry="3" {...f} />
-          <path d="M14 16 L18 18 M34 16 L30 18" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-      )
-    case 'greed':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M17 20 L21 22 L17 24 M31 20 L27 22 L31 24" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <path d="M24 16 L24 34 M20 20 L28 20 M18 28 L30 28" stroke={color} strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'anger':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M13 19 L20 22 M35 19 L28 22" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="18" cy="24" r="1.8" {...f} />
-          <circle cx="30" cy="24" r="1.8" {...f} />
-          <path d="M17 33 Q24 28 31 33" stroke={color} strokeWidth="2.4" strokeLinecap="round" fill="none" />
-        </svg>
-      )
-    case 'euphoria':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M14 19 L20 22 M34 19 L28 22" stroke={color} strokeWidth="2" strokeLinecap="round" />
-          <path d="M15 28 Q24 38 33 28" stroke={color} strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <path d="M24 6 L25.5 10 L29.5 10 L26 12.5 L27.5 16.5 L24 14 L20.5 16.5 L22 12.5 L18.5 10 L22.5 10 Z" {...f} />
-        </svg>
-      )
-    case 'revenge':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <path d="M14 18 L20 22 L14 22 Z M34 18 L28 22 L34 22 Z" {...f} />
-          <path d="M15 33 Q24 27 33 33" stroke={color} strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <path d="M10 10 L14 14 M38 10 L34 14" stroke={color} strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'gradeA':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" {...m} />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" {...f} />
-          <path d="M18 30 L24 16 L30 30 M20 25 L28 25" {...sk} strokeWidth="2.2" />
-        </svg>
-      )
-    case 'gradeB':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" {...m} />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" {...f} />
-          <path d="M19 16 L27 16 Q30 16 30 19 Q30 22 27 22 L19 22 M19 22 L28 22 Q31 22 31 26 Q31 30 28 30 L19 30 Z" {...sk} strokeWidth="2" fill="none" />
-        </svg>
-      )
-    case 'gradeC':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" {...m} />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" {...f} />
-          <path d="M30 19 Q27 16 24 16 Q18 16 18 23 Q18 30 24 30 Q27 30 30 27" {...sk} strokeWidth="2.2" fill="none" />
-        </svg>
-      )
-    case 'gradeD':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" {...m} />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" {...f} />
-          <path d="M19 16 L25 16 Q31 16 31 23 Q31 30 25 30 L19 30 Z" {...sk} strokeWidth="2" fill="none" />
-        </svg>
-      )
-    case 'upload':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="28" width="36" height="14" rx="3" {...m} />
-          <path d="M24 38 L24 10 M24 10 L16 18 M24 10 L32 18" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'download':
-      return (
-        <svg {...svgProps}>
-          <rect x="6" y="28" width="36" height="14" rx="3" {...m} />
-          <path d="M24 10 L24 36 M24 36 L16 28 M24 36 L32 28" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'edit':
-      return (
-        <svg {...svgProps}>
-          <path d="M8 40 L8 32 L28 12 L36 20 L16 40 Z" {...m} />
-          <path d="M28 12 L36 20 L40 16 Q42 14 40 12 L36 8 Q34 6 32 8 Z" {...f} />
-          <path d="M8 40 L16 40" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'delete':
-      return (
-        <svg {...svgProps}>
-          <path d="M10 14 L38 14 L36 40 Q36 42 34 42 L14 42 Q12 42 12 40 Z" {...m} />
-          <rect x="14" y="6" width="20" height="6" rx="2" {...f} />
-          <path d="M20 20 L20 36 M24 20 L24 36 M28 20 L28 36" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'plus':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M24 18 L24 30 M18 24 L30 24" {...sk} strokeWidth="2.6" />
-        </svg>
-      )
-    case 'check':
-      return (
-        <svg {...svgProps}>
-          <circle cx="24" cy="24" r="18" {...m} />
-          <circle cx="24" cy="24" r="11" {...f} />
-          <path d="M18 24 L22 28 L30 20" {...sk} strokeWidth="2.6" />
-        </svg>
-      )
-    case 'warning':
-      return (
-        <svg {...svgProps}>
-          <path d="M24 6 L44 40 Q45 42 43 42 L5 42 Q3 42 4 40 Z" {...m} />
-          <path d="M24 14 L40 40 L8 40 Z" {...f} />
-          <path d="M24 22 L24 31" {...sk} strokeWidth="2.6" />
-          <circle cx="24" cy="36" r="1.6" fill="#fff" />
-        </svg>
-      )
-    case 'lock':
-      return (
-        <svg {...svgProps}>
-          <rect x="10" y="22" width="28" height="20" rx="4" {...m} />
-          <path d="M16 22 L16 16 Q16 8 24 8 Q32 8 32 16 L32 22" stroke={color} strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <circle cx="24" cy="31" r="3" {...f} />
-          <rect x="23" y="31" width="2" height="6" rx="1" {...f} />
-        </svg>
-      )
-    case 'user':
-      return (
-        <svg {...svgProps}>
-          <path d="M6 42 Q6 28 24 28 Q42 28 42 42 Z" {...m} />
-          <circle cx="24" cy="16" r="8" {...f} />
-        </svg>
-      )
-    case 'logout':
-      return (
-        <svg {...svgProps}>
-          <path d="M6 10 Q6 6 10 6 L24 6 L24 42 L10 42 Q6 42 6 38 Z" {...m} />
-          <path d="M24 24 L42 24 M42 24 L34 16 M42 24 L34 32" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    default:
-      return null
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-/*                         GLASS RENDERER                          */
-/* ═══════════════════════════════════════════════════════════════ */
-
-function GlassIcon({ name, color, uid, ...svgProps }: any) {
-  const cyan = '#5ac8fa'
-  const purple = '#bf5af2'
-
-  const ids = {
-    bg: `${uid}-bg`,
-    active: `${uid}-active`,
-    shine: `${uid}-shine`,
-    orb: `${uid}-orb`,
-    hi: `${uid}-hi`,
-    glow: `${uid}-glow`,
-  }
-
-  const Defs = () => (
-    <defs>
-      <linearGradient id={ids.bg} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor={color} stopOpacity="0.35" />
-        <stop offset="50%" stopColor={cyan} stopOpacity="0.2" />
-        <stop offset="100%" stopColor={purple} stopOpacity="0.3" />
-      </linearGradient>
-      <linearGradient id={ids.active} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor={color} stopOpacity="0.95" />
-        <stop offset="100%" stopColor={cyan} stopOpacity="0.85" />
-      </linearGradient>
-      <linearGradient id={ids.shine} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#fff" stopOpacity="0.7" />
-        <stop offset="50%" stopColor="#fff" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-      </linearGradient>
-      <radialGradient id={ids.orb} cx="0.3" cy="0.3" r="0.8">
-        <stop offset="0%" stopColor="#fff" stopOpacity="0.9" />
-        <stop offset="30%" stopColor={cyan} stopOpacity="0.85" />
-        <stop offset="70%" stopColor={color} stopOpacity="0.9" />
-        <stop offset="100%" stopColor={purple} stopOpacity="0.95" />
-      </radialGradient>
-      <radialGradient id={ids.hi} cx="0.3" cy="0.25" r="0.4">
-        <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
-        <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-      </radialGradient>
-      <filter id={ids.glow} x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
-      </filter>
-    </defs>
+      {/* Plate border */}
+      <rect
+        x="8.5" y="8.5" width="239" height="239" rx="75.5"
+        fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1"
+      />
+    </svg>
   )
 
-  const bg = `url(#${ids.bg})`
-  const active = `url(#${ids.active})`
-  const shine = `url(#${ids.shine})`
-  const orb = `url(#${ids.orb})`
-  const hi = `url(#${ids.hi})`
-  const stroke = 'rgba(255,255,255,0.35)'
-  const strokeStrong = 'rgba(255,255,255,0.5)'
-
-  switch (name) {
-    case 'dashboard':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="6" width="16" height="20" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="6.5" width="15" height="8" rx="3.5" fill={shine} opacity="0.7" />
-          <rect x="26" y="6" width="16" height="12" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="26.5" y="6.5" width="15" height="5" rx="3.5" fill={shine} opacity="0.7" />
-          <rect x="6" y="30" width="16" height="12" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="30.5" width="15" height="5" rx="3.5" fill={shine} opacity="0.7" />
-          <rect x="26" y="22" width="16" height="20" rx="4" fill={active} stroke={strokeStrong} strokeWidth="0.6" />
-          <rect x="26.5" y="22.5" width="15" height="8" rx="3.5" fill={shine} opacity="0.85" />
-          <path d="M29 36 L32 33 L35 35 L39 29" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="39" cy="29" r="1.4" fill="#fff" />
-        </svg>
-      )
-    case 'trades':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="10" width="36" height="28" rx="5" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="10.5" width="35" height="10" rx="4.5" fill={shine} opacity="0.7" />
-          <path d="M11 32 L18 24 L24 28 L32 18 L38 22" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="38" cy="22" r="3" fill={orb} />
-          <circle cx="38" cy="22" r="1.2" fill="#fff" />
-        </svg>
-      )
-    case 'playbook':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M8 10 Q8 7 11 7 L34 7 Q37 7 37 10 L37 38 Q37 41 34 41 L11 41 Q8 41 8 38 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M8 10 Q8 7 11 7 L22 7 L22 41 L11 41 Q8 41 8 38 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M9 10 Q9 8 11 8 L21 8 L21 18 L9 18 Z" fill={shine} opacity="0.5" />
-          <path d="M27 15 L35 15 M27 22 L33 22 M27 29 L35 29" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
-          <circle cx="40" cy="10" r="4" fill={orb} />
-          <path d="M38.5 10 L39.5 11 L41.5 9" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'journal':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="8" y="8" width="30" height="34" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="8.5" y="8.5" width="29" height="12" rx="3.5" fill={shine} opacity="0.6" />
-          <path d="M12 16 L30 16 M12 23 L30 23 M12 30 L24 30" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M34 6 L42 14 L30 26 L22 26 L22 18 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M34 6 L42 14" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      )
-    case 'goals':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={bg} stroke={stroke} strokeWidth="0.4" />
-          <circle cx="24" cy="24" r="5" fill={orb} />
-          <ellipse cx="20" cy="14" rx="10" ry="4" fill={shine} opacity="0.5" />
-          <path d="M24 24 L40 8 M40 8 L40 14 L46 14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'simulator':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="10" width="36" height="24" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="10.5" width="35" height="8" rx="3.5" fill={shine} opacity="0.6" />
-          <path d="M11 28 Q18 20 24 24 T38 14" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" strokeDasharray="3 2.5" />
-          <circle cx="38" cy="14" r="3" fill={orb} />
-          <path d="M18 40 L30 40" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-          <rect x="21" y="34" width="6" height="6" rx="1.2" fill={active} stroke={strokeStrong} strokeWidth="0.4" />
-        </svg>
-      )
-    case 'analytics':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="8" y="22" width="6" height="18" rx="1.5" fill={bg} stroke={stroke} strokeWidth="0.4" />
-          <rect x="18" y="14" width="6" height="26" rx="1.5" fill={bg} stroke={stroke} strokeWidth="0.4" />
-          <rect x="28" y="8" width="6" height="32" rx="1.5" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <rect x="28.5" y="8.5" width="5" height="10" rx="1" fill={shine} opacity="0.8" />
-          <rect x="38" y="18" width="4" height="22" rx="1.2" fill={bg} stroke={stroke} strokeWidth="0.4" />
-          <path d="M6 42 L42 42" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-      )
-    case 'ai':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 6 L30 18 L42 18 L32 27 L36 40 L24 33 L12 40 L16 27 L6 18 L18 18 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="10" fill={color} opacity="0.3" filter={`url(#${ids.glow})`} />
-          <circle cx="24" cy="24" r="8" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="21" rx="3.5" ry="2.5" fill={hi} />
-          <circle cx="21" cy="23" r="1.2" fill="#fff" />
-          <circle cx="27" cy="23" r="1.2" fill="#fff" />
-          <path d="M20 27 Q24 29 28 27" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-        </svg>
-      )
-    case 'settings':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 4 L28 8 L34 6 L37 11 L43 12 L42 18 L46 22 L42 28 L43 34 L37 35 L34 40 L28 38 L24 42 L20 38 L14 40 L11 35 L5 34 L6 28 L2 22 L6 18 L5 12 L11 11 L14 6 L20 8 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="23" r="7" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="22" cy="21" rx="3" ry="2" fill={hi} />
-          <circle cx="24" cy="23" r="2.8" fill="#fff" />
-        </svg>
-      )
-    case 'billing':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="12" width="36" height="24" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6" y="16" width="36" height="6" fill={active} />
-          <rect x="6.5" y="12.5" width="35" height="3" rx="3.5" fill={shine} opacity="0.6" />
-          <rect x="10" y="28" width="10" height="4" rx="1" fill="#fff" fillOpacity="0.9" />
-          <rect x="28" y="28" width="8" height="2" rx="1" fill={color} />
-        </svg>
-      )
-    case 'import':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="26" width="36" height="16" rx="3" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="26.5" width="35" height="6" rx="2.5" fill={shine} opacity="0.6" />
-          <path d="M24 8 L24 28 M24 28 L16 20 M24 28 L32 20" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="14" cy="34" r="1.5" fill={active} />
-        </svg>
-      )
-    case 'long':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <ellipse cx="20" cy="12" rx="12" ry="4" fill={shine} opacity="0.5" />
-          <path d="M16 28 L24 18 L32 28" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="24" cy="18" r="2.5" fill={orb} />
-        </svg>
-      )
-    case 'short':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <ellipse cx="20" cy="12" rx="12" ry="4" fill={shine} opacity="0.5" />
-          <path d="M16 20 L24 30 L32 20" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <circle cx="24" cy="30" r="2.5" fill={orb} />
-        </svg>
-      )
-    case 'take':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M18 24 L22 28 L30 20" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'stop':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M19 19 L29 29 M29 19 L19 29" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'breakeven':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M17 22 L31 22 M17 26 L31 26" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'planned':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M24 18 L24 24 L28 26" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'calm':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <circle cx="17" cy="21" r="2" fill="#fff" />
-          <circle cx="31" cy="21" r="2" fill="#fff" />
-          <path d="M17 31 L31 31" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'fear':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <circle cx="17" cy="22" r="2.5" fill="#fff" />
-          <circle cx="31" cy="22" r="2.5" fill="#fff" />
-          <ellipse cx="24" cy="32" rx="4" ry="3" fill="#fff" />
-          <path d="M14 16 L18 18 M34 16 L30 18" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-      )
-    case 'greed':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <path d="M17 20 L21 22 L17 24 M31 20 L27 22 L31 24" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <path d="M24 16 L24 34 M20 20 L28 20 M18 28 L30 28" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'anger':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <path d="M13 19 L20 22 M35 19 L28 22" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="18" cy="24" r="1.8" fill="#fff" />
-          <circle cx="30" cy="24" r="1.8" fill="#fff" />
-          <path d="M17 33 Q24 28 31 33" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-        </svg>
-      )
-    case 'euphoria':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <path d="M14 19 L20 22 M34 19 L28 22" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-          <path d="M15 28 Q24 38 33 28" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <path d="M24 6 L25.5 10 L29.5 10 L26 12.5 L27.5 16.5 L24 14 L20.5 16.5 L22 12.5 L18.5 10 L22.5 10 Z" fill={active} stroke={strokeStrong} strokeWidth="0.3" />
-        </svg>
-      )
-    case 'revenge':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="20" cy="14" rx="12" ry="5" fill={hi} opacity="0.8" />
-          <path d="M14 18 L20 22 L14 22 Z M34 18 L28 22 L34 22 Z" fill="#fff" />
-          <path d="M15 33 Q24 27 33 33" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <path d="M10 10 L14 14 M38 10 L34 14" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-        </svg>
-      )
-    case 'gradeA':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 22 L12 22 L12 16 Z" fill={shine} opacity="0.4" />
-          <path d="M18 30 L24 16 L30 30 M20 25 L28 25" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'gradeB':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 22 L12 22 L12 16 Z" fill={shine} opacity="0.4" />
-          <path d="M19 16 L27 16 Q30 16 30 19 Q30 22 27 22 L19 22 M19 22 L28 22 Q31 22 31 26 Q31 30 28 30 L19 30 Z" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    case 'gradeC':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 22 L12 22 L12 16 Z" fill={shine} opacity="0.4" />
-          <path d="M30 19 Q27 16 24 16 Q18 16 18 23 Q18 30 24 30 Q27 30 30 27" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-        </svg>
-      )
-    case 'gradeD':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 4 L40 12 L40 28 Q40 38 24 44 Q8 38 8 28 L8 12 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 27 Q36 34 24 38 Q12 34 12 27 L12 16 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M24 10 L36 16 L36 22 L12 22 L12 16 Z" fill={shine} opacity="0.4" />
-          <path d="M19 16 L25 16 Q31 16 31 23 Q31 30 25 30 L19 30 Z" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )
-    case 'upload':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="28" width="36" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="28.5" width="35" height="5" rx="2.5" fill={shine} opacity="0.6" />
-          <path d="M24 38 L24 10 M24 10 L16 18 M24 10 L32 18" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'download':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="6" y="28" width="36" height="14" rx="3" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="6.5" y="28.5" width="35" height="5" rx="2.5" fill={shine} opacity="0.6" />
-          <path d="M24 10 L24 36 M24 36 L16 28 M24 36 L32 28" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'edit':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M8 40 L8 32 L28 12 L36 20 L16 40 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M28 12 L36 20 L40 16 Q42 14 40 12 L36 8 Q34 6 32 8 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M8 40 L16 40" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
-        </svg>
-      )
-    case 'delete':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M10 14 L38 14 L36 40 Q36 42 34 42 L14 42 Q12 42 12 40 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="14" y="6" width="20" height="6" rx="2" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <rect x="14.5" y="6.5" width="19" height="2" rx="1.5" fill={shine} opacity="0.7" />
-          <path d="M20 20 L20 36 M24 20 L24 36 M28 20 L28 36" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      )
-    case 'plus':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M24 18 L24 30 M18 24 L30 24" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-        </svg>
-      )
-    case 'check':
-      return (
-        <svg {...svgProps}><Defs />
-          <circle cx="24" cy="24" r="18" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="24" r="11" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="20" rx="5" ry="3" fill={hi} />
-          <path d="M18 24 L22 28 L30 20" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    case 'warning':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M24 6 L44 40 Q45 42 43 42 L5 42 Q3 42 4 40 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M24 14 L40 40 L8 40 Z" fill={active} stroke={strokeStrong} strokeWidth="0.5" />
-          <path d="M24 14 L32 27 L16 27 Z" fill={shine} opacity="0.4" />
-          <path d="M24 22 L24 31" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-          <circle cx="24" cy="36" r="1.6" fill="#fff" />
-        </svg>
-      )
-    case 'lock':
-      return (
-        <svg {...svgProps}><Defs />
-          <rect x="10" y="22" width="28" height="20" rx="4" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <rect x="10.5" y="22.5" width="27" height="7" rx="3.5" fill={shine} opacity="0.6" />
-          <path d="M16 22 L16 16 Q16 8 24 8 Q32 8 32 16 L32 22" stroke={color} strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <circle cx="24" cy="31" r="3" fill={active} />
-          <rect x="23" y="31" width="2" height="6" rx="1" fill={active} />
-        </svg>
-      )
-    case 'user':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M6 42 Q6 28 24 28 Q42 28 42 42 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <circle cx="24" cy="16" r="8" fill={orb} stroke={strokeStrong} strokeWidth="0.5" />
-          <ellipse cx="21" cy="13" rx="3.5" ry="2.5" fill={hi} />
-        </svg>
-      )
-    case 'logout':
-      return (
-        <svg {...svgProps}><Defs />
-          <path d="M6 10 Q6 6 10 6 L24 6 L24 42 L10 42 Q6 42 6 38 Z" fill={bg} stroke={stroke} strokeWidth="0.5" />
-          <path d="M7 10 Q7 7 10 7 L23 7 L23 16 L7 16 Z" fill={shine} opacity="0.5" />
-          <path d="M24 24 L42 24 M42 24 L34 16 M42 24 L34 32" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      )
-    default:
-      return null
-  }
+  return (
+    <span
+      className={className}
+      style={{
+        display: 'inline-flex',
+        flexShrink: 0,
+        verticalAlign: 'middle',
+        filter: dark
+          ? `drop-shadow(0 ${Math.round(size * 0.08)}px ${Math.round(size * 0.16)}px rgba(0,0,0,0.4))`
+          : `drop-shadow(0 ${Math.round(size * 0.06)}px ${Math.round(size * 0.14)}px rgba(0,0,0,0.18)) drop-shadow(0 1px 2px rgba(0,0,0,0.08))`,
+        ...style,
+      }}
+    >
+      {svg}
+    </span>
+  )
 }
 
 export default Icon
