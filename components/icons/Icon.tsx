@@ -3,33 +3,20 @@
 import React, { useEffect, useState } from 'react'
 
 /**
- * AurumTrade Icon System v3 (Final)
+ * AurumTrade Icon System v4 (Final)
  * ──────────────────────────────────────────────────────────────
- *  Pure SVG glass plate + Phosphor Icons (MIT) glyph inside.
- *  Self-contained — works identically on any background (dark, light,
- *  gradient). No backdrop-filter dependency, no flicker.
+ * Matte/glossy glass plate + Phosphor Icons (MIT) glyph inside.
  *
- *  Each icon is ONE <svg> that contains:
- *    • clipped rounded square with tinted gradient
- *    • 3 blurred radial blobs → "aurora through glass"
- *    • top shine highlight
- *    • white semi-transparent border
- *    • Phosphor glyph on top in white
- *    • CSS drop-shadow under the whole plate (theme-aware)
+ * Dark mode:  translucent tint + backdrop-filter blur + shine
+ * Light mode: saturated solid gradient + deep shadow + shine
  *
- *  Usage:
- *    <Icon name="dashboard"  size={48} color="#0a84ff" />
- *    <Icon name="ai"         size={64} color="#bf5af2" />
- *    <Icon name="take"       size={28} color="#30d158" />
+ * Usage:
+ *   <Icon name="dashboard" size={48} color="#0a84ff" />
+ *   <Icon name="ai"        size={64} color="#bf5af2" />
+ *   <Icon name="take"      size={24} color="#30d158" />
  *
- *  Props:
- *    name    — one of IconName
- *    size    — total side length in px (default 48)
- *    color   — plate tint (default BLUE '#0a84ff')
- *    className, style — applied to wrapper <span>
- *
- *  Icons are from Phosphor Icons (MIT License). Bundled inline:
- *  no npm runtime dependency. Include LICENSE-PHOSPHOR.txt in repo.
+ * Icons: Phosphor Icons (MIT License). Bundled inline.
+ * See /LICENSE-PHOSPHOR.txt at repo root.
  */
 
 export type IconName =
@@ -50,7 +37,7 @@ interface IconProps {
   style?: React.CSSProperties
 }
 
-/* ════════════════════ THEME DETECTION (shared singleton) ════════════════════ */
+/* ─── Shared singleton theme observer ─── */
 type Listener = (dark: boolean) => void
 const listeners = new Set<Listener>()
 let observer: MutationObserver | null = null
@@ -83,20 +70,24 @@ function useIsDark() {
   return dark
 }
 
-/* ════════════════════ COLOR UTILITIES ════════════════════ */
+/* ─── Color utilities ─── */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   let h = hex.replace('#', '').trim()
   if (h.length === 3) h = h.split('').map(c => c + c).join('')
   const n = parseInt(h, 16) || 0
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
 }
-function clamp(n: number) { return Math.max(0, Math.min(255, n)) }
-function shift(hex: string, dr: number, dg: number, db: number): string {
+function rgba(hex: string, a: number): string {
   const { r, g, b } = hexToRgb(hex)
-  return `#${clamp(r + dr).toString(16).padStart(2, '0')}${clamp(g + dg).toString(16).padStart(2, '0')}${clamp(b + db).toString(16).padStart(2, '0')}`
+  return `rgba(${r}, ${g}, ${b}, ${a})`
+}
+function darken(hex: string, amount: number): string {
+  const { r, g, b } = hexToRgb(hex)
+  const f = 1 - amount
+  return `rgb(${Math.round(r * f)}, ${Math.round(g * f)}, ${Math.round(b * f)})`
 }
 
-/* ════════════════════ GLYPHS (Phosphor MIT regular weight) ════════════════════ */
+/* ─── Phosphor glyph paths (regular weight, MIT) ─── */
 const GLYPHS: Record<IconName, string> = {
   dashboard: `<path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z" />`,
   trades: `<path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31l-56,56V200H224A8,8,0,0,1,232,208Z" />`,
@@ -138,7 +129,7 @@ const GLYPHS: Record<IconName, string> = {
   logout: `<path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z" />`,
 }
 
-/* ════════════════════ MAIN COMPONENT ════════════════════ */
+/* ─── Main component ─── */
 export function Icon({
   name,
   size = 48,
@@ -148,92 +139,79 @@ export function Icon({
 }: IconProps) {
   const dark = useIsDark()
 
-  // Companion colors for aurora gradient
-  const comp1 = shift(color, -40, -20, +60)  // bluer/darker shift
-  const comp2 = shift(color, +60, +40, -30)  // warmer/lighter shift
+  const radius    = Math.round(size * 0.31)
+  const glyphSize = Math.round(size * 0.55)
 
-  // Stable unique id per render — derived from color+name to minimize churn
-  const uid = React.useId().replace(/:/g, '')
+  const plateStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: radius,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    flexShrink: 0,
+    verticalAlign: 'middle',
+    backdropFilter: 'blur(16px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+    background: dark
+      ? `linear-gradient(135deg, ${rgba(color, 0.85)}, ${rgba(color, 0.4)})`
+      : `linear-gradient(135deg, ${color}, ${darken(color, 0.22)})`,
+    border: dark
+      ? `1px solid ${rgba(color, 0.45)}`
+      : `1px solid ${rgba(color, 0.55)}`,
+    boxShadow: dark
+      ? `inset 0 1px 0 rgba(255,255,255,0.3),
+         inset 0 -1px 0 rgba(0,0,0,0.15),
+         0 ${Math.round(size * 0.16)}px ${Math.round(size * 0.4)}px -${Math.round(size * 0.16)}px rgba(0,0,0,0.45)`
+      : `inset 0 1px 0 rgba(255,255,255,0.65),
+         inset 0 -1px 0 rgba(0,0,0,0.08),
+         0 ${Math.round(size * 0.12)}px ${Math.round(size * 0.28)}px -${Math.round(size * 0.1)}px rgba(0,0,0,0.22),
+         0 2px 4px rgba(0,0,0,0.1)`,
+    ...style,
+  }
 
-  const glyph = GLYPHS[name] || ''
+  // Top shine highlight
+  const shineStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: '55%',
+    background: dark
+      ? 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%)'
+      : 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
+    pointerEvents: 'none',
+    zIndex: 2,
+    borderRadius: `${radius}px ${radius}px 0 0`,
+  }
 
-  const svg = (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 256 256"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      style={{ display: 'block' }}
-    >
-      <defs>
-        <clipPath id={`clip-${uid}`}>
-          <rect x="8" y="8" width="240" height="240" rx="76" />
-        </clipPath>
-        <radialGradient id={`b1-${uid}`} cx="0.25" cy="0.2" r="0.6">
-          <stop offset="0%" stopColor={comp2} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={comp2} stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id={`b2-${uid}`} cx="0.85" cy="0.15" r="0.5">
-          <stop offset="0%" stopColor={comp1} stopOpacity="0.85" />
-          <stop offset="100%" stopColor={comp1} stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id={`b3-${uid}`} cx="0.7" cy="0.9" r="0.55">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id={`plate-${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.55" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.25" />
-        </linearGradient>
-        <linearGradient id={`shine-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.55" />
-          <stop offset="60%" stopColor="#fff" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-        <filter id={`blur-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="20" />
-        </filter>
-      </defs>
+  // Radial top-left highlight
+  const highlightStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    background: dark
+      ? 'radial-gradient(ellipse at 25% 20%, rgba(255,255,255,0.3) 0%, transparent 45%)'
+      : 'radial-gradient(ellipse at 25% 20%, rgba(255,255,255,0.5) 0%, transparent 50%)',
+    pointerEvents: 'none',
+    zIndex: 1,
+    borderRadius: 'inherit',
+  }
 
-      {/* Clipped interior */}
-      <g clipPath={`url(#clip-${uid})`}>
-        {/* Base tint */}
-        <rect x="8" y="8" width="240" height="240" fill={`url(#plate-${uid})`} />
-        {/* Blurred aurora blobs */}
-        <g filter={`url(#blur-${uid})`}>
-          <rect x="0" y="0" width="256" height="256" fill={`url(#b1-${uid})`} />
-          <rect x="0" y="0" width="256" height="256" fill={`url(#b2-${uid})`} />
-          <rect x="0" y="0" width="256" height="256" fill={`url(#b3-${uid})`} />
-        </g>
-        {/* Top shine */}
-        <rect x="8" y="8" width="240" height="130" fill={`url(#shine-${uid})`} />
-        {/* Glyph on top — white */}
-        <g fill="#ffffff" dangerouslySetInnerHTML={{ __html: glyph }} />
-      </g>
-
-      {/* Plate border */}
-      <rect
-        x="8.5" y="8.5" width="239" height="239" rx="75.5"
-        fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1"
-      />
-    </svg>
-  )
+  const glyphHTML = GLYPHS[name] || ''
 
   return (
-    <span
-      className={className}
-      style={{
-        display: 'inline-flex',
-        flexShrink: 0,
-        verticalAlign: 'middle',
-        filter: dark
-          ? `drop-shadow(0 ${Math.round(size * 0.08)}px ${Math.round(size * 0.16)}px rgba(0,0,0,0.4))`
-          : `drop-shadow(0 ${Math.round(size * 0.06)}px ${Math.round(size * 0.14)}px rgba(0,0,0,0.18)) drop-shadow(0 1px 2px rgba(0,0,0,0.08))`,
-        ...style,
-      }}
-    >
-      {svg}
+    <span className={className} style={plateStyle} aria-hidden="true">
+      <span style={highlightStyle} />
+      <span style={shineStyle} />
+      <svg
+        width={glyphSize}
+        height={glyphSize}
+        viewBox="0 0 256 256"
+        fill="#ffffff"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ position: 'relative', zIndex: 3, display: 'block' }}
+        dangerouslySetInnerHTML={{ __html: glyphHTML }}
+      />
     </span>
   )
 }
