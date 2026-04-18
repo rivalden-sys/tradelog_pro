@@ -109,8 +109,11 @@ export async function POST(req: NextRequest) {
     const longWR  = longTrades.length  ? Math.round(longTrades.filter(t => t.result === 'Тейк').length / longTrades.length * 100) : 0
     const shortWR = shortTrades.length ? Math.round(shortTrades.filter(t => t.result === 'Тейк').length / shortTrades.length * 100) : 0
 
-    // Playbook compliance
-    const { data: ruleChecks } = await supabase.from('trade_rule_checks').select('followed')
+    // Playbook compliance — filtered by user_id
+    const { data: ruleChecks } = await supabase
+      .from('trade_rule_checks')
+      .select('followed')
+      .eq('user_id', user.id)
     const totalChecks    = ruleChecks?.length || 0
     const followedChecks = ruleChecks?.filter((r: any) => r.followed).length || 0
     const playbookCompliance = totalChecks > 0 ? Math.round((followedChecks / totalChecks) * 100) : null
