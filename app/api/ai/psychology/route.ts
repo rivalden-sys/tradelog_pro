@@ -175,7 +175,8 @@ Write all text values in ${lang}. Respond ONLY with JSON, no markdown:
     })
 
     return NextResponse.json({ success: true, data: result })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message, code: 'AI_ERROR' }, { status: 500 })
+  } catch (e) {
+    console.error('AI psychology error:', e)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'AI_ERROR' }, { status: 500 })
   }
 }
