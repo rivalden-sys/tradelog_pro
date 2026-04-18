@@ -74,11 +74,11 @@ function GradientText({ children, from, to, style }: { children: React.ReactNode
   )
 }
 
-// Inline checkmark for feature bullets — keeps tiny sizes crisp
+// Inline checkmark for feature bullets
 function CheckDot({ color, size = 22 }: { color: string; size?: number }) {
   return (
     <div style={{ width: size, height: size, borderRadius: size * 0.32, background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <Icon name="check" size={size * 0.6} color={color} variant="duotone" />
+      <Icon name="check" size={size * 0.7} color={color} variant="glass" />
     </div>
   )
 }
@@ -235,7 +235,7 @@ export default function Landing() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ background: `${GREEN}15`, border: `1px solid ${GREEN}30`, borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <Icon name="check" size={12} color={GREEN} variant="duotone" />
+                      <Icon name="check" size={12} color={GREEN} variant="glass" />
                       <span style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase' }}>Followed</span>
                     </div>
                     <div style={{ fontSize: 22, fontWeight: 900, color: GREEN }}>71%</div>
@@ -243,7 +243,7 @@ export default function Landing() {
                   </div>
                   <div style={{ background: `${RED}15`, border: `1px solid ${RED}30`, borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <Icon name="stop" size={12} color={RED} variant="duotone" />
+                      <Icon name="stop" size={12} color={RED} variant="glass" />
                       <span style={{ fontSize: 9, color: RED, fontWeight: 700, textTransform: 'uppercase' }}>Violated</span>
                     </div>
                     <div style={{ fontSize: 22, fontWeight: 900, color: RED }}>34%</div>
@@ -269,7 +269,7 @@ export default function Landing() {
                   {[{ name:'calm' as const,l:'Calm',c:GREEN,wr:'71%' },{ name:'greed' as const,l:'Greed',c:ORANGE,wr:'38%' },{ name:'revenge' as const,l:'Revenge',c:RED,wr:'22%' },{ name:'euphoria' as const,l:'Euphoria',c:PURPLE,wr:'41%' }].map(em => (
                     <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 64 }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <Icon name={em.name} size={24} color={em.c} variant="duotone" />
+                        <Icon name={em.name} size={24} color={em.c} variant="glass" />
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{em.l}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: em.c, marginTop: 1 }}>{em.wr}</div>
@@ -321,7 +321,7 @@ export default function Landing() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Supports .csv and .xlsx</div>
               </div>
               <div style={{ marginTop: 12, background: `${GREEN}12`, border: `1px solid ${GREEN}30`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Icon name="check" size={22} color={GREEN} variant="duotone" />
+                <Icon name="check" size={22} color={GREEN} variant="glass" />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>Format detected: Bybit Futures</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Found 47 trades — ready to import</div>
@@ -438,7 +438,7 @@ export default function Landing() {
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="ai" size={24} color={PURPLE} variant="duotone" />
+                <Icon name="ai" size={24} color={PURPLE} variant="glass" />
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>What your AI coach actually finds</div>
@@ -455,7 +455,7 @@ export default function Landing() {
                 <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${item.color}30`, borderRadius: 18, padding: isMobile ? '18px' : '22px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Icon name={item.iconName} size={22} color={item.color} variant="duotone" />
+                      <Icon name={item.iconName} size={22} color={item.color} variant="glass" />
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{item.label}</span>
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 800, color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}30`, borderRadius: 20, padding: '2px 10px' }}>{item.tag}</span>
@@ -465,7 +465,7 @@ export default function Landing() {
               ))}
             </div>
             <div style={{ marginTop: 20, padding: '16px 20px', background: `${GREEN}10`, border: `1px solid ${GREEN}25`, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Icon name="warning" size={24} color={GREEN} variant="duotone" />
+              <Icon name="warning" size={24} color={GREEN} variant="glass" />
               <div style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
                 <span style={{ color: GREEN, fontWeight: 700 }}>Every insight is based on your actual data.</span>{' '}
                 The more trades you log, the sharper the analysis.
@@ -484,7 +484,7 @@ export default function Landing() {
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={f.iconName} size={26} color={f.color} variant="duotone" />
+                    <Icon name={f.iconName} size={26} color={f.color} variant="glass" />
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
                 </div>
@@ -505,7 +505,7 @@ export default function Landing() {
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={f.iconName} size={26} color={f.color} variant="duotone" />
+                    <Icon name={f.iconName} size={26} color={f.color} variant="glass" />
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
                 </div>
@@ -560,7 +560,7 @@ export default function Landing() {
               {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n', 'CSV Import (limited)'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name="check" size={12} color="rgba(255,255,255,0.6)" variant="duotone" />
+                    <Icon name="check" size={12} color="rgba(255,255,255,0.6)" variant="glass" />
                   </div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.55)' }}>{f}</span>
                 </div>
@@ -578,7 +578,7 @@ export default function Landing() {
               {['Unlimited trades','Spot & Futures support','CSV Import (all exchanges)','Playbook + compliance','Emotion tracking','Daily Journal','Goals & Streak','Performance Simulator','Trade screenshots','MAE / MFE analytics','Public profile','AI Coach','AI Trade Score','AI Psychology Analysis','AI Chat','Analysis history'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name="check" size={12} color={GREEN} variant="duotone" />
+                    <Icon name="check" size={12} color={GREEN} variant="glass" />
                   </div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
                 </div>
