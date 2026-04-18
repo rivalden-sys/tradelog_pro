@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import Icon from '@/components/icons/Icon'
 
 const FONT   = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif"
@@ -70,6 +71,15 @@ function GradientText({ children, from, to, style }: { children: React.ReactNode
     <span style={{ background: `linear-gradient(135deg, ${from || '#fff'} 0%, ${to || 'rgba(255,255,255,0.55)'} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', ...style }}>
       {children}
     </span>
+  )
+}
+
+// Inline checkmark for feature bullets — keeps tiny sizes crisp
+function CheckDot({ color, size = 22 }: { color: string; size?: number }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: size * 0.32, background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Icon name="check" size={size * 0.6} color={color} variant="duotone" />
+    </div>
   )
 }
 
@@ -207,7 +217,7 @@ export default function Landing() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20, marginBottom: isMobile ? 12 : 20 }}>
           <Glass accent={GREEN} style={{ padding: isMobile ? '28px 22px' : '44px 40px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 36, marginBottom: 16 }}>📋</div>
+              <div style={{ marginBottom: 16 }}><Icon name="playbook" size={48} color={GREEN} /></div>
               <div style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.03em' }}>Playbook</div>
               <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 24 }}>
                 Define your setup rules. Every trade tracks which rules you followed — and shows win rate with vs without compliance.
@@ -215,7 +225,7 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
                 {['Define entry rules per setup', 'Track compliance on every trade', 'Win rate: followed vs violated', '+X% insight when rules work'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 7, background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                    <CheckDot color={GREEN} />
                     <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.7)' }}>{f}</span>
                   </div>
                 ))}
@@ -224,12 +234,18 @@ export default function Landing() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 10 }}>CHoCH + BOS + FVG</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div style={{ background: `${GREEN}15`, border: `1px solid ${GREEN}30`, borderRadius: 10, padding: '10px 12px' }}>
-                    <div style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>✓ Followed</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <Icon name="check" size={12} color={GREEN} variant="duotone" />
+                      <span style={{ fontSize: 9, color: GREEN, fontWeight: 700, textTransform: 'uppercase' }}>Followed</span>
+                    </div>
                     <div style={{ fontSize: 22, fontWeight: 900, color: GREEN }}>71%</div>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>win rate</div>
                   </div>
                   <div style={{ background: `${RED}15`, border: `1px solid ${RED}30`, borderRadius: 10, padding: '10px 12px' }}>
-                    <div style={{ fontSize: 9, color: RED, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>✕ Violated</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <Icon name="stop" size={12} color={RED} variant="duotone" />
+                      <span style={{ fontSize: 9, color: RED, fontWeight: 700, textTransform: 'uppercase' }}>Violated</span>
+                    </div>
                     <div style={{ fontSize: 22, fontWeight: 900, color: RED }}>34%</div>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>win rate</div>
                   </div>
@@ -244,16 +260,18 @@ export default function Landing() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 20 }}>
             <Glass accent={ORANGE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>🧠</div>
+                <div style={{ marginBottom: 12 }}><Icon name="ai" size={40} color={ORANGE} /></div>
                 <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Emotion Tracking</div>
                 <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
                   Log your emotional state on every trade. AI finds which emotions hurt your win rate most.
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[{ e:'😌',l:'Calm',c:GREEN,wr:'71%' },{ e:'🤑',l:'Greed',c:ORANGE,wr:'38%' },{ e:'💀',l:'Revenge',c:RED,wr:'22%' },{ e:'🚀',l:'Euphoria',c:PURPLE,wr:'41%' }].map(em => (
-                    <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 52 }}>
-                      <div style={{ fontSize: 18 }}>{em.e}</div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{em.l}</div>
+                  {[{ name:'calm' as const,l:'Calm',c:GREEN,wr:'71%' },{ name:'greed' as const,l:'Greed',c:ORANGE,wr:'38%' },{ name:'revenge' as const,l:'Revenge',c:RED,wr:'22%' },{ name:'euphoria' as const,l:'Euphoria',c:PURPLE,wr:'41%' }].map(em => (
+                    <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 64 }}>
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Icon name={em.name} size={24} color={em.c} variant="duotone" />
+                      </div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{em.l}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: em.c, marginTop: 1 }}>{em.wr}</div>
                     </div>
                   ))}
@@ -263,7 +281,7 @@ export default function Landing() {
 
             <Glass accent={BLUE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28, flex: 1 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>📓</div>
+                <div style={{ marginBottom: 12 }}><Icon name="journal" size={40} color={BLUE} /></div>
                 <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Daily Journal</div>
                 <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
                   Note your mood, market observations, plans, and mistakes — even on no-trade days.
@@ -283,7 +301,7 @@ export default function Landing() {
         <Glass accent={ORANGE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28, marginBottom: isMobile ? 12 : 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <div>
-              <div style={{ fontSize: 36, marginBottom: 16 }}>📥</div>
+              <div style={{ marginBottom: 16 }}><Icon name="import" size={48} color={ORANGE} /></div>
               <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.03em' }}>CSV Import</div>
               <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 20 }}>
                 Stop entering trades manually. Upload your history directly from your exchange — we auto-detect format.
@@ -296,12 +314,14 @@ export default function Landing() {
             </div>
             <div>
               <div style={{ border: `2px dashed ${ORANGE}55`, borderRadius: 18, padding: '28px 20px', textAlign: 'center', background: `${ORANGE}08` }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📁</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <Icon name="upload" size={48} color={ORANGE} />
+                </div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Drop your CSV here</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Supports .csv and .xlsx</div>
               </div>
               <div style={{ marginTop: 12, background: `${GREEN}12`, border: `1px solid ${GREEN}30`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 18 }}>✅</div>
+                <Icon name="check" size={22} color={GREEN} variant="duotone" />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>Format detected: Bybit Futures</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Found 47 trades — ready to import</div>
@@ -315,7 +335,7 @@ export default function Landing() {
         <Glass accent={BLUE} style={{ padding: isMobile ? '28px 22px' : '40px 44px', borderRadius: 28, marginBottom: isMobile ? 12 : 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 20 : 48, alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <div>
-              <div style={{ fontSize: 36, marginBottom: 16 }}>📸</div>
+              <div style={{ marginBottom: 16 }}><Icon name="edit" size={48} color={BLUE} /></div>
               <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.03em' }}>Trade Screenshots</div>
               <div style={{ fontSize: isMobile ? 14 : 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 20 }}>
                 Attach your TradingView chart directly to each trade. See exactly what you saw before entering — and learn from it.
@@ -323,7 +343,7 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {['Attach chart screenshot per trade', 'See your entry on the exact candle', 'Review setups visually over time', 'Stored securely in cloud'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 7, background: `${BLUE}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: BLUE, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                    <CheckDot color={BLUE} />
                     <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.7)' }}>{f}</span>
                   </div>
                 ))}
@@ -364,7 +384,7 @@ export default function Landing() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Glass accent={GREEN} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 28, marginBottom: 12 }}>🎯</div>
+              <div style={{ marginBottom: 12 }}><Icon name="goals" size={40} color={GREEN} /></div>
               <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Goals & Streak</div>
               <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
                 Set weekly and monthly goals — win rate, trade count, P&L. Track your streak of active trading days.
@@ -372,7 +392,7 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {['Weekly & monthly goals', 'Win rate / P&L / trade count targets', 'Streak counter with trophy at 7 days', 'Auto-progress from real trades'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                    <CheckDot color={GREEN} size={20} />
                     <span style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
                   </div>
                 ))}
@@ -382,7 +402,7 @@ export default function Landing() {
 
           <Glass accent={PURPLE} style={{ padding: isMobile ? '24px 22px' : '32px 32px', borderRadius: 28 }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: 28, marginBottom: 12 }}>📈</div>
+              <div style={{ marginBottom: 12 }}><Icon name="analytics" size={40} color={PURPLE} /></div>
               <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.03em' }}>Performance Simulator</div>
               <div style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, marginBottom: 16 }}>
                 Monte Carlo simulation based on your real stats. See where you'll be in 3-6 months if you keep trading the same way.
@@ -390,7 +410,7 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {['200 Monte Carlo scenarios', 'P10 / P50 / P90 outcomes', 'Ruin probability calculator', 'EV calculator'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: `${PURPLE}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: PURPLE, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                    <CheckDot color={PURPLE} size={20} />
                     <span style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.6)' }}>{f}</span>
                   </div>
                 ))}
@@ -417,7 +437,9 @@ export default function Landing() {
         <Glass accent={PURPLE} style={{ padding: isMobile ? '28px 22px' : '48px 48px', borderRadius: 28, marginBottom: isMobile ? 12 : 20, background: `${PURPLE}08` }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🤖</div>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${PURPLE}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="ai" size={24} color={PURPLE} variant="duotone" />
+              </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>What your AI coach actually finds</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Real insights from real journal data — not generic advice</div>
@@ -425,15 +447,15 @@ export default function Landing() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 10 : 14 }}>
               {[
-                { icon: '😌', label: 'Psychology Analysis found:', insight: "Your win rate when calm: 71%. When feeling revenge: 22%. You've lost $340 on revenge trades this month.", color: PURPLE, tag: 'Psychology' },
-                { icon: '📋', label: 'AI Coach found:', insight: "You follow your CHoCH+BOS playbook 68% of the time. The 32% when you break rules has a 29% win rate vs 71% when you follow them.", color: GREEN, tag: 'Coach' },
-                { icon: '📊', label: 'Trade Score detected:', insight: "Your BOS setup on Mondays has 38% win rate (12 trades). On Wednesdays–Thursdays: 67%. You're taking low-probability trades early in the week.", color: ORANGE, tag: 'Trade Score' },
-                { icon: '🔍', label: 'Trade Review revealed:', insight: "MAE analysis shows your stop is too tight — price dips avg $180 before taking profit. Widening stop by 20% would save 8 stopped-out trades per month.", color: BLUE, tag: 'Trade Review + MAE' },
+                { iconName: 'calm' as const, label: 'Psychology Analysis found:', insight: "Your win rate when calm: 71%. When feeling revenge: 22%. You've lost $340 on revenge trades this month.", color: PURPLE, tag: 'Psychology' },
+                { iconName: 'playbook' as const, label: 'AI Coach found:', insight: "You follow your CHoCH+BOS playbook 68% of the time. The 32% when you break rules has a 29% win rate vs 71% when you follow them.", color: GREEN, tag: 'Coach' },
+                { iconName: 'analytics' as const, label: 'Trade Score detected:', insight: "Your BOS setup on Mondays has 38% win rate (12 trades). On Wednesdays–Thursdays: 67%. You're taking low-probability trades early in the week.", color: ORANGE, tag: 'Trade Score' },
+                { iconName: 'trades' as const, label: 'Trade Review revealed:', insight: "MAE analysis shows your stop is too tight — price dips avg $180 before taking profit. Widening stop by 20% would save 8 stopped-out trades per month.", color: BLUE, tag: 'Trade Review + MAE' },
               ].map((item, i) => (
                 <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${item.color}30`, borderRadius: 18, padding: isMobile ? '18px' : '22px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 20 }}>{item.icon}</span>
+                      <Icon name={item.iconName} size={22} color={item.color} variant="duotone" />
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{item.label}</span>
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 800, color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}30`, borderRadius: 20, padding: '2px 10px' }}>{item.tag}</span>
@@ -443,7 +465,7 @@ export default function Landing() {
               ))}
             </div>
             <div style={{ marginTop: 20, padding: '16px 20px', background: `${GREEN}10`, border: `1px solid ${GREEN}25`, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 20 }}>💡</div>
+              <Icon name="warning" size={24} color={GREEN} variant="duotone" />
               <div style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
                 <span style={{ color: GREEN, fontWeight: 700 }}>Every insight is based on your actual data.</span>{' '}
                 The more trades you log, the sharper the analysis.
@@ -454,14 +476,16 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 16, marginBottom: isMobile ? 10 : 16 }}>
           {[
-            { icon: '🧠', title: 'AI Coach', color: GREEN, desc: 'Full journal analysis: setup performance, emotion patterns, playbook discipline, risk management. Returns 9 specific insights + 4 action steps.', stats: 'Analyzes last 50 trades' },
-            { icon: '🎯', title: 'Trade Score', color: ORANGE, desc: 'Pre-trade probability score based on your personal historical win rate. Detects tilt risk, emotion impact, and unfavorable conditions.', stats: 'Scores 0–100 with confidence level' },
-            { icon: '🧬', title: 'Psychology', color: PURPLE, desc: 'Identifies cognitive biases — loss aversion, revenge trading, overconfidence. Measures after-loss behavior and self-assessment accuracy.', stats: 'Severity: critical / high / medium / low' },
+            { iconName: 'ai' as const, title: 'AI Coach', color: GREEN, desc: 'Full journal analysis: setup performance, emotion patterns, playbook discipline, risk management. Returns 9 specific insights + 4 action steps.', stats: 'Analyzes last 50 trades' },
+            { iconName: 'goals' as const, title: 'Trade Score', color: ORANGE, desc: 'Pre-trade probability score based on your personal historical win rate. Detects tilt risk, emotion impact, and unfavorable conditions.', stats: 'Scores 0–100 with confidence level' },
+            { iconName: 'calm' as const, title: 'Psychology', color: PURPLE, desc: 'Identifies cognitive biases — loss aversion, revenge trading, overconfidence. Measures after-loss behavior and self-assessment accuracy.', stats: 'Severity: critical / high / medium / low' },
           ].map(f => (
             <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '28px 24px', borderRadius: 22 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={f.iconName} size={26} color={f.color} variant="duotone" />
+                  </div>
                   <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>{f.title}</div>
@@ -474,13 +498,15 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 16 }}>
           {[
-            { icon: '💬', title: 'AI Chat', color: BLUE, desc: 'Chat with AI that has full context of your journal — 50 trades, emotions, playbook compliance, mood history. Ask anything specific about your trading.', stats: '50 messages/hour' },
-            { icon: '📊', title: 'Trade Review + MAE/MFE', color: RED, desc: 'Per-trade deep analysis: entry quality, execution score 0–100, AI grade vs your self-grade. MAE/MFE analysis shows if your stop is too tight or your exits are too early.', stats: 'Execution score + MAE/MFE stop analysis' },
+            { iconName: 'journal' as const, title: 'AI Chat', color: BLUE, desc: 'Chat with AI that has full context of your journal — 50 trades, emotions, playbook compliance, mood history. Ask anything specific about your trading.', stats: '50 messages/hour' },
+            { iconName: 'analytics' as const, title: 'Trade Review + MAE/MFE', color: RED, desc: 'Per-trade deep analysis: entry quality, execution score 0–100, AI grade vs your self-grade. MAE/MFE analysis shows if your stop is too tight or your exits are too early.', stats: 'Execution score + MAE/MFE stop analysis' },
           ].map(f => (
             <Glass key={f.title} accent={f.color} hover style={{ padding: isMobile ? '22px 18px' : '28px 24px', borderRadius: 22 }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={f.iconName} size={26} color={f.color} variant="duotone" />
+                  </div>
                   <span style={{ fontSize: 10, fontWeight: 800, color: PURPLE, background: `${PURPLE}20`, border: `1px solid ${PURPLE}35`, borderRadius: 20, padding: '3px 10px' }}>Pro</span>
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.02em' }}>{f.title}</div>
@@ -533,7 +559,9 @@ export default function Landing() {
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>forever</div>
               {['Up to 20 trades', 'Basic analytics', 'Dashboard', 'Dark mode & i18n', 'CSV Import (limited)'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>✓</div>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name="check" size={12} color="rgba(255,255,255,0.6)" variant="duotone" />
+                  </div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.55)' }}>{f}</span>
                 </div>
               ))}
@@ -549,7 +577,9 @@ export default function Landing() {
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 28 }}>per month</div>
               {['Unlimited trades','Spot & Futures support','CSV Import (all exchanges)','Playbook + compliance','Emotion tracking','Daily Journal','Goals & Streak','Performance Simulator','Trade screenshots','MAE / MFE analytics','Public profile','AI Coach','AI Trade Score','AI Psychology Analysis','AI Chat','Analysis history'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: GREEN, flexShrink: 0, fontWeight: 800 }}>✓</div>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: `${GREEN}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name="check" size={12} color={GREEN} variant="duotone" />
+                  </div>
                   <span style={{ fontSize: isMobile ? 13 : 14, color: 'rgba(255,255,255,0.8)' }}>{f}</span>
                 </div>
               ))}
