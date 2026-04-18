@@ -156,11 +156,12 @@ INSTRUCTION: When answering, always cite specific trades, dates, or statistics f
 
     const fullHistory = [...(history || []), { role: 'user', content: message }, { role: 'assistant', content: answer }]
     await supabase.from('ai_sessions').insert({
-    user_id: user.id, type: 'chat', trade_id: null, prompt: message, response: JSON.stringify(fullHistory),
+      user_id: user.id, type: 'chat', trade_id: null, prompt: message, response: JSON.stringify(fullHistory),
     })
 
     return NextResponse.json({ success: true, data: { answer } })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message, code: 'AI_ERROR' }, { status: 500 })
+  } catch (e) {
+    console.error('AI chat error:', e)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'AI_ERROR' }, { status: 500 })
   }
 }
