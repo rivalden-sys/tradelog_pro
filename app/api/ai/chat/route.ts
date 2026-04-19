@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { getOpenAI, AI_MODEL, AI_TEMP, AI_MAX_TOKENS } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rateLimit'
 
+const MAX_MESSAGE_LENGTH = 2000
+const MAX_HISTORY_ITEMS  = 40
+const MAX_HISTORY_ITEM_LENGTH = 4000
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
@@ -23,8 +27,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Rate limit exceeded. Try again in 1 hour.', code: 'RATE_LIMIT_EXCEEDED' }, { status: 429 })
     }
 
-    const { message, history, locale } = await req.json()
-    if (!message) return NextResponse.json({ success: false, error: 'Message is required', code: 'BAD_REQUEST' }, { status: 400 })
+    const body = await req.json()
+    const { message, history, locale } = body
+
+    // Payload validation
+    if (!message || typeof message !== 'string') {
+      return NextResponse.json({ success: false, error: 'Message is required', code: 'BAD_REQUEST' }, { status: 400 })
+    }
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json({ success: false, error: 'Message too long', code: 'BAD_REQUEST' }, { status: 400 })
+    }
+    if (history !== undefined && !Array.isArray(history)) {
+      return NextResponse.json({ success: false, error: 'Invalid history format', code: 'BAD_REQUEST' }, { status: 400 })
+    }
+    if (Array.isArray(history) && history.length > MAX_HISTORY_ITEMS) {
+      return NextResponse.json({ success: false, error: 'History too long', code: 'BAD_REQUEST' }, { status: 400 })
+    }
+    if (Array.isArray(history)) {
+      for (const item of history) {
+        if (typeof item?.content === 'string' && item.content.length > MAX_HISTORY_ITEM_LENGTH) {
+          return NextResponse.json({ success: false, error: 'History item too long', code: 'BAD_REQUEST' }, { status: 400 })
+        }
+      }
+    }
+    const safeLocale = typeof locale === 'string' ? locale.slice(0, 10) : 'uk'
 
     const { data: trades } = await supabase
       .from('trades')
@@ -80,8 +106,11 @@ export async function POST(req: NextRequest) {
       .map(([s, v]) => `${s}: ${v.total} trades | ${Math.round(v.wins / v.total * 100)}% WR | ${v.pnl.toFixed(2)}$`)
       .join('\n')
 
-    // Playbook compliance
-    const { data: ruleChecks } = await supabase.from('trade_rule_checks').select('followed')
+    // Playbook compliance — filtered by user_id
+    const { data: ruleChecks } = await supabase
+      .from('trade_rule_checks')
+      .select('followed')
+      .eq('user_id', user.id)
     const totalChecks    = ruleChecks?.length || 0
     const followedChecks = ruleChecks?.filter(r => r.followed).length || 0
     const playbookCompliance = totalChecks > 0 ? Math.round((followedChecks / totalChecks) * 100) : null
@@ -98,7 +127,7 @@ export async function POST(req: NextRequest) {
       ? journalNotes.map(n => `${n.date} | mood:${n.mood}/5${n.content ? ` | ${n.content.slice(0, 80)}` : ''}${n.mistakes ? ` | mistakes: ${n.mistakes.slice(0, 80)}` : ''}`).join('\n')
       : null
 
-    const lang = locale === 'uk' ? 'Ukrainian' : 'English'
+    const lang = safeLocale === 'uk' ? 'Ukrainian' : 'English'
 
     const systemPrompt = `You are Alex — a Senior Trading Coach with 15+ years of experience training professional traders at hedge funds and proprietary trading firms. You have deep expertise in technical analysis, risk management, trading psychology, and behavioral finance.
 
