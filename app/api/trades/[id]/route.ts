@@ -35,7 +35,18 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
-    const trade = await getTradeById(id, user.id)
+
+    let trade
+    try {
+      trade = await getTradeById(id, user.id)
+    } catch {
+      return NextResponse.json({ success: false, error: 'Trade not found', code: 'NOT_FOUND' }, { status: 404 })
+    }
+
+    if (!trade) {
+      return NextResponse.json({ success: false, error: 'Trade not found', code: 'NOT_FOUND' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
     console.error('Trade GET error:', error)
@@ -49,12 +60,20 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
+
     const body = await request.json()
     const parsed = UpdateSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: 'Invalid request data', code: 'VALIDATION_ERROR' }, { status: 400 })
     }
-    const trade = await updateTrade(id, user.id, parsed.data as any)
+
+    let trade
+    try {
+      trade = await updateTrade(id, user.id, parsed.data as any)
+    } catch {
+      return NextResponse.json({ success: false, error: 'Trade not found', code: 'NOT_FOUND' }, { status: 404 })
+    }
+
     return NextResponse.json({ success: true, data: trade })
   } catch (error) {
     console.error('Trade PUT error:', error)
@@ -69,24 +88,33 @@ export async function DELETE(request: NextRequest, { params }: { params: Params 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 })
 
-    // Отримуємо угоду перед видаленням щоб дістати screenshot_url
-    const trade = await getTradeById(id, user.id)
+    // Отримуємо screenshot_url перед видаленням
+    let trade
+    try {
+      trade = await getTradeById(id, user.id)
+    } catch {
+      return NextResponse.json({ success: false, error: 'Trade not found', code: 'NOT_FOUND' }, { status: 404 })
+    }
 
-    // Якщо є скріншот — видаляємо з Storage
-    if (trade?.screenshot_url) {
+    const screenshotUrl = trade?.screenshot_url
+
+    // FIX #15: спочатку видаляємо DB row, потім Storage
+    // Якщо deleteTrade fails — Storage файл залишається (не orphan)
+    await deleteTrade(id, user.id)
+
+    // Видаляємо Storage тільки після успішного DB delete
+    if (screenshotUrl) {
       try {
-        const url = new URL(trade.screenshot_url)
+        const url = new URL(screenshotUrl)
         const pathParts = url.pathname.split('/storage/v1/object/public/trade-screenshots/')
         if (pathParts.length === 2) {
-          const filePath = pathParts[1]
-          await supabase.storage.from('trade-screenshots').remove([filePath])
+          await supabase.storage.from('trade-screenshots').remove([pathParts[1]])
         }
       } catch {
-        // Не блокуємо видалення угоди якщо Storage cleanup не вдався
+        // Не блокуємо відповідь якщо Storage cleanup не вдався
       }
     }
 
-    await deleteTrade(id, user.id)
     return NextResponse.json({ success: true, data: { deleted: true } })
   } catch (error) {
     console.error('Trade DELETE error:', error)
