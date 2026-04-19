@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
 import { DARK, LIGHT } from '@/lib/colors'
+import Icon from '@/components/icons/Icon'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
@@ -55,7 +56,9 @@ function ProGate({ feature, dark, purple, blue }: { feature: string; dark: boole
       background: dark ? `linear-gradient(135deg, ${purple}15, ${blue}10)` : `linear-gradient(135deg, ${purple}10, ${blue}08)`,
       borderRadius: 14, border: `1px solid ${purple}30`,
     }}>
-      <div style={{ fontSize: 24, marginBottom: 10 }}>⚡</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+        <Icon name="warning" size={32} color={purple} />
+      </div>
       <div style={{ fontSize: 15, fontWeight: 700, color: dark ? DARK.text : LIGHT.text, marginBottom: 6 }}>Pro Feature</div>
       <div style={{ fontSize: 13, color: subColor, marginBottom: 18, lineHeight: 1.6 }}>
         {feature} is available on Pro plan only.
@@ -398,7 +401,11 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 borderRadius: 10, padding: '8px 14px', color: subColor,
                 fontSize: 13, cursor: 'pointer', fontFamily: FONT,
                 boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-              }}>✏️ {t('trade_detail_edit')}</button>
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <Icon name="edit" size={14} color={subColor} />
+                {t('trade_detail_edit')}
+              </button>
               {isPlanned && (
                 <button onClick={() => setShowCloseForm(true)} style={btnStyle(GREEN, '#000')}>
                   {t('trade_close_btn')}
@@ -520,7 +527,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   {glare}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, position: 'relative' }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>📋 Playbook</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: textColor, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Icon name="playbook" size={18} color={PURPLE} />
+                        Playbook
+                      </div>
                       <div style={{ fontSize: 12, color: subColor, marginTop: 2 }}>{playbook.setup_name}</div>
                     </div>
                     <div style={{
@@ -614,7 +624,10 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               {/* Screenshot */}
               <div style={glassCard()}>
                 {glare}
-                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 12, position: 'relative' }}>📸 Screenshot</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 12, position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="camera" size={18} color={BLUE} />
+                  Screenshot
+                </div>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
                   onChange={e => { const f = e.target.files?.[0]; if (f) uploadScreenshot(f) }} />
 
@@ -630,8 +643,14 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       background: 'rgba(255,69,58,0.85)', color: '#fff',
                       border: 'none', borderRadius: 8, padding: '5px 10px',
                       fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                      display: 'flex', alignItems: 'center', gap: 5,
                     }}>
-                      {screenshotUploading ? '...' : '🗑 Delete'}
+                      {screenshotUploading ? '...' : (
+                        <>
+                          <Icon name="delete" size={12} color="#fff" />
+                          Delete
+                        </>
+                      )}
                     </button>
                   </div>
                 ) : (
@@ -648,10 +667,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                     }}
                   >
                     {screenshotUploading ? (
-                      <div style={{ color: subColor, fontSize: 13 }}>⏳ Uploading...</div>
+                      <div style={{ color: subColor, fontSize: 13 }}>Uploading...</div>
                     ) : (
                       <>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+                          <Icon name="camera" size={32} color={subColor} style={{ opacity: 0.5 }} />
+                        </div>
                         <div style={{ fontSize: 13, color: subColor, marginBottom: 4 }}>Click or drag to upload</div>
                         <div style={{ fontSize: 11, color: subColor, opacity: 0.6 }}>JPG, PNG, WEBP · max 2MB</div>
                       </>
