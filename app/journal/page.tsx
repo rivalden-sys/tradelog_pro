@@ -5,6 +5,7 @@ import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
 import { useLocale } from '@/hooks/useLocale'
+import Icon from '@/components/icons/Icon'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
@@ -192,8 +193,9 @@ export default function JournalPage() {
 
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>
-              📓 {t('journal_title')}
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Icon name="journal" size={28} color={BLUE} />
+              {t('journal_title')}
             </h1>
             <div style={{ fontSize: 13, color: subColor, marginTop: 4 }}>{t('journal_subtitle')}</div>
           </div>
@@ -305,7 +307,9 @@ export default function JournalPage() {
               ) : history.length === 0 ? (
                 <div style={{ ...glassCard(), padding: '24px', textAlign: 'center' }}>
                   {glare}
-                  <div style={{ fontSize: 28, marginBottom: 10 }}>📓</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+                    <Icon name="journal" size={32} color={subColor} style={{ opacity: 0.4 }} />
+                  </div>
                   <div style={{ fontSize: 14, color: subColor, lineHeight: 1.6 }}>{t('journal_empty_title')}</div>
                 </div>
               ) : (
