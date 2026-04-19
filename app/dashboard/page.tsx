@@ -255,7 +255,7 @@ export default function DashboardPage() {
           .eq('user_id', user.id)
           .eq('status', 'closed')
           .order('date', { ascending: false })
-        setTrades(data || [])
+        setTrades((data || []) as Trade[])
       } finally {
         setLoading(false)
       }
