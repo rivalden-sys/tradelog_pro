@@ -5,6 +5,7 @@ import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
 import { useLocale } from '@/hooks/useLocale'
+import Icon from '@/components/icons/Icon'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
@@ -122,7 +123,6 @@ export default function SimulatorPage() {
     load()
   }, [])
 
-  // Дебаунс симуляції — запускається через 300мс після останньої зміни
   useEffect(() => {
     if (loadingStats) return
     const timer = setTimeout(() => {
@@ -199,7 +199,6 @@ export default function SimulatorPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button style={btnStyle} onClick={dec} disabled={value <= min}>−</button>
-
           <div style={{
             flex: 1, textAlign: 'center',
             background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
@@ -223,10 +222,8 @@ export default function SimulatorPage() {
               {unit === '$' ? 'USD' : unit === '%' ? 'percent' : isUk ? 'шт.' : 'trades'}
             </div>
           </div>
-
           <button style={btnStyle} onClick={inc} disabled={value >= max}>+</button>
         </div>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${min}` : `${min}${unit}`}</span>
           <span style={{ fontSize: 10, color: subColor }}>{unit === '$' ? `$${max}` : `${max}${unit}`}</span>
@@ -315,8 +312,9 @@ export default function SimulatorPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
 
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>
-              📈 Performance Simulator
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Icon name="simulator" size={28} color={PURPLE} />
+              Performance Simulator
             </h1>
             <div style={{ fontSize: 13, color: subColor, marginTop: 4 }}>
               {isUk ? 'Monte Carlo симуляція — що буде якщо торгувати так само ще кілька місяців' : 'Monte Carlo simulation — what happens if you keep trading the same way'}
@@ -326,7 +324,7 @@ export default function SimulatorPage() {
           {!loadingStats && realWinRate !== null && (
             <div style={{ ...glassCard(BLUE), marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               {glare}
-              <div style={{ fontSize: 20, flexShrink: 0 }}>📊</div>
+              <Icon name="analytics" size={24} color={BLUE} />
               <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textColor, marginBottom: 2 }}>
                   {isUk ? 'Параметри з твоїх реальних угод' : 'Loaded from your real trades'}
@@ -343,8 +341,9 @@ export default function SimulatorPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={glassCard()}>
                 {glare}
-                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative' }}>
-                  {isUk ? '📊 Статистика торгівлі' : '📊 Trading Statistics'}
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="analytics" size={20} color={BLUE} />
+                  {isUk ? 'Статистика торгівлі' : 'Trading Statistics'}
                 </div>
                 <div style={{ position: 'relative' }}>
                   <Stepper label="Win Rate" value={winRate} min={10} max={90} unit="%" color={winRate >= 50 ? GREEN : RED} onChange={setWinRate} />
@@ -356,8 +355,9 @@ export default function SimulatorPage() {
 
               <div style={glassCard()}>
                 {glare}
-                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative' }}>
-                  {isUk ? '⚙️ Параметри симуляції' : '⚙️ Simulation Parameters'}
+                <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 20, position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="settings" size={20} color={subColor} />
+                  {isUk ? 'Параметри симуляції' : 'Simulation Parameters'}
                 </div>
                 <div style={{ position: 'relative' }}>
                   <Stepper label={isUk ? 'Стартовий баланс' : 'Start Balance'} value={startBalance} min={100} max={100000} step={100} unit="$" color={PURPLE} onChange={setStartBalance} />
@@ -411,8 +411,9 @@ export default function SimulatorPage() {
               {result && (
                 <div style={glassCard()}>
                   {glare}
-                  <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative' }}>
-                    {isUk ? `📊 Результати після ${months} міс.` : `📊 Results after ${months} months`}
+                  <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon name="analytics" size={20} color={PURPLE} />
+                    {isUk ? `Результати після ${months} міс.` : `Results after ${months} months`}
                   </div>
                   <div className="stat-badges" style={{ position: 'relative' }}>
                     <StatBadge label={isUk ? 'Гірший 10%' : 'Worst 10%'} value={`$${result.p10}`} color={RED}    sub={`${Math.round((result.p10 / startBalance - 1) * 100)}%`} />
@@ -448,7 +449,7 @@ export default function SimulatorPage() {
                 <div style={glassCard(isPositiveEV ? GREEN : RED)}>
                   {glare}
                   <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 10, position: 'relative' }}>
-                    {isUk ? '💡 Висновок' : '💡 Key Insight'}
+                    💡 {isUk ? 'Висновок' : 'Key Insight'}
                   </div>
                   <div style={{ fontSize: 14, color: textColor, lineHeight: 1.7, position: 'relative' }}>
                     {isPositiveEV ? (
