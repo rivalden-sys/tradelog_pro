@@ -205,6 +205,8 @@ function statCard(dark: boolean): React.CSSProperties {
   }
 }
 
+const TRADE_COLUMNS = 'id, date, pair, setup, rr, direction, result, profit_usd, profit_pct, self_grade'
+
 export default function DashboardPage() {
   const dark = useDark()
   const t    = th(dark)
@@ -248,8 +250,10 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         const { data } = await supabase
-          .from('trades').select('*')
-          .eq('user_id', user.id).eq('status', 'closed')
+          .from('trades')
+          .select(TRADE_COLUMNS)
+          .eq('user_id', user.id)
+          .eq('status', 'closed')
           .order('date', { ascending: false })
         setTrades(data || [])
       } finally {
