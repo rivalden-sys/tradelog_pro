@@ -6,6 +6,7 @@ import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
 import { useLocale } from '@/hooks/useLocale'
+import Icon from '@/components/icons/Icon'
 
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
@@ -240,7 +241,10 @@ export default function PlaybookPage() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>📋 {t('playbook_title')}</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Icon name="playbook" size={28} color={GREEN} />
+                {t('playbook_title')}
+              </h1>
               <div style={{ fontSize: 13, color: subColor, marginTop: 4 }}>{t('playbook_subtitle')}</div>
             </div>
             {!showForm && (
@@ -303,7 +307,10 @@ export default function PlaybookPage() {
             <div style={{ textAlign: 'center', padding: '48px 0', color: subColor, fontSize: 14 }}>{t('playbook_loading')}</div>
           ) : playbooks.length === 0 && !showForm ? (
             <div style={{ ...glassCard(), textAlign: 'center', padding: '48px 20px' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
+              {glare}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <Icon name="playbook" size={48} color={subColor} style={{ opacity: 0.4 }} />
+              </div>
               <div style={{ fontSize: 16, fontWeight: 700, color: textColor, marginBottom: 8 }}>{t('playbook_empty_title')}</div>
               <div style={{ fontSize: 14, color: subColor, lineHeight: 1.6, marginBottom: 24, maxWidth: 380, margin: '0 auto 24px' }}>
                 {t('playbook_empty_sub')}
