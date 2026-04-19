@@ -6,6 +6,7 @@ import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
+import Icon from '@/components/icons/Icon'
 
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const FONT = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
@@ -239,7 +240,7 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <button onClick={() => router.back()} style={{ background: 'transparent', border: 'none', color: subColor, fontSize: 14, cursor: 'pointer', fontFamily: FONT }}>← Назад</button>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>✏️ Редагування угоди</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: textColor, margin: 0, letterSpacing: '-0.04em' }}>Редагування угоди</h1>
             {isPlanned && <span style={{ fontSize: 12, fontWeight: 700, color: ORANGE, background: ORANGE + '22', borderRadius: 8, padding: '4px 10px' }}>🕐 Планова</span>}
           </div>
 
@@ -288,7 +289,10 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
               borderRadius: 14, padding: '16px',
               border: `1px solid ${isPlanned ? ORANGE + '33' : dark ? DARK.border : 'rgba(0,0,0,0.08)'}`,
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: isPlanned ? ORANGE : subColor, marginBottom: 14 }}>📍 Точки входу</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: isPlanned ? ORANGE : subColor, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="goals" size={18} color={isPlanned ? ORANGE : subColor} />
+                Точки входу
+              </div>
               <div className="form-grid-3" style={{ marginBottom: 14 }}>
                 <div>
                   <label style={labelStyle}>Ціна входу</label>
@@ -370,8 +374,9 @@ export default function EditTradePage({ params }: { params: Promise<{ id: string
                 })}
               </div>
               {isDanger && (
-                <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: ORANGE + '15', border: `1px solid ${ORANGE}33`, fontSize: 12, color: ORANGE, fontWeight: 600 }}>
-                  ⚠️ {locale === 'uk' ? 'Небезпечний емоційний стан. Переконайся що рішення прийнято по плану.' : 'Dangerous emotional state. Make sure your decision follows the plan.'}
+                <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: ORANGE + '15', border: `1px solid ${ORANGE}33`, fontSize: 12, color: ORANGE, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="warning" size={16} color={ORANGE} />
+                  {locale === 'uk' ? 'Небезпечний емоційний стан. Переконайся що рішення прийнято по плану.' : 'Dangerous emotional state. Make sure your decision follows the plan.'}
                 </div>
               )}
             </div>
