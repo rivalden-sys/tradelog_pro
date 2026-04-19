@@ -7,6 +7,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useTheme } from '@/components/layout/ThemeProvider';
 import { useLocale } from '@/hooks/useLocale';
 import { DARK, LIGHT } from '@/lib/colors';
+import Icon from '@/components/icons/Icon';
 
 const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif";
@@ -39,16 +40,16 @@ export default function NavBar() {
   }
 
   const links = [
-    { href: '/dashboard', label: t('nav_dashboard') },
-    { href: '/trades',    label: t('nav_journal')   },
-    { href: '/goals',     label: '🎯 Goals'          },
-    { href: '/simulator', label: '📈 Simulator'      },
-    { href: '/playbook',  label: '📋 Playbook'       },
-    { href: '/journal',   label: '📓 Journal'        },
-    { href: '/ai',        label: t('nav_ai')         },
-    { href: '/analytics', label: t('nav_analytics')  },
-    { href: '/settings',  label: t('nav_settings')   },
-    { href: '/billing',   label: t('nav_billing')    },
+    { href: '/dashboard', label: t('nav_dashboard'),  icon: 'dashboard',  color: '#0a84ff' },
+    { href: '/trades',    label: t('nav_journal'),    icon: 'trades',     color: '#30d158' },
+    { href: '/goals',     label: 'Goals',             icon: 'goals',      color: '#ff9f0a' },
+    { href: '/simulator', label: 'Simulator',         icon: 'simulator',  color: '#bf5af2' },
+    { href: '/playbook',  label: 'Playbook',          icon: 'playbook',   color: '#30d158' },
+    { href: '/journal',   label: 'Journal',           icon: 'journal',    color: '#0a84ff' },
+    { href: '/ai',        label: t('nav_ai'),         icon: 'ai',         color: '#bf5af2' },
+    { href: '/analytics', label: t('nav_analytics'),  icon: 'analytics',  color: '#bf5af2' },
+    { href: '/settings',  label: t('nav_settings'),   icon: 'settings',   color: '#8e8e93' },
+    { href: '/billing',   label: t('nav_billing'),    icon: 'billing',    color: '#30d158' },
   ]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
@@ -122,12 +123,13 @@ export default function NavBar() {
             border: dark ? `1px solid ${DARK.border}` : '1px solid rgba(0,0,0,0.05)',
             overflowX: 'auto',
           }}>
-            {links.map(({ href, label }) => (
+            {links.map(({ href, label, icon, color }) => (
               <Link key={href} href={href} className="nav-link" style={{
                 padding: '5px 11px', borderRadius: 8, fontSize: 12,
                 fontWeight: isActive(href) ? 600 : 400,
                 color: isActive(href) ? textColor : subColor,
                 textDecoration: 'none', whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: 5,
                 background: isActive(href)
                   ? dark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)'
                   : 'transparent',
@@ -137,7 +139,10 @@ export default function NavBar() {
                     : 'inset 0 1px 0 rgba(255,255,255,1), 0 1px 3px rgba(0,0,0,0.06)'
                   : 'none',
                 transition: 'all 0.15s',
-              }}>{label}</Link>
+              }}>
+                <Icon name={icon} size={12} color={isActive(href) ? color : subColor} />
+                {label}
+              </Link>
             ))}
           </div>
         )}
@@ -192,9 +197,9 @@ export default function NavBar() {
           overflowY: 'auto',
           maxHeight: 'calc(100vh - 54px)',
         }}>
-          {links.map(({ href, label }) => (
+          {links.map(({ href, label, icon, color }) => (
             <Link key={href} href={href} onClick={() => setMenuOpen(false)} style={{
-              display: 'block',
+              display: 'flex', alignItems: 'center', gap: 12,
               padding: '13px 16px', borderRadius: 12,
               fontSize: 16,
               fontWeight: isActive(href) ? 600 : 400,
@@ -206,7 +211,10 @@ export default function NavBar() {
               boxShadow: isActive(href) && !dark ? 'inset 0 1px 0 rgba(255,255,255,1)' : 'none',
               marginBottom: 2,
               transition: 'all 0.15s',
-            }}>{label}</Link>
+            }}>
+              <Icon name={icon} size={20} color={isActive(href) ? color : subColor} />
+              {label}
+            </Link>
           ))}
 
           <div style={{ height: 1, background: borderBot, margin: '10px 0' }} />
