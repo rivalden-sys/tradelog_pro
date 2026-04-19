@@ -318,7 +318,6 @@ export default function NewTradePage() {
                 Планова угода
               </button>
               <button onClick={() => setMode('closed')} style={modeBtn('closed', GREEN, mode)}>
-                <Icon name="take" size={18} color={GREEN} style={{ opacity: mode === 'closed' ? 1 : 0.4 }} />
                 ✓ Закрита угода
               </button>
             </div>
