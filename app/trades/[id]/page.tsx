@@ -702,7 +702,16 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                     )}
                     {!scoreProGate && (
-                      <button onClick={runTradeScore} disabled={scoreLoading} style={btnStyle(ORANGE, '#000', scoreLoading)}>
+                      <button onClick={runTradeScore} disabled={scoreLoading} style={{
+                       padding: '9px 18px', borderRadius: 12, border: `1px solid ${ORANGE}66`,
+                       background: `linear-gradient(135deg, ${ORANGE}dd, ${ORANGE})`,
+                       color: '#fff',
+                       fontSize: 13, fontWeight: 700, cursor: scoreLoading ? 'default' : 'pointer',
+                       fontFamily: FONT, opacity: scoreLoading ? 0.7 : 1,
+                       backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                       boxShadow: scoreLoading ? 'none' : `0 2px 16px ${ORANGE}55`,
+                        whiteSpace: 'nowrap' as const,
+                      }}>
                         {scoreLoading ? t('trade_score_analyzing') : scoreData ? t('trade_score_rerun') : t('trade_score_get')}
                       </button>
                     )}
