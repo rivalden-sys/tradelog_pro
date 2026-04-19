@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const { trade, locale } = await req.json()
     if (!trade) return NextResponse.json({ success: false, error: 'Trade is required', code: 'BAD_REQUEST' }, { status: 400 })
 
-    // Full historical data for this setup + direction
+    // Historical data for this setup + direction (capped to prevent large payloads)
     const { data: history } = await supabase
       .from('trades')
       .select('setup, direction, result, rr, profit_usd, pair, emotion, date')
@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
       .eq('setup', trade.setup)
       .eq('direction', trade.direction)
       .eq('status', 'closed')
+      .order('date', { ascending: false })
+      .limit(500)
 
     // All trades for overall context
     const { data: allTrades } = await supabase
@@ -49,12 +51,12 @@ export async function POST(req: NextRequest) {
     const win_rate  = similar.length ? Math.round((wins / similar.length) * 100) : 0
     const avgRR     = similar.length ? (similar.reduce((s, t) => s + (t.rr || 0), 0) / similar.length).toFixed(2) : '0'
     const avgPnl    = similar.length ? (similar.reduce((s, t) => s + (t.profit_usd || 0), 0) / similar.length).toFixed(2) : '0'
-    const last5     = similar.slice(-5).map(t => t.result)
+    const last5     = similar.slice(0, 5).map(t => t.result)
     const recentWR  = last5.length ? Math.round(last5.filter(r => r === 'Тейк').length / last5.length * 100) : null
 
     // Overall trader context
-    const totalTrades   = (allTrades || []).length
-    const overallWR     = totalTrades ? Math.round((allTrades || []).filter(t => t.result === 'Тейк').length / totalTrades * 100) : 0
+    const totalTrades    = (allTrades || []).length
+    const overallWR      = totalTrades ? Math.round((allTrades || []).filter(t => t.result === 'Тейк').length / totalTrades * 100) : 0
     const currentEmotion = trade.emotion || null
 
     // Emotion performance for this emotion state
@@ -126,7 +128,8 @@ Write all text values in ${lang}. Respond ONLY with JSON, no markdown:
     })
 
     return NextResponse.json({ success: true, data: result })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message, code: 'AI_ERROR' }, { status: 500 })
+  } catch (e) {
+    console.error('AI trade-score error:', e)
+    return NextResponse.json({ success: false, error: 'Internal server error', code: 'AI_ERROR' }, { status: 500 })
   }
 }
