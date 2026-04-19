@@ -6,19 +6,19 @@ import { useLocale } from '@/hooks/useLocale'
 import NavBar from '@/components/layout/NavBar'
 import { createClient } from '@/lib/supabase/client'
 import { DARK, LIGHT } from '@/lib/colors'
-import Icon, { IconName } from '@/components/icons/Icon'
+import Icon from '@/components/icons/Icon'
 
 const SETUPS_DEFAULT = ['CHoCH + BOS + FVG', 'Breaker/Mitigation + iFVG', 'Order Block + FVG', 'Liquidity Sweep + Reversal', 'NWOG / NDOG', 'Premium/Discount + POI']
 const GRADES         = ['A', 'B', 'C', 'D']
 const FONT           = "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif"
 
-const EMOTIONS: { value: string; icon: IconName; label: string; color: string }[] = [
-  { value: 'calm',     icon: 'calm',    label: 'Спокій',     color: '#30d158' },
-  { value: 'fear',     icon: 'fear',    label: 'Страх',      color: '#0a84ff' },
-  { value: 'greed',    icon: 'greed',   label: 'Жадібність', color: '#ff9f0a' },
-  { value: 'anger',    icon: 'anger',   label: 'Злість',     color: '#ff453a' },
-  { value: 'euphoria', icon: 'euphoria',label: 'Ейфорія',    color: '#bf5af2' },
-  { value: 'revenge',  icon: 'revenge', label: 'Revenge',    color: '#ff453a' },
+const EMOTIONS = [
+  { value: 'calm',     emoji: '😌', label: 'Спокій',     color: '#30d158' },
+  { value: 'fear',     emoji: '😰', label: 'Страх',      color: '#0a84ff' },
+  { value: 'greed',    emoji: '🤑', label: 'Жадібність', color: '#ff9f0a' },
+  { value: 'anger',    emoji: '😤', label: 'Злість',     color: '#ff453a' },
+  { value: 'euphoria', emoji: '🚀', label: 'Ейфорія',    color: '#bf5af2' },
+  { value: 'revenge',  emoji: '😈', label: 'Revenge',    color: '#ff453a' },
 ]
 
 function useDark() {
@@ -319,7 +319,7 @@ export default function NewTradePage() {
               </button>
               <button onClick={() => setMode('closed')} style={modeBtn('closed', GREEN, mode)}>
                 <Icon name="take" size={18} color={GREEN} style={{ opacity: mode === 'closed' ? 1 : 0.4 }} />
-                Закрита угода
+                ✓ Закрита угода
               </button>
             </div>
           </div>
@@ -492,7 +492,7 @@ export default function NewTradePage() {
             {/* Emotion tracking */}
             <div style={glassSection(activeEmotion?.color)}>
               <div style={{ fontSize: 13, fontWeight: 700, color: activeEmotion?.color || subColor, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name={activeEmotion?.icon || 'calm'} size={18} color={activeEmotion?.color || subColor} />
+                <span style={{ fontSize: 18 }}>{activeEmotion?.emoji}</span>
                 Емоційний стан
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -512,7 +512,7 @@ export default function NewTradePage() {
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                     }}
                   >
-                    <Icon name={em.icon} size={32} color={em.color} style={{ opacity: emotion === em.value ? 1 : 0.45 }} />
+                    <span style={{ fontSize: 22 }}>{em.emoji}</span>
                     <span style={{ fontSize: 11, color: emotion === em.value ? em.color : subColor, fontWeight: 600 }}>{em.label}</span>
                   </button>
                 ))}
@@ -588,13 +588,8 @@ export default function NewTradePage() {
               transition: 'all 0.2s',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             }}>
-              {!saving && (
-                <Icon
-                  name={mode === 'planned' ? 'planned' : 'take'}
-                  size={20}
-                  color={mode === 'planned' ? '#000' : '#fff'}
-                />
-              )}
+              {!saving && mode === 'planned' && <span>🕐</span>}
+              {!saving && mode === 'closed' && <span>✓</span>}
               {saving ? t('new_trade_saving') : mode === 'planned' ? 'Зберегти план' : 'Зберегти угоду'}
             </button>
           </div>
