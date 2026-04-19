@@ -401,9 +401,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                 borderRadius: 10, padding: '8px 14px', color: subColor,
                 fontSize: 13, cursor: 'pointer', fontFamily: FONT,
                 boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-                display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                <Icon name="edit" size={14} color={subColor} />
                 {t('trade_detail_edit')}
               </button>
               {isPlanned && (
