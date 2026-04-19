@@ -115,7 +115,7 @@ export async function updateTrade(
 ): Promise<Trade> {
   const supabase = await createClient()
 
-  const updates: Partial<ExtendedTradeFormData & { pair: string }> = {}
+  const updates: Record<string, unknown> = {}
   if (form.date            !== undefined) updates.date            = form.date
   if (form.pair            !== undefined) updates.pair            = form.pair?.toUpperCase().trim()
   if (form.setup           !== undefined) updates.setup           = form.setup
