@@ -300,11 +300,9 @@ export default function NewTradePage() {
           <div style={{ ...glassSection(), marginBottom: 12, padding: 4 }}>
             <div style={{ display: 'flex' }}>
               <button onClick={() => setTradeType('futures')} style={modeBtn('futures', BLUE, tradeType)}>
-                <Icon name="trades" size={18} color={BLUE} style={{ opacity: tradeType === 'futures' ? 1 : 0.4 }} />
                 Futures
               </button>
               <button onClick={() => setTradeType('spot')} style={modeBtn('spot', ORANGE, tradeType)}>
-                <Icon name="billing" size={18} color={ORANGE} style={{ opacity: tradeType === 'spot' ? 1 : 0.4 }} />
                 Spot
               </button>
             </div>
@@ -314,8 +312,7 @@ export default function NewTradePage() {
           <div style={{ ...glassSection(), marginBottom: 20, padding: 4 }}>
             <div style={{ display: 'flex' }}>
               <button onClick={() => setMode('planned')} style={modeBtn('planned', ORANGE, mode)}>
-                <Icon name="planned" size={18} color={ORANGE} style={{ opacity: mode === 'planned' ? 1 : 0.4 }} />
-                Планова угода
+                🕐 Планова угода
               </button>
               <button onClick={() => setMode('closed')} style={modeBtn('closed', GREEN, mode)}>
                 ✓ Закрита угода
@@ -364,7 +361,6 @@ export default function NewTradePage() {
               <label style={labelStyle}>{t('new_trade_direction')}</label>
               {tradeType === 'spot' ? (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 10, border: `1px solid ${GREEN}`, background: GREEN + '22', color: GREEN, fontSize: 13, fontWeight: 700 }}>
-                  <Icon name="long" size={16} color={GREEN} />
                   Long (Spot only)
                 </div>
               ) : (
@@ -416,8 +412,8 @@ export default function NewTradePage() {
                     <div>
                       <input type="number" step="0.1" placeholder="1.0" value={form.risk_pct} onChange={e => set('risk_pct', e.target.value)} style={inputStyle()} />
                       {riskHint
-                        ? <div style={{ fontSize: 11, marginTop: 5, color: BLUE, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Icon name="billing" size={14} color={BLUE} /> {riskHint}
+                        ? <div style={{ fontSize: 11, marginTop: 5, color: BLUE, fontWeight: 600 }}>
+                            💰 {riskHint}
                           </div>
                         : <div style={{ fontSize: 11, color: subColor, marginTop: 4 }}>% від депозиту</div>
                       }
