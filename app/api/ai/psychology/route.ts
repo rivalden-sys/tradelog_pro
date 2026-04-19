@@ -92,8 +92,11 @@ export async function POST(req: NextRequest) {
     }
     const afterLossWR = afterLossTotal > 0 ? Math.round(afterLossWins / afterLossTotal * 100) : null
 
-    // Playbook violations
-    const { data: ruleChecks } = await supabase.from('trade_rule_checks').select('followed')
+    // Playbook violations — filtered by user_id
+    const { data: ruleChecks } = await supabase
+      .from('trade_rule_checks')
+      .select('followed')
+      .eq('user_id', user.id)
     const totalChecks    = ruleChecks?.length || 0
     const violatedChecks = ruleChecks?.filter(r => !r.followed).length || 0
     const playbookViolationRate = totalChecks > 0 ? Math.round((violatedChecks / totalChecks) * 100) : null
