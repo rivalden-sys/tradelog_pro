@@ -6,6 +6,7 @@ import { useTheme } from '@/components/layout/ThemeProvider'
 import { useLocale } from '@/hooks/useLocale'
 import { DARK, LIGHT } from '@/lib/colors'
 import NavBar from '@/components/layout/NavBar'
+import Icon, { IconName } from '@/components/icons/Icon'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const GREEN  = '#30d158'
@@ -30,11 +31,11 @@ interface GoalProgress {
   done: boolean
 }
 
-const GOAL_META: Record<GoalType, { label: string; labelUk: string; unit: string; color: string; icon: string; description: string; descriptionUk: string }> = {
-  win_rate:    { label: 'Win Rate',          labelUk: 'Win Rate',            unit: '%', color: GREEN,  icon: '🎯', description: 'Percentage of winning trades', descriptionUk: 'Відсоток прибуткових угод' },
-  trade_count: { label: 'Trades',            labelUk: 'Угоди',               unit: '',  color: BLUE,   icon: '📊', description: 'Number of closed trades',      descriptionUk: 'Кількість закритих угод' },
-  total_pnl:   { label: 'Total P&L',         labelUk: 'Загальний P&L',       unit: '$', color: PURPLE, icon: '💰', description: 'Total profit in USD',          descriptionUk: 'Загальний прибуток у USD' },
-  max_losses:  { label: 'Max Losing Streak', labelUk: 'Макс. серія збитків', unit: '',  color: ORANGE, icon: '🛡️', description: 'Max consecutive losing trades', descriptionUk: 'Макс. збиткових угод поспіль' },
+const GOAL_META: Record<GoalType, { label: string; labelUk: string; unit: string; color: string; icon: IconName; description: string; descriptionUk: string }> = {
+  win_rate:    { label: 'Win Rate',          labelUk: 'Win Rate',            unit: '%', color: GREEN,  icon: 'goals',     description: 'Percentage of winning trades', descriptionUk: 'Відсоток прибуткових угод' },
+  trade_count: { label: 'Trades',            labelUk: 'Угоди',               unit: '',  color: BLUE,   icon: 'trades',    description: 'Number of closed trades',      descriptionUk: 'Кількість закритих угод' },
+  total_pnl:   { label: 'Total P&L',         labelUk: 'Загальний P&L',       unit: '$', color: PURPLE, icon: 'analytics', description: 'Total profit in USD',          descriptionUk: 'Загальний прибуток у USD' },
+  max_losses:  { label: 'Max Losing Streak', labelUk: 'Макс. серія збитків', unit: '',  color: ORANGE, icon: 'warning',   description: 'Max consecutive losing trades', descriptionUk: 'Макс. збиткових угод поспіль' },
 }
 
 function getWeekRange() {
@@ -258,7 +259,7 @@ export default function GoalsPage() {
         )}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 22 }}>{meta.icon}</span>
+            <Icon name={meta.icon} size={32} color={color} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: text }}>{label}</div>
               <div style={{ fontSize: 12, color: sub, marginTop: 2 }}>{isUk ? meta.descriptionUk : meta.description}</div>
@@ -297,7 +298,9 @@ export default function GoalsPage() {
         </div>
         {goals.length === 0 ? (
           <div style={{ ...card(), textAlign: 'center', padding: '40px 24px', color: sub }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🎯</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <Icon name="goals" size={40} color={sub} style={{ opacity: 0.4 }} />
+            </div>
             <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>{isUk ? 'Немає цілей' : 'No goals yet'}</div>
             <div style={{ fontSize: 13 }}>{isUk ? 'Додайте першу ціль для цього періоду' : 'Add your first goal for this period'}</div>
           </div>
@@ -423,8 +426,9 @@ export default function GoalsPage() {
                       color: active ? m.color : sub,
                       fontSize: 13, fontWeight: active ? 600 : 400,
                       fontFamily: FONT, textAlign: 'left', transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 8,
                     }}>
-                      <span style={{ fontSize: 16, marginRight: 6 }}>{m.icon}</span>
+                      <Icon name={m.icon} size={18} color={active ? m.color : sub} style={{ opacity: active ? 1 : 0.5 }} />
                       {isUk ? m.labelUk : m.label}
                     </button>
                   )
