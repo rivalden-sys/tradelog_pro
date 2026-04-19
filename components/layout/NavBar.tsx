@@ -7,7 +7,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useTheme } from '@/components/layout/ThemeProvider';
 import { useLocale } from '@/hooks/useLocale';
 import { DARK, LIGHT } from '@/lib/colors';
-import Icon from '@/components/icons/Icon';
+import Icon, { IconName } from '@/components/icons/Icon';
 
 const FONT   = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const NUNITO = "'Nunito', -apple-system, BlinkMacSystemFont, sans-serif";
@@ -39,7 +39,7 @@ export default function NavBar() {
     router.push('/login');
   }
 
-  const links = [
+  const links: { href: string; label: string; icon: IconName; color: string }[] = [
     { href: '/dashboard', label: t('nav_dashboard'),  icon: 'dashboard',  color: '#0a84ff' },
     { href: '/trades',    label: t('nav_journal'),    icon: 'trades',     color: '#30d158' },
     { href: '/goals',     label: 'Goals',             icon: 'goals',      color: '#ff9f0a' },
