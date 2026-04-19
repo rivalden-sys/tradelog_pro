@@ -11,9 +11,20 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+function normalizeSubscriptionId(
+  sub: string | Stripe.Subscription | null | undefined
+): string | null {
+  if (sub == null) return null;
+  return typeof sub === "string" ? sub : sub.id;
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = req.headers.get("stripe-signature")!;
+  const sig = req.headers.get("stripe-signature");
+
+  if (!sig) {
+    return new NextResponse("Bad Request", { status: 400 });
+  }
 
   let event: Stripe.Event;
   try {
@@ -32,14 +43,17 @@ export async function POST(req: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const customerId = session.customer as string;
-        const subscriptionId = session.subscription as string;
-        // SECURITY: prefer metadata.user_id (set in checkout/route.ts) for first linkage
+        const subscriptionId = normalizeSubscriptionId(session.subscription);
         const userId = session.metadata?.user_id;
+
+        if (!subscriptionId) {
+          console.error("Webhook checkout: missing subscription id");
+          break;
+        }
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
         if (userId) {
-          // strict mapping by user id from Stripe metadata
           const { error } = await supabaseAdmin
             .from("users")
             .update({
@@ -50,7 +64,6 @@ export async function POST(req: Request) {
             .eq("id", userId);
           if (error) console.error("Webhook checkout update (by user_id) failed:", error);
         } else {
-          // fallback: map by customer id, ensure exactly one match
           const { data: users, error: selError } = await supabaseAdmin
             .from("users")
             .select("id")
@@ -73,10 +86,9 @@ export async function POST(req: Request) {
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = (invoice as any).subscription as string | null;
+        const subscriptionId = normalizeSubscriptionId((invoice as any).subscription);
         const customerId = invoice.customer as string;
 
-        // SECURITY: prefer subscription_id (precise), fallback to customer_id
         if (subscriptionId) {
           const { error } = await supabaseAdmin
             .from("users")
@@ -105,7 +117,6 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const subscriptionId = subscription.id;
 
-        // SECURITY: map by subscription_id (precise)
         const { error } = await supabaseAdmin
           .from("users")
           .update({
