@@ -8,6 +8,7 @@ import NavBar from '@/components/layout/NavBar'
 import { Trade } from '@/types'
 import { DARK, LIGHT } from '@/lib/colors'
 import { SUPPORTED_EXCHANGES, FORMAT_LABELS, type DetectedFormat, type ColumnMapping } from '@/lib/importParsers'
+import Icon from '@/components/icons/Icon'
 
 const FONT = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
@@ -226,7 +227,11 @@ export default function TradesPage() {
                 border: `1px solid ${borderColor}`, borderRadius: 12, padding: '10px 16px',
                 fontSize: 14, fontWeight: 600, color: textColor, cursor: 'pointer', whiteSpace: 'nowrap',
                 boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-              }}>{t('trades_import_csv')}</button>
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <Icon name="import" size={16} color={textColor} />
+                {t('trades_import_csv')}
+              </button>
               <button
                 onClick={() => isAtLimit ? router.push('/billing') : router.push('/trades/new')}
                 style={{
@@ -237,9 +242,12 @@ export default function TradesPage() {
                   border: 'none', borderRadius: 12, padding: '10px 20px',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                   boxShadow: dark ? `0 0 20px ${isAtLimit ? DARK.orange : DARK.green}44` : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8,
                 }}
-              >{isAtLimit ? t('trades_upgrade') : t('trades_add')}</button>
+              >
+                <Icon name={isAtLimit ? 'billing' : 'plus'} size={16} color={isAtLimit ? '#000' : '#fff'} />
+                {isAtLimit ? t('trades_upgrade') : t('trades_add')}
+              </button>
             </div>
           </div>
 
@@ -253,8 +261,8 @@ export default function TradesPage() {
           )}
           {isNearLimit && (
             <div style={{ background: dark ? `${DARK.blue}12` : LIGHT.blueBg, border: `1px solid ${dark ? DARK.blue + '30' : LIGHT.blue + '33'}`, borderRadius: 16, padding: '12px 16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, color: subColor }}>
-                <span style={{ color: BLUE, fontWeight: 600 }}>ℹ️ </span>
+              <div style={{ fontSize: 13, color: subColor, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="warning" size={16} color={BLUE} />
                 {t('trades_near_limit').replace('{count}', String(FREE_LIMIT - totalCount))}{' '}
                 <a href="/billing" style={{ color: BLUE, fontWeight: 600 }}>Upgrade to Pro →</a>
               </div>
@@ -307,7 +315,9 @@ export default function TradesPage() {
               <div style={{ textAlign: 'center', padding: '48px', color: subColor }}>{t('trades_loading')}</div>
             ) : trades.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: subColor }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                  <Icon name="trades" size={48} color={subColor} style={{ opacity: 0.4 }} />
+                </div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: textColor }}>{t('trades_empty')}</div>
                 <div style={{ fontSize: 13, marginTop: 6 }}>{t('trades_empty_sub')}</div>
               </div>
@@ -468,7 +478,9 @@ export default function TradesPage() {
                       setImportText(text)
                     }}
                   />
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{importFile ? '✅' : '📁'}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    <Icon name={importFile ? 'check' : 'import'} size={40} color={importFile ? GREEN : subColor} />
+                  </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: textColor, marginBottom: 6 }}>
                     {importFile ? importFile.name : t('trades_import_drop')}
                   </div>
@@ -511,8 +523,16 @@ export default function TradesPage() {
                   <label style={{ fontSize: 12, color: subColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 8 }}>Trade Type</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {(['futures', 'spot'] as const).map(tt => (
-                      <button key={tt} onClick={() => setMapping(m => ({ ...m, trade_type: tt }))} style={{ flex: 1, padding: '10px', borderRadius: 10, border: `1px solid ${mapping.trade_type === tt ? GREEN : borderColor}`, background: mapping.trade_type === tt ? `${GREEN}22` : 'transparent', color: mapping.trade_type === tt ? GREEN : subColor, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}>
-                        {tt === 'futures' ? '📈 Futures' : '🪙 Spot'}
+                      <button key={tt} onClick={() => setMapping(m => ({ ...m, trade_type: tt }))} style={{
+                        flex: 1, padding: '10px', borderRadius: 10,
+                        border: `1px solid ${mapping.trade_type === tt ? GREEN : borderColor}`,
+                        background: mapping.trade_type === tt ? `${GREEN}22` : 'transparent',
+                        color: mapping.trade_type === tt ? GREEN : subColor,
+                        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      }}>
+                        <Icon name={tt === 'futures' ? 'trades' : 'billing'} size={16} color={mapping.trade_type === tt ? GREEN : subColor} />
+                        {tt === 'futures' ? 'Futures' : 'Spot'}
                       </button>
                     ))}
                   </div>
@@ -572,7 +592,9 @@ export default function TradesPage() {
 
             {importStep === 'done' && importResult && (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                  <Icon name="check" size={56} color={GREEN} />
+                </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: textColor, marginBottom: 8 }}>{t('trades_import_done_title')}</div>
                 <div style={{ fontSize: 15, color: subColor, marginBottom: 28 }}>
                   {t('trades_import_done_added')} <span style={{ color: GREEN, fontWeight: 800 }}>{importResult.imported}</span>
