@@ -227,9 +227,7 @@ export default function TradesPage() {
                 border: `1px solid ${borderColor}`, borderRadius: 12, padding: '10px 16px',
                 fontSize: 14, fontWeight: 600, color: textColor, cursor: 'pointer', whiteSpace: 'nowrap',
                 boxShadow: dark ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-                display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Icon name="import" size={16} color={textColor} />
                 {t('trades_import_csv')}
               </button>
               <button
@@ -242,10 +240,9 @@ export default function TradesPage() {
                   border: 'none', borderRadius: 12, padding: '10px 20px',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                   boxShadow: dark ? `0 0 20px ${isAtLimit ? DARK.orange : DARK.green}44` : '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8,
+                  transition: 'all 0.2s',
                 }}
               >
-                <Icon name={isAtLimit ? 'billing' : 'plus'} size={16} color={isAtLimit ? '#000' : '#fff'} />
                 {isAtLimit ? t('trades_upgrade') : t('trades_add')}
               </button>
             </div>
