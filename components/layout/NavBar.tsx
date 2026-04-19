@@ -140,7 +140,7 @@ export default function NavBar() {
                   : 'none',
                 transition: 'all 0.15s',
               }}>
-                <Icon name={icon} size={12} color={isActive(href) ? color : subColor} />
+                <Icon name={icon} size={12} color={color} style={{ opacity: isActive(href) ? 1 : 0.45 }} />
                 {label}
               </Link>
             ))}
