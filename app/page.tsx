@@ -262,11 +262,11 @@ export default function Landing() {
                   Log your emotional state on every trade. AI finds which emotions hurt your win rate most.
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[{ name:'calm' as const,l:'Calm',c:GREEN,wr:'71%' },{ name:'greed' as const,l:'Greed',c:ORANGE,wr:'38%' },{ name:'revenge' as const,l:'Revenge',c:RED,wr:'22%' },{ name:'euphoria' as const,l:'Euphoria',c:PURPLE,wr:'41%' }].map(em => (
-                    <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 64 }}>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <Icon name={em.name} size={24} color={em.c} />
-                      </div>
+                  {[{ emoji:'😌', l:'Calm',    c:GREEN,  wr:'71%' },{ emoji:'🤑', l:'Greed',   c:ORANGE, wr:'38%' },{ emoji:'😈', l:'Revenge', c:RED,    wr:'22%' },{ emoji:'🚀', l:'Euphoria',c:PURPLE, wr:'41%' }].map(em => (
+                   <div key={em.l} style={{ background: `${em.c}15`, border: `1px solid ${em.c}30`, borderRadius: 10, padding: '8px 10px', textAlign: 'center', flex: 1, minWidth: 64 }}>
+                    <div style={{ fontSize: 22, lineHeight: 1 }}>
+                      {em.emoji}
+                        </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{em.l}</div>
                       <div style={{ fontSize: 13, fontWeight: 800, color: em.c, marginTop: 1 }}>{em.wr}</div>
                     </div>
